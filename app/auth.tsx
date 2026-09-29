@@ -8,7 +8,7 @@ import { EmojiName } from '@/lib/emoji';
 import { LANGUAGES } from '@/lib/i18n';
 import { showAlert } from '@/lib/alert';
 import { useSettings } from '@/lib/settings';
-import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { isDemo, isSupabaseConfigured, supabase } from '@/lib/supabase';
 
 export default function AuthScreen() {
   const { t, colors, language, setLanguage, isRTL } = useSettings();
@@ -81,6 +81,15 @@ export default function AuthScreen() {
           <Txt muted center style={{ marginBottom: 20 }}>
             {t('authWelcome')}
           </Txt>
+
+          {isDemo && (
+            <View style={[styles.freeHint, { backgroundColor: colors.surfaceAlt, marginBottom: 14 }]}>
+              <Emoji3D name="sparkles" size={28} />
+              <Txt variant="caption" style={{ flex: 1, fontWeight: '700' }}>
+                {t('demoHint')}
+              </Txt>
+            </View>
+          )}
 
           <Card3D style={{ gap: 12, padding: 18 }}>
             <View style={styles.titleRow}>

@@ -43,6 +43,7 @@ const en = {
   authWelcome: 'Homemade food, delivered with love',
   checkEmail: 'Account created! Check your email to confirm it, then sign in.',
   fillAllFields: 'Please enter your email and a password of at least 6 characters.',
+  demoHint: 'Demo preview: sign in with any email and a password of 6+ characters. Orders stay on this device.',
   supabaseMissing:
     'Supabase is not configured. Add EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_KEY to your .env file.',
 
@@ -183,6 +184,7 @@ const ar: Record<TranslationKey, string> = {
   authWelcome: 'أكل بيتي، يوصلك بحب',
   checkEmail: 'تم إنشاء الحساب! افحص بريدك لتأكيده ثم سجّل الدخول.',
   fillAllFields: 'من فضلك أدخل بريدك وكلمة مرور من ٦ أحرف على الأقل.',
+  demoHint: 'نسخة تجريبية: سجّل الدخول بأي بريد وكلمة مرور من ٦ أحرف أو أكثر. الطلبات تُحفظ على هذا الجهاز فقط.',
   supabaseMissing: 'لم يتم إعداد Supabase. أضف EXPO_PUBLIC_SUPABASE_URL و EXPO_PUBLIC_SUPABASE_KEY إلى ملف .env.',
 
   hello: 'أهلاً',
@@ -314,6 +316,8 @@ const fr: Record<TranslationKey, string> = {
   authWelcome: 'La cuisine maison, livrée avec amour',
   checkEmail: 'Compte créé ! Confirmez votre e-mail puis connectez-vous.',
   fillAllFields: 'Entrez votre e-mail et un mot de passe d’au moins 6 caractères.',
+  demoHint:
+    'Version de démo : connectez-vous avec n’importe quel e-mail et un mot de passe de 6 caractères ou plus. Les commandes restent sur cet appareil.',
   supabaseMissing:
     "Supabase n'est pas configuré. Ajoutez EXPO_PUBLIC_SUPABASE_URL et EXPO_PUBLIC_SUPABASE_KEY au fichier .env.",
 
