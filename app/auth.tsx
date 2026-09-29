@@ -1,8 +1,8 @@
-import { Image } from 'expo-image';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import { Emoji3D } from '@/components/Emoji3D';
+import { Logo } from '@/components/Logo';
 import { Button3D, Card3D, Screen, Txt } from '@/components/ui';
 import { EmojiName } from '@/lib/emoji';
 import { LANGUAGES } from '@/lib/i18n';
@@ -75,8 +75,8 @@ export default function AuthScreen() {
             ))}
           </View>
 
-          <View style={[styles.logoWrap, { shadowColor: colors.shadow }]}>
-            <Image source={require('@/assets/images/logo.png')} style={styles.logo} contentFit="contain" />
+          <View style={{ marginVertical: 12 }}>
+            <Logo width={200} />
           </View>
           <Txt muted center style={{ marginBottom: 20 }}>
             {t('authWelcome')}
@@ -93,7 +93,7 @@ export default function AuthScreen() {
 
           <Card3D style={{ gap: 12, padding: 18 }}>
             <View style={styles.titleRow}>
-              <Emoji3D name={mode === 'signIn' ? 'wave' : 'sparkles'} size={40} float sway />
+              <Emoji3D name={mode === 'signIn' ? 'wave' : 'sparkles'} size={40} />
               <Txt variant="heading">{mode === 'signIn' ? t('signIn') : t('signUp')}</Txt>
             </View>
 
@@ -132,7 +132,7 @@ export default function AuthScreen() {
 
           <View style={[styles.freeHint, { backgroundColor: colors.surfaceAlt }]}>
             <Emoji3D name="gift" size={36} float />
-            <Txt style={{ flex: 1, fontWeight: '700' }}>{t('onb5Body')}</Txt>
+            <Txt style={{ flex: 1, fontWeight: '700' }}>{t('onb7Body')}</Txt>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -144,13 +144,6 @@ const styles = StyleSheet.create({
   scroll: { padding: 20, paddingBottom: 40 },
   langRow: { flexDirection: 'row', justifyContent: 'center', gap: 8, marginBottom: 8 },
   lang: { paddingVertical: 6, paddingHorizontal: 10, borderRadius: 14, borderWidth: 1.5 },
-  logoWrap: {
-    alignSelf: 'center',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-  },
-  logo: { width: 240, height: 200 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 4 },
   inputWrap: {
     flexDirection: 'row',

@@ -20,7 +20,7 @@ function TabIcon({ name, focused }: { name: EmojiName; focused: boolean }) {
         transform: [{ scale: focused ? 1.15 : 0.95 }, { translateY: focused ? -2 : 0 }],
         opacity: focused ? 1 : 0.75,
       }}>
-      <Emoji3D name={name} size={28} />
+      <Emoji3D name={name} size={26} />
     </View>
   );
 }
@@ -53,7 +53,8 @@ export default function TabLayout() {
           headerShown: false,
           tabBarActiveTintColor: colors.primary,
           tabBarInactiveTintColor: colors.textMuted,
-          tabBarLabelStyle: { fontWeight: '700', fontSize: 11 },
+          tabBarLabelStyle: { fontWeight: '700', fontSize: 10 },
+          tabBarItemStyle: { paddingHorizontal: 0 },
           tabBarStyle: {
             backgroundColor: colors.surface,
             borderTopColor: colors.border,
@@ -75,6 +76,8 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen name="orders" options={{ title: t('tabOrders'), tabBarIcon: icon('receipt') }} />
+        <Tabs.Screen name="rewards" options={{ title: t('tabRewards'), tabBarIcon: icon('trophy') }} />
+        <Tabs.Screen name="chat" options={{ title: t('tabChat'), tabBarIcon: icon('robot') }} />
         <Tabs.Screen name="settings" options={{ title: t('tabSettings'), tabBarIcon: icon('gear') }} />
       </Tabs>
 
@@ -82,9 +85,9 @@ export default function TabLayout() {
         <View style={styles.backdrop}>
           <Card3D style={styles.welcome}>
             <View style={styles.welcomeArt}>
-              <Emoji3D name="gift" size={70} float sway />
+              <Emoji3D name="gift" size={70} />
               <Emoji3D name="truck" size={120} float />
-              <Emoji3D name="party" size={70} float sway />
+              <Emoji3D name="party" size={70} />
             </View>
             <Txt variant="title" center>
               {t('freeDeliveryTitle')}

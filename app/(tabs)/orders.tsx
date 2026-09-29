@@ -1,4 +1,4 @@
-import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
+import { FlatList, Linking, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 
 import { Emoji3D } from '@/components/Emoji3D';
 import { Card3D, EmptyState, Screen, Txt } from '@/components/ui';
@@ -28,7 +28,7 @@ export default function OrdersScreen() {
         contentContainerStyle={{ padding: 20, gap: 14, flexGrow: 1 }}
         ListHeaderComponent={
           <View style={styles.header}>
-            <Emoji3D name="receipt" size={52} float sway />
+            <Emoji3D name="receipt" size={52} />
             <Txt variant="title">{t('myOrders')}</Txt>
           </View>
         }
@@ -64,13 +64,45 @@ export default function OrdersScreen() {
                   );
                 })}
               </View>
-              {item.delivery_fee === 0 && (
-                <View style={styles.row}>
-                  <Emoji3D name="truck" size={20} />
-                  <Txt variant="caption" style={{ color: colors.success, fontWeight: '800' }}>
-                    {t('freeDeliveryBadge')}
+              <View style={styles.badges}>
+                {item.points_earned > 0 && (
+                  <View style={styles.row}>
+                    <Emoji3D name="coin" size={20} />
+                    <Txt variant="caption" style={{ color: colors.primary, fontWeight: '800' }}>
+                      {t('pointsEarned', { n: item.points_earned })}
+                    </Txt>
+                  </View>
+                )}
+                {item.delivery_fee === 0 && (
+                  <View style={styles.row}>
+                    <Emoji3D name="truck" size={20} />
+                    <Txt variant="caption" style={{ color: colors.success, fontWeight: '800' }}>
+                      {t('freeDeliveryBadge')}
+                    </Txt>
+                  </View>
+                )}
+                {item.discount > 0 && (
+                  <View style={styles.row}>
+                    <Emoji3D name="ticket" size={20} />
+                    <Txt variant="caption" style={{ color: colors.success, fontWeight: '800' }}>
+                      {t('discount')} − {formatPrice(item.discount)}
+                    </Txt>
+                  </View>
+                )}
+              </View>
+              {item.delivery_lat != null && item.delivery_lng != null && (
+                <Pressable
+                  onPress={() =>
+                    Linking.openURL(
+                      `https://www.google.com/maps/search/?api=1&query=${item.delivery_lat},${item.delivery_lng}`
+                    )
+                  }
+                  style={styles.row}>
+                  <Emoji3D name="pin" size={20} />
+                  <Txt variant="caption" style={{ color: colors.primary, fontWeight: '700' }} numberOfLines={1}>
+                    {item.address ?? t('openInMaps')} ↗
                   </Txt>
-                </View>
+                </Pressable>
               )}
             </Card3D>
           );
@@ -83,6 +115,7 @@ export default function OrdersScreen() {
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  badges: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 16, rowGap: 6 },
   items: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   item: {
     flexDirection: 'row',

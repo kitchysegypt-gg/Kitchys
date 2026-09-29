@@ -8,11 +8,13 @@ import { ChefCard, DishCard, FreeDeliveryBanner } from '@/components/menu';
 import { Chip, Screen, Txt } from '@/components/ui';
 import { CATEGORIES, CHEFS, Category, DISHES, dishesByChef, getChef } from '@/data/menu';
 import { useAuth } from '@/lib/auth';
+import { useOrders } from '@/lib/orders';
 import { useSettings } from '@/lib/settings';
 
 export default function HomeScreen() {
-  const { t, colors, isRTL } = useSettings();
+  const { t, colors, isRTL, location } = useSettings();
   const { session } = useAuth();
+  const { points, rank } = useOrders();
   const [category, setCategory] = useState<Category | 'all'>('all');
   const [query, setQuery] = useState('');
 
@@ -36,6 +38,28 @@ export default function HomeScreen() {
   return (
     <Screen>
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
+        <View style={styles.topBar}>
+          <Pressable
+            onPress={() => router.push('/location')}
+            style={[styles.deliverTo, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Emoji3D name="pin" size={26} />
+            <View style={{ flex: 1 }}>
+              <Txt variant="caption" muted>
+                {t('deliverTo')}
+              </Txt>
+              <Txt style={{ fontWeight: '800' }} numberOfLines={1}>
+                {location?.address || t('setLocation')}
+              </Txt>
+            </View>
+          </Pressable>
+          <Pressable
+            onPress={() => router.navigate('/rewards')}
+            style={[styles.pointsChip, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Emoji3D name={rank.emoji} size={24} />
+            <Txt style={{ fontWeight: '900', color: colors.primary, fontVariant: ['tabular-nums'] }}>{points}</Txt>
+          </Pressable>
+        </View>
+
         <LinearGradient colors={colors.heroGradient} style={styles.hero}>
           <View style={{ flex: 1 }}>
             <Txt color="#FFE9DF" style={{ fontWeight: '700' }}>
@@ -46,7 +70,7 @@ export default function HomeScreen() {
               {t('whatToEat')}
             </Txt>
           </View>
-          <Emoji3D name="cooking" size={96} float sway />
+          <Emoji3D name="cooking" size={96} float />
         </LinearGradient>
 
         <View
@@ -148,8 +172,30 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  topBar: { flexDirection: 'row', gap: 10, paddingHorizontal: 20, paddingTop: 12 },
+  deliverTo: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderBottomWidth: 3,
+  },
+  pointsChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderBottomWidth: 3,
+  },
   hero: {
     margin: 20,
+    marginTop: 14,
     marginBottom: 0,
     padding: 20,
     borderRadius: 26,

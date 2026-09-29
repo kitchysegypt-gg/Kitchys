@@ -5,9 +5,10 @@ import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, TextInpu
 import { Confetti } from '@/components/Confetti';
 import { Emoji3D } from '@/components/Emoji3D';
 import { FreeDeliveryBanner, QuantityStepper } from '@/components/menu';
-import { Button3D, Card3D, EmptyState, Screen, Txt } from '@/components/ui';
+import { Button3D, Card3D, Chip, EmptyState, Screen, Txt } from '@/components/ui';
 import { getChef } from '@/data/menu';
 import { useCart } from '@/lib/cart';
+import { applyReward, getReward, pointsFor } from '@/lib/loyalty';
 import { useOrders } from '@/lib/orders';
 import { showAlert } from '@/lib/alert';
 import { useSettings } from '@/lib/settings';
@@ -15,24 +16,31 @@ import { useSounds } from '@/lib/sound';
 import { DELIVERY_FEE } from '@/lib/supabase';
 
 export default function CartScreen() {
-  const { t, l, colors, formatPrice, isRTL } = useSettings();
+  const { t, l, colors, formatPrice, isRTL, location } = useSettings();
   const { lines, subtotal, setQuantity, clear } = useCart();
-  const { freeDeliveriesLeft, placeOrder } = useOrders();
+  const { freeDeliveriesLeft, placeOrder, availableVouchers, orderCount } = useOrders();
   const { playOrderSuccess } = useSounds();
-  const [address, setAddress] = useState('');
+  // Prefilled from the saved map location until the customer types their own.
+  const [typedAddress, setAddress] = useState<string | null>(null);
+  const address = typedAddress ?? (location ? [location.address, location.details].filter(Boolean).join(', ') : '');
+  const [voucherId, setVoucherId] = useState<string | null>(null);
+  const [earned, setEarned] = useState(0);
   const [notes, setNotes] = useState('');
   const [busy, setBusy] = useState(false);
   const [burst, setBurst] = useState(0);
   const [success, setSuccess] = useState(false);
 
-  const deliveryFee = freeDeliveriesLeft > 0 ? 0 : DELIVERY_FEE;
+  const baseDeliveryFee = freeDeliveriesLeft > 0 ? 0 : DELIVERY_FEE;
+  const voucher = availableVouchers.find((v) => v.id === voucherId);
+  const { discount, deliveryFee } = applyReward(voucher && getReward(voucher.reward_id), subtotal, baseDeliveryFee);
+  const total = subtotal - discount + deliveryFee;
   const clearBurst = useCallback(() => setBurst(0), []);
 
   const submit = async () => {
     if (!address.trim()) return showAlert(t('address'), t('addressRequired'));
     setBusy(true);
     try {
-      await placeOrder({
+      const order = await placeOrder({
         items: lines.map((line) => ({
           dishId: line.dish.id,
           name: line.dish.name.en,
@@ -42,9 +50,14 @@ export default function CartScreen() {
         subtotal,
         address: address.trim(),
         notes: notes.trim() || null,
+        voucher_id: voucher?.id ?? null,
+        delivery_lat: location?.latitude ?? null,
+        delivery_lng: location?.longitude ?? null,
       });
       clear();
       setNotes('');
+      setVoucherId(null);
+      setEarned(order.points_earned);
       setSuccess(true);
       setBurst(Date.now());
       playOrderSuccess();
@@ -77,7 +90,7 @@ export default function CartScreen() {
             contentContainerStyle={{ padding: 20, gap: 14, paddingBottom: 40 }}
             keyboardShouldPersistTaps="handled">
             <View style={styles.header}>
-              <Emoji3D name="cart" size={52} float sway />
+              <Emoji3D name="cart" size={52} />
               <Txt variant="title">{t('yourCart')}</Txt>
             </View>
 
@@ -118,6 +131,13 @@ export default function CartScreen() {
                 style={inputStyle}
                 multiline
               />
+              <Button3D
+                small
+                variant="secondary"
+                emoji="pin"
+                title={location ? t('location') : t('pickOnMap')}
+                onPress={() => router.push('/location')}
+              />
               <View style={styles.row}>
                 <Emoji3D name="clipboard" size={24} />
                 <Txt variant="label" muted>
@@ -134,8 +154,38 @@ export default function CartScreen() {
               />
             </Card3D>
 
+            {availableVouchers.length > 0 && (
+              <Card3D style={{ gap: 10 }}>
+                <View style={styles.row}>
+                  <Emoji3D name="ticket" size={24} />
+                  <Txt variant="label" muted>
+                    {t('applyVoucher')}
+                  </Txt>
+                </View>
+                <View style={styles.chips}>
+                  <Chip label={t('noVoucher')} active={!voucher} onPress={() => setVoucherId(null)} />
+                  {availableVouchers.map((v) => {
+                    const reward = getReward(v.reward_id);
+                    const pointless = reward?.kind === 'free_delivery' && baseDeliveryFee === 0;
+                    return (
+                      <Chip
+                        key={v.id}
+                        label={reward ? t(reward.label) : v.reward_id}
+                        emoji={reward?.emoji}
+                        active={voucher?.id === v.id}
+                        onPress={() => (pointless ? showAlert(t('deliveryAlreadyFree')) : setVoucherId(v.id))}
+                      />
+                    );
+                  })}
+                </View>
+              </Card3D>
+            )}
+
             <Card3D style={{ gap: 8 }}>
               <SummaryRow label={t('subtotal')} value={formatPrice(subtotal)} />
+              {discount > 0 && (
+                <SummaryRow label={t('discount')} value={`− ${formatPrice(discount)}`} valueColor={colors.success} />
+              )}
               <SummaryRow
                 label={t('delivery')}
                 value={deliveryFee === 0 ? `${t('free')} 🎉` : formatPrice(deliveryFee)}
@@ -143,11 +193,17 @@ export default function CartScreen() {
                 strike={deliveryFee === 0 ? formatPrice(DELIVERY_FEE) : undefined}
               />
               <View style={[styles.divider, { backgroundColor: colors.border }]} />
-              <SummaryRow label={t('total')} value={formatPrice(subtotal + deliveryFee)} big />
+              <SummaryRow label={t('total')} value={formatPrice(total)} big />
+              <View style={styles.row}>
+                <Emoji3D name="coin" size={20} />
+                <Txt variant="caption" style={{ fontWeight: '800', color: colors.primary }}>
+                  {t('youWillEarn', { n: pointsFor(subtotal - discount, orderCount) })}
+                </Txt>
+              </View>
             </Card3D>
 
             <Button3D
-              title={`${t('placeOrder')} · ${formatPrice(subtotal + deliveryFee)}`}
+              title={`${t('placeOrder')} · ${formatPrice(total)}`}
               emoji="bags"
               onPress={submit}
               loading={busy}
@@ -159,13 +215,21 @@ export default function CartScreen() {
       <Modal visible={success} transparent animationType="fade" onRequestClose={() => setSuccess(false)}>
         <View style={styles.backdrop}>
           <Card3D style={{ padding: 24, alignItems: 'center' }}>
-            <Emoji3D name="party" size={130} float sway />
+            <Emoji3D name="party" size={130} float />
             <Txt variant="title" center style={{ marginTop: 10 }}>
               {t('orderPlaced')}
             </Txt>
             <Txt muted center style={{ marginVertical: 12 }}>
               {t('orderPlacedBody')}
             </Txt>
+            {earned > 0 && (
+              <View style={[styles.row, styles.earnedPill, { backgroundColor: colors.surfaceAlt }]}>
+                <Emoji3D name="coin" size={26} />
+                <Txt variant="heading" style={{ color: colors.primary }}>
+                  {t('pointsEarned', { n: earned })}
+                </Txt>
+              </View>
+            )}
             <Button3D
               title={t('viewOrders')}
               emoji="receipt"
@@ -221,6 +285,8 @@ const styles = StyleSheet.create({
   line: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 10 },
   lineArt: { width: 64, height: 64, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  earnedPill: { borderRadius: 16, paddingVertical: 8, paddingHorizontal: 14, marginBottom: 14 },
   input: { borderRadius: 14, borderWidth: 1, padding: 12, fontSize: 15, minHeight: 48 },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   divider: { height: 1, marginVertical: 4 },

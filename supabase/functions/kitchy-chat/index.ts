@@ -1,0 +1,143 @@
+// Kitchy AI: the in-app assistant, powered by Claude.
+// Needs the ANTHROPIC_API_KEY secret (Supabase dashboard -> Edge Functions -> Secrets).
+import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
+import Anthropic from 'npm:@anthropic-ai/sdk@0.129.0';
+import { createClient } from 'npm:@supabase/supabase-js@2';
+
+import { MENU } from './menu.ts';
+
+const MODEL = 'claude-opus-5-5';
+const MAX_TURNS = 20;
+const MAX_CHARS = 2000;
+const LANGUAGES: Record<string, string> = { en: 'English', ar: 'Egyptian Arabic', fr: 'French' };
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+};
+
+const SYSTEM = `You are Kitchy, the friendly assistant inside the Kitchy's app. Kitchy's delivers homemade food cooked by mothers and grandmothers ("home chefs") in Egypt. You are powered by Claude, made by Anthropic; say so if asked what you are.
+
+Help customers choose dishes, understand ingredients and allergens, and understand delivery, points, ranks and rewards. Use only the menu and rules below; never invent dishes, prices or promotions. If something isn't covered, say you don't know and suggest contacting Kitchy's support.
+
+Allergies: state the listed allergens for a dish plainly. For severe allergies, add that home kitchens can have cross-contact and the customer should mention the allergy in the notes for the chef.
+
+You can't place, change or cancel orders, and you can't change points; explain where in the app to do it (Home or Chefs to browse, Cart to order and apply vouchers, Orders to track, Rewards to redeem points, Settings for language and theme).
+
+Keep replies short and warm: usually 1-4 sentences or a short list. Plain text only, no markdown headings or tables. Reply in the language the customer writes in.
+
+${MENU}`;
+
+type ChatTurn = { role: 'user' | 'assistant'; content: string };
+
+function json(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+}
+
+function validate(body: any): { messages: ChatTurn[]; language: string } | string {
+  const messages = body?.messages;
+  if (!Array.isArray(messages) || messages.length === 0) return 'messages is required';
+  const recent = messages.slice(-MAX_TURNS);
+  // The API needs the conversation to start with a user turn.
+  while (recent.length && recent[0].role !== 'user') recent.shift();
+  for (const m of recent) {
+    if ((m.role !== 'user' && m.role !== 'assistant') || typeof m.content !== 'string') return 'invalid message';
+    if (!m.content.trim() || m.content.length > MAX_CHARS) return 'message is empty or too long';
+  }
+  if (!recent.length || recent[recent.length - 1].role !== 'user') return 'last message must be from the user';
+  const language = typeof body.language === 'string' && LANGUAGES[body.language] ? body.language : 'en';
+  return { messages: recent.map((m) => ({ role: m.role, content: m.content })), language };
+}
+
+/** A short summary of this customer's orders and points, read with their own permissions. */
+async function customerContext(authHeader: string) {
+  const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, {
+    global: { headers: { Authorization: authHeader } },
+  });
+  const [{ data: user }, { data: orders }, { data: vouchers }] = await Promise.all([
+    supabase.auth.getUser(),
+    supabase.from('orders').select('status, total, points_earned, created_at, items').order('created_at', { ascending: false }),
+    supabase.from('reward_vouchers').select('reward_id, cost, status'),
+  ]);
+  const active = (orders ?? []).filter((o) => o.status !== 'cancelled');
+  const earned = active.reduce((sum, o) => sum + Number(o.points_earned ?? 0), 0);
+  const spent = (vouchers ?? []).reduce((sum, v) => sum + Number(v.cost), 0);
+  const name = user?.user?.user_metadata?.full_name;
+  const last = (orders ?? []).slice(0, 3).map(
+    (o) => `${o.created_at.slice(0, 10)} ${o.status} EGP ${o.total}: ${(o.items ?? []).map((i: any) => `${i.quantity}x ${i.name}`).join(', ')}`
+  );
+  return [
+    `Customer context (private; use it only to answer this customer's questions):`,
+    name ? `- Name: ${name}` : null,
+    `- Orders placed (not cancelled): ${active.length}`,
+    `- Free deliveries left: ${Math.max(0, 3 - active.length)}`,
+    `- Points balance: ${Math.max(0, earned - spent)}`,
+    `- Unused vouchers: ${(vouchers ?? []).filter((v) => v.status === 'available').map((v) => v.reward_id).join(', ') || 'none'}`,
+    last.length ? `- Recent orders:\n  ${last.join('\n  ')}` : '- No orders yet',
+  ]
+    .filter(Boolean)
+    .join('\n');
+}
+
+Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
+
+  const apiKey = Deno.env.get('ANTHROPIC_API_KEY');
+  if (!apiKey) return json({ error: 'The assistant is not set up yet (missing ANTHROPIC_API_KEY).' }, 503);
+
+  const input = validate(await req.json().catch(() => null));
+  if (typeof input === 'string') return json({ error: input }, 400);
+
+  const context = await customerContext(req.headers.get('Authorization') ?? '').catch(() => null);
+  const client = new Anthropic({ apiKey });
+
+  try {
+    const response = await client.beta.messages.create({
+      model: MODEL,
+      max_tokens: 16000,
+      // Chat answers are short; low effort keeps them quick and inexpensive.
+      output_config: { effort: 'low' },
+      // If a request is declined by a safety classifier, retry it on a suitable fallback model.
+      betas: ['server-side-fallback-2026-07-01'],
+      fallbacks: 'default',
+      system: [{ type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } }],
+      messages: [
+        ...input.messages,
+        // Per-request details go last so the stable system prompt above stays cached.
+        {
+          role: 'system',
+          content: `${context ?? 'Customer context is unavailable right now.'}\nThe app language is ${LANGUAGES[input.language]}; reply in the language the customer writes in.`,
+        },
+      ],
+    });
+
+    if (response.stop_reason === 'refusal') {
+      return json({ reply: "Sorry, I can't help with that. Ask me about our dishes, allergens, orders or points." });
+    }
+    const reply = response.content
+      .filter((b): b is Anthropic.Beta.BetaTextBlock => b.type === 'text')
+      .map((b) => b.text)
+      .join('\n')
+      .trim();
+    return json({ reply: reply || "Sorry, I didn't catch that. Could you ask again?" });
+  } catch (error) {
+    if (error instanceof Anthropic.RateLimitError) {
+      return json({ error: 'Kitchy is busy right now. Please try again in a minute.' }, 429);
+    }
+    if (error instanceof Anthropic.AuthenticationError) {
+      console.error('Invalid ANTHROPIC_API_KEY');
+      return json({ error: 'The assistant is not set up correctly.' }, 503);
+    }
+    if (error instanceof Anthropic.APIError) {
+      console.error(`Claude API error ${error.status}:`, error.message);
+      return json({ error: 'The assistant is unavailable right now.' }, 502);
+    }
+    console.error(error);
+    return json({ error: 'Something went wrong.' }, 500);
+  }
+});

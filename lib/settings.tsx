@@ -7,11 +7,21 @@ import { Palette, THEMES, ThemeName, ThemePreference } from './theme';
 
 const STORAGE_KEY = 'kitchys.settings.v1';
 
+export type SavedLocation = {
+  latitude: number;
+  longitude: number;
+  /** Street address, from reverse geocoding or typed by the customer. */
+  address: string;
+  /** Building, floor, apartment. */
+  details: string;
+};
+
 type StoredSettings = {
   language: Language;
   theme: ThemePreference;
   soundEnabled: boolean;
   onboarded: boolean;
+  location: SavedLocation | null;
 };
 
 const DEFAULTS: StoredSettings = {
@@ -19,6 +29,7 @@ const DEFAULTS: StoredSettings = {
   theme: 'system',
   soundEnabled: true,
   onboarded: false,
+  location: null,
 };
 
 type SettingsContextValue = StoredSettings & {
@@ -30,6 +41,7 @@ type SettingsContextValue = StoredSettings & {
   setTheme: (theme: ThemePreference) => void;
   setSoundEnabled: (enabled: boolean) => void;
   setOnboarded: (onboarded: boolean) => void;
+  setLocation: (location: SavedLocation | null) => void;
   t: (key: TranslationKey, params?: Record<string, string | number>) => string;
   /** Pick the current language from a piece of localized content. */
   l: (text: Localized) => string;
@@ -74,6 +86,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       setTheme: (theme) => update({ theme }),
       setSoundEnabled: (soundEnabled) => update({ soundEnabled }),
       setOnboarded: (onboarded) => update({ onboarded }),
+      setLocation: (location) => update({ location }),
       t: (key, params) => translate(language, key, params),
       l: (text) => text[language] ?? text.en,
       formatPrice: (amount) =>
