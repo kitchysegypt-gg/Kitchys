@@ -7,6 +7,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AuthProvider, useAuth } from '@/lib/auth';
 import { CartProvider } from '@/lib/cart';
+import { CatalogProvider } from '@/lib/catalog';
 import { OrdersProvider } from '@/lib/orders';
 import { SettingsProvider, useSettings } from '@/lib/settings';
 import { SoundProvider } from '@/lib/sound';
@@ -20,13 +21,15 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <SettingsProvider>
         <AuthProvider>
-          <OrdersProvider>
-            <CartProvider>
-              <SoundProvider>
-                <RootNavigator />
-              </SoundProvider>
-            </CartProvider>
-          </OrdersProvider>
+          <CatalogProvider>
+            <OrdersProvider>
+              <CartProvider>
+                <SoundProvider>
+                  <RootNavigator />
+                </SoundProvider>
+              </CartProvider>
+            </OrdersProvider>
+          </CatalogProvider>
         </AuthProvider>
       </SettingsProvider>
     </SafeAreaProvider>
@@ -78,6 +81,9 @@ function RootNavigator() {
           <Stack.Screen name="dish/[id]" options={{ presentation: 'modal' }} />
           <Stack.Screen name="guide" options={{ presentation: 'modal' }} />
           <Stack.Screen name="location" />
+          <Stack.Screen name="apply" />
+          <Stack.Screen name="kitchen" />
+          <Stack.Screen name="review/[orderId]" options={{ presentation: 'modal' }} />
         </Stack.Protected>
       </Stack>
     </ThemeProvider>

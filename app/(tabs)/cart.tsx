@@ -4,11 +4,14 @@ import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, TextInpu
 
 import { Confetti } from '@/components/Confetti';
 import { Emoji3D } from '@/components/Emoji3D';
+import { DishArt } from '@/components/media';
+import { ScheduleValue, SchedulePicker } from '@/components/SchedulePicker';
 import { FreeDeliveryBanner, QuantityStepper } from '@/components/menu';
 import { Button3D, Card3D, Chip, EmptyState, Screen, Txt } from '@/components/ui';
-import { getChef } from '@/data/menu';
 import { useCart } from '@/lib/cart';
+import { useCatalog } from '@/lib/catalog';
 import { applyReward, getReward, pointsFor } from '@/lib/loyalty';
+import { isTooSoon, slotDate } from '@/lib/schedule';
 import { useOrders } from '@/lib/orders';
 import { showAlert } from '@/lib/alert';
 import { useSettings } from '@/lib/settings';
@@ -18,12 +21,14 @@ import { DELIVERY_FEE } from '@/lib/supabase';
 export default function CartScreen() {
   const { t, l, colors, formatPrice, isRTL, location } = useSettings();
   const { lines, subtotal, setQuantity, clear } = useCart();
+  const { getChef } = useCatalog();
   const { freeDeliveriesLeft, placeOrder, availableVouchers, orderCount } = useOrders();
   const { playOrderSuccess } = useSounds();
   // Prefilled from the saved map location until the customer types their own.
   const [typedAddress, setAddress] = useState<string | null>(null);
   const address = typedAddress ?? (location ? [location.address, location.details].filter(Boolean).join(', ') : '');
   const [voucherId, setVoucherId] = useState<string | null>(null);
+  const [schedule, setSchedule] = useState<ScheduleValue>({ mode: 'asap' });
   const [earned, setEarned] = useState(0);
   const [notes, setNotes] = useState('');
   const [busy, setBusy] = useState(false);
@@ -38,6 +43,8 @@ export default function CartScreen() {
 
   const submit = async () => {
     if (!address.trim()) return showAlert(t('address'), t('addressRequired'));
+    const scheduledFor = schedule.mode === 'later' ? slotDate(schedule.day, schedule.minutes) : null;
+    if (scheduledFor && isTooSoon(scheduledFor)) return showAlert(t('deliveryTime'), t('timeTooSoon'));
     setBusy(true);
     try {
       const order = await placeOrder({
@@ -53,10 +60,12 @@ export default function CartScreen() {
         voucher_id: voucher?.id ?? null,
         delivery_lat: location?.latitude ?? null,
         delivery_lng: location?.longitude ?? null,
+        scheduled_for: scheduledFor?.toISOString() ?? null,
       });
       clear();
       setNotes('');
       setVoucherId(null);
+      setSchedule({ mode: 'asap' });
       setEarned(order.points_earned);
       setSuccess(true);
       setBurst(Date.now());
@@ -96,15 +105,15 @@ export default function CartScreen() {
 
             {lines.map(({ dish, quantity }) => (
               <Card3D key={dish.id} style={styles.line}>
-                <View style={[styles.lineArt, { backgroundColor: getChef(dish.chefId)?.color }]}>
-                  <Emoji3D name={dish.emoji} size={48} />
+                <View style={styles.lineArt}>
+                  <DishArt dish={dish} height={64} emojiSize={48} radius={16} color={getChef(dish.chefId)?.color} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Txt style={{ fontWeight: '800' }} numberOfLines={1}>
                     {l(dish.name)}
                   </Txt>
                   <Txt variant="caption" muted numberOfLines={1}>
-                    {l(getChef(dish.chefId)!.name)}
+                    {getChef(dish.chefId) ? l(getChef(dish.chefId)!.name) : ''}
                   </Txt>
                   <Txt style={{ fontWeight: '900', color: colors.primary, marginTop: 2 }}>
                     {formatPrice(dish.price * quantity)}
@@ -153,6 +162,8 @@ export default function CartScreen() {
                 multiline
               />
             </Card3D>
+
+            <SchedulePicker value={schedule} onChange={setSchedule} />
 
             {availableVouchers.length > 0 && (
               <Card3D style={{ gap: 10 }}>
@@ -283,7 +294,7 @@ function SummaryRow({
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   line: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 10 },
-  lineArt: { width: 64, height: 64, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  lineArt: { width: 64, height: 64 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   earnedPill: { borderRadius: 16, paddingVertical: 8, paddingHorizontal: 14, marginBottom: 14 },

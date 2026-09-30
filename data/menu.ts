@@ -15,19 +15,18 @@ export const ALLERGEN_EMOJI: Record<Allergen, EmojiName> = {
   sesame: 'seedling',
 };
 
-export type Category = 'main' | 'baked' | 'seafood' | 'desserts' | 'drinks' | 'healthy';
+export type Category = 'main' | 'baked' | 'seafood' | 'desserts' | 'healthy';
 
 export const CATEGORIES: {
   id: Category | 'all';
   emoji: EmojiName;
-  label: 'catAll' | 'catMain' | 'catBaked' | 'catSeafood' | 'catDesserts' | 'catDrinks' | 'catHealthy';
+  label: 'catAll' | 'catMain' | 'catBaked' | 'catSeafood' | 'catDesserts' | 'catHealthy';
 }[] = [
   { id: 'all', emoji: 'sparkles', label: 'catAll' },
   { id: 'main', emoji: 'pot', label: 'catMain' },
   { id: 'baked', emoji: 'flatbread', label: 'catBaked' },
   { id: 'seafood', emoji: 'shrimp', label: 'catSeafood' },
   { id: 'desserts', emoji: 'cake', label: 'catDesserts' },
-  { id: 'drinks', emoji: 'tropical_drink', label: 'catDrinks' },
   { id: 'healthy', emoji: 'salad', label: 'catHealthy' },
 ];
 
@@ -38,7 +37,8 @@ export type Chef = {
   area: Localized;
   specialty: Localized;
   bio: Localized;
-  rating: number;
+  /** Set for chefs who joined through the app (they have a login and a kitchen). */
+  kitchen?: boolean;
   color: string;
 };
 
@@ -58,6 +58,8 @@ export type Dish = {
   spicy?: boolean;
   vegetarian?: boolean;
   popular?: boolean;
+  /** Dishes added by a home chef in the app. */
+  kitchen?: boolean;
 };
 
 export const CHEFS: Chef[] = [
@@ -72,7 +74,6 @@ export const CHEFS: Chef[] = [
       ar: 'بتطبخ لعيلتها المكونة من ٧ أفراد من ٣٠ سنة. ملوخيتها مشهورة في الشارع كله.',
       fr: 'Elle cuisine pour sa famille de sept depuis 30 ans. Sa mouloukhiya est célèbre dans toute la rue.',
     },
-    rating: 4.9,
     color: '#FFE3D3',
   },
   {
@@ -86,7 +87,6 @@ export const CHEFS: Chef[] = [
       ar: 'بنت صياد، بتشتري السمك طازة كل يوم الصبح من مينا الأنفوشي.',
       fr: 'Fille de pêcheur, elle achète le poisson frais chaque matin au port d’Anfouchi.',
     },
-    rating: 4.8,
     color: '#D9F0FF',
   },
   {
@@ -96,11 +96,10 @@ export const CHEFS: Chef[] = [
     area: { en: 'Nasr City, Cairo', ar: 'مدينة نصر، القاهرة', fr: 'Nasr City, Le Caire' },
     specialty: { en: 'Oven-baked favourites', ar: 'أكلات الفرن', fr: 'Plats au four' },
     bio: {
-      en: 'Her wood-style oven turns out the flakiest feteer and the creamiest béchamel in Nasr City.',
-      ar: 'فرنها بيطلع أطرى فطير وأغنى مكرونة بشاميل في مدينة نصر.',
-      fr: 'Son four sort le feteer le plus feuilleté et la béchamel la plus crémeuse de Nasr City.',
+      en: 'Her wood-style oven turns out the crispiest roz moammar and the creamiest béchamel in Nasr City.',
+      ar: 'فرنها بيطلع أحلى رز معمر وأغنى مكرونة بشاميل في مدينة نصر.',
+      fr: 'Son four sort le riz moammar le plus croustillant et la béchamel la plus crémeuse de Nasr City.',
     },
-    rating: 4.7,
     color: '#FFF1C7',
   },
   {
@@ -108,13 +107,12 @@ export const CHEFS: Chef[] = [
     name: { en: 'Nana Hoda', ar: 'نانا هدى', fr: 'Nana Hoda' },
     emoji: 'grandma_2',
     area: { en: 'Heliopolis, Cairo', ar: 'مصر الجديدة، القاهرة', fr: 'Héliopolis, Le Caire' },
-    specialty: { en: 'Desserts & drinks', ar: 'حلويات ومشروبات', fr: 'Desserts et boissons' },
+    specialty: { en: 'After-dinner desserts', ar: 'حلويات بعد العشا', fr: 'Desserts du soir' },
     bio: {
       en: 'Grandmother of eleven and the reason every family gathering ends with something sweet.',
       ar: 'جدة لـ ١١ حفيد، وهي السبب إن كل لمة عيلة بتخلص بحاجة حلوة.',
       fr: 'Grand-mère de onze petits-enfants, c’est grâce à elle que chaque fête finit en douceur.',
     },
-    rating: 5.0,
     color: '#FFE0EC',
   },
   {
@@ -128,7 +126,6 @@ export const CHEFS: Chef[] = [
       ar: 'أخصائية تغذية وأم لـ ٣ أطفال، بتعمل أكل خفيف وطازة وطعمه بيتي.',
       fr: 'Nutritionniste et mère de trois enfants, elle prépare une cuisine légère au goût de la maison.',
     },
-    rating: 4.8,
     color: '#DDF5EA',
   },
 ];
@@ -246,6 +243,33 @@ export const DISHES: Dish[] = [
 
   // ——— Teta Samira ———
   {
+    id: 'hamam-mahshi',
+    chefId: 'fatma',
+    category: 'main',
+    emoji: 'poultry',
+    name: { en: 'Stuffed Pigeons', ar: 'حمام محشي', fr: 'Pigeons farcis' },
+    short: {
+      en: 'Two pigeons stuffed with spiced freekeh, roasted golden',
+      ar: 'جوزين حمام محشيين فريك متبل ومحمرين',
+      fr: 'Deux pigeons farcis au freekeh épicé, rôtis',
+    },
+    description: {
+      en: 'A proper Egyptian feast: two young pigeons stuffed with freekeh (green wheat) cooked in rich broth with onion and warm spices, simmered, then roasted until the skin is crisp and golden. Served with a bowl of the broth.',
+      ar: 'عزومة مصرية بجد: جوزين حمام صغيرين محشيين فريك مطبوخ في شوربة غنية بالبصل والبهارات، متسلقين وبعدين متحمرين لحد ما الجلد يقرمش. بيتقدم مع طبق شوربة.',
+      fr: 'Un vrai festin égyptien : deux jeunes pigeons farcis au freekeh (blé vert) cuit dans un bouillon parfumé aux oignons et aux épices, mijotés puis rôtis jusqu’à ce que la peau soit croustillante. Servis avec un bol de bouillon.',
+    },
+    ingredients: {
+      en: 'Pigeons, freekeh (wheat), onions, ghee (butter), pigeon broth, cinnamon, cardamom, black pepper, mastic',
+      ar: 'حمام، فريك (قمح)، بصل، سمنة (زبدة)، شوربة حمام، قرفة، حبهان، فلفل أسود، مستكة',
+      fr: 'Pigeons, freekeh (blé), oignons, ghee (beurre), bouillon de pigeon, cannelle, cardamome, poivre noir, mastic',
+    },
+    allergens: ['gluten', 'dairy'],
+    price: 320,
+    prepMinutes: 60,
+    serves: 1,
+    popular: true,
+  },
+  {
     id: 'sayadeya',
     chefId: 'samira',
     category: 'seafood',
@@ -355,32 +379,30 @@ export const DISHES: Dish[] = [
 
   // ——— Om Karim ———
   {
-    id: 'feteer',
+    id: 'roz-moammar',
     chefId: 'mona',
     category: 'baked',
-    emoji: 'flatbread',
-    name: { en: 'Feteer Meshaltet', ar: 'فطير مشلتت', fr: 'Feteer meshaltet' },
+    emoji: 'pan',
+    name: { en: 'Roz Moammar with Chicken', ar: 'رز معمر بالفراخ', fr: 'Riz moammar au poulet' },
     short: {
-      en: 'Flaky buttery pastry with honey & old cheese',
-      ar: 'فطير بالسمنة مع عسل وجبنة قديمة',
-      fr: 'Feuilleté au beurre, miel et vieux fromage',
+      en: 'Creamy oven-baked rice with a crispy top and roast chicken',
+      ar: 'رز معمر في الفرن بوش مقرمش مع فراخ محمرة',
+      fr: 'Riz crémeux gratiné au four et poulet rôti',
     },
     description: {
-      en: 'Dozens of paper-thin layers of dough brushed with ghee and baked until golden and flaky. Comes with honey, molasses and tahini, and a piece of salty aged "mish" cheese.',
-      ar: 'عشرات الطبقات الرقيقة من العجين مدهونة بالسمنة ومخبوزة لحد ما تدهب وتقرمش. معاها عسل أبيض وعسل أسود بالطحينة، وحتة جبنة قديمة.',
-      fr: 'Des dizaines de couches de pâte ultra-fines badigeonnées de ghee et cuites jusqu’à être dorées. Avec miel, mélasse, tahini et un morceau de fromage vieilli « mish ».',
+      en: 'Rice slow-baked in a clay pot with milk, cream and butter until the inside is silky and the top turns into a golden crust. Served with a quarter roast chicken.',
+      ar: 'رز متسوي على مهل في طاجن فخار باللبن والقشطة والزبدة لحد ما يبقى كريمي من جوه والوش دهبي مقرمش. بيتقدم مع ربع فرخة محمرة.',
+      fr: 'Riz cuit lentement en terre cuite avec du lait, de la crème et du beurre, fondant à l’intérieur avec une croûte dorée. Servi avec un quart de poulet rôti.',
     },
     ingredients: {
-      en: 'Wheat flour, ghee (butter), honey, molasses, tahini (sesame), aged cheese (milk), salt',
-      ar: 'دقيق قمح، سمنة (زبدة)، عسل أبيض، عسل أسود، طحينة (سمسم)، جبنة قديمة (لبن)، ملح',
-      fr: 'Farine de blé, ghee (beurre), miel, mélasse, tahini (sésame), fromage vieilli (lait), sel',
+      en: 'Rice, milk, cream, butter, chicken, onion, salt, black pepper',
+      ar: 'رز، لبن، قشطة، زبدة، فراخ، بصل، ملح، فلفل أسود',
+      fr: 'Riz, lait, crème, beurre, poulet, oignon, sel, poivre noir',
     },
-    allergens: ['gluten', 'dairy', 'sesame'],
-    price: 150,
-    prepMinutes: 35,
+    allergens: ['dairy'],
+    price: 200,
+    prepMinutes: 55,
     serves: 2,
-    vegetarian: true,
-    popular: true,
   },
   {
     id: 'hawawshi',
@@ -575,88 +597,33 @@ export const DISHES: Dish[] = [
     serves: 3,
     vegetarian: true,
   },
-  {
-    id: 'karkade',
-    chefId: 'hoda',
-    category: 'drinks',
-    emoji: 'hibiscus',
-    name: { en: 'Iced Karkade', ar: 'كركديه ساقع', fr: 'Karkadé glacé' },
-    short: {
-      en: 'Chilled Aswan hibiscus tea, 1 litre',
-      ar: 'كركديه أسواني ساقع، ١ لتر',
-      fr: 'Infusion d’hibiscus d’Assouan glacée, 1 litre',
-    },
-    description: {
-      en: 'Deep-red Aswan hibiscus flowers steeped overnight and lightly sweetened, served ice cold. Naturally caffeine-free and refreshing on a hot Cairo day.',
-      ar: 'كركديه أسواني أحمر غامق منقوع طول الليل ومتحلي خفيف، بيتقدم ساقع جداً. خالي من الكافيين ومنعش في حر القاهرة.',
-      fr: 'Fleurs d’hibiscus d’Assouan infusées toute la nuit et légèrement sucrées, servies glacées. Sans caféine et rafraîchissant.',
-    },
-    ingredients: {
-      en: 'Dried hibiscus flowers, water, sugar, mint',
-      ar: 'كركديه مجفف، ماء، سكر، نعناع',
-      fr: 'Fleurs d’hibiscus séchées, eau, sucre, menthe',
-    },
-    allergens: [],
-    price: 45,
-    prepMinutes: 5,
-    serves: 3,
-    vegetarian: true,
-  },
-  {
-    id: 'mango',
-    chefId: 'hoda',
-    category: 'drinks',
-    emoji: 'mango',
-    name: { en: 'Fresh Mango Juice', ar: 'عصير مانجا فريش', fr: 'Jus de mangue frais' },
-    short: {
-      en: 'Thick Ismailia mango juice, no added sugar',
-      ar: 'عصير مانجا إسماعيلاوي تقيل بدون سكر',
-      fr: 'Jus épais de mangue d’Ismaïlia, sans sucre ajouté',
-    },
-    description: {
-      en: 'Ripe Ismailia mangoes blended thick, with nothing added. Pure summer in a bottle (500 ml).',
-      ar: 'مانجا إسماعيلاوي مستوية متضربة تقيلة، من غير أي إضافات. صيف في إزازة (٥٠٠ مل).',
-      fr: 'Mangues mûres d’Ismaïlia mixées, sans rien ajouter. L’été en bouteille (500 ml).',
-    },
-    ingredients: {
-      en: 'Fresh mango',
-      ar: 'مانجا فريش',
-      fr: 'Mangue fraîche',
-    },
-    allergens: [],
-    price: 65,
-    prepMinutes: 5,
-    serves: 1,
-    vegetarian: true,
-  },
 
   // ——— Mama Nour ———
   {
-    id: 'taameya',
+    id: 'shawarma-plate',
     chefId: 'nour',
-    category: 'healthy',
-    emoji: 'falafel',
-    name: { en: 'Taameya Plate', ar: 'طبق طعمية', fr: 'Assiette de taameya' },
+    category: 'main',
+    emoji: 'stuffed_flatbread',
+    name: { en: 'Chicken Shawarma Plate', ar: 'طبق شاورما فراخ', fr: 'Assiette shawarma poulet' },
     short: {
-      en: 'Green fava-bean falafel with salad & tahini',
-      ar: 'طعمية خضرا بالفول مع سلطة وطحينة',
-      fr: 'Falafels verts aux fèves, salade et tahini',
+      en: 'Marinated chicken shawarma with garlic sauce and salad',
+      ar: 'شاورما فراخ متبلة مع تومية وسلطة',
+      fr: 'Shawarma de poulet mariné, sauce à l’ail et salade',
     },
     description: {
-      en: 'Egyptian falafel made from fava beans and loads of fresh herbs, crispy outside and bright green inside. Served with baladi salad, tahini and warm bread.',
-      ar: 'طعمية مصري من الفول المدشوش وكمية كبيرة من الخضرة، مقرمشة من برا وخضرا من جوا. بتتقدم مع سلطة بلدي وطحينة وعيش سخن.',
-      fr: 'Falafels égyptiens aux fèves et herbes fraîches, croustillants dehors et verts dedans. Avec salade baladi, tahini et pain chaud.',
+      en: 'Chicken thighs marinated overnight in yoghurt, lemon and shawarma spices, seared and sliced thin. Served with homemade garlic toum, pickles, a fresh salad and warm bread.',
+      ar: 'أوراك فراخ متبلة طول الليل بالزبادي والليمون وبهارات الشاورما، متشوحة ومقطعة شرايح رفيعة. بتتقدم مع تومية بيتي ومخلل وسلطة فريش وعيش سخن.',
+      fr: 'Hauts de cuisse marinés toute la nuit au yaourt, citron et épices shawarma, saisis et émincés. Servis avec une toum maison, des pickles, une salade fraîche et du pain chaud.',
     },
     ingredients: {
-      en: 'Fava beans, parsley, coriander, dill, leek, garlic, sesame seeds, tahini, tomatoes, cucumber, baladi bread (wheat)',
-      ar: 'فول مدشوش، بقدونس، كزبرة، شبت، كرات، توم، سمسم، طحينة، طماطم، خيار، عيش بلدي (قمح)',
-      fr: 'Fèves, persil, coriandre, aneth, poireau, ail, graines de sésame, tahini, tomates, concombre, pain baladi (blé)',
+      en: 'Chicken, yoghurt (milk), lemon, garlic, sunflower oil, shawarma spices, pickles, tomatoes, lettuce, bread (wheat)',
+      ar: 'فراخ، زبادي (لبن)، ليمون، توم، زيت عباد الشمس، بهارات شاورما، مخلل، طماطم، خس، عيش (قمح)',
+      fr: 'Poulet, yaourt (lait), citron, ail, huile de tournesol, épices shawarma, pickles, tomates, laitue, pain (blé)',
     },
-    allergens: ['gluten', 'sesame'],
-    price: 70,
-    prepMinutes: 20,
+    allergens: ['gluten', 'dairy'],
+    price: 190,
+    prepMinutes: 30,
     serves: 1,
-    vegetarian: true,
     popular: true,
   },
   {
@@ -737,33 +704,6 @@ export const DISHES: Dish[] = [
     price: 230,
     prepMinutes: 30,
     serves: 1,
-  },
-  {
-    id: 'lemon-mint',
-    chefId: 'nour',
-    category: 'drinks',
-    emoji: 'lemon',
-    name: { en: 'Lemon Mint', ar: 'ليمون بالنعناع', fr: 'Citron-menthe' },
-    short: {
-      en: 'Frozen lemonade with fresh mint',
-      ar: 'ليمون فريش ساقع بالنعناع',
-      fr: 'Citronnade glacée à la menthe fraîche',
-    },
-    description: {
-      en: 'Freshly squeezed lemons blended with ice and a handful of mint leaves, lightly sweetened with honey. 500 ml.',
-      ar: 'ليمون معصور فريش متضرب مع تلج وحفنة نعناع، ومتحلي خفيف بالعسل. ٥٠٠ مل.',
-      fr: 'Citrons pressés mixés avec de la glace et des feuilles de menthe, légèrement sucrés au miel. 500 ml.',
-    },
-    ingredients: {
-      en: 'Lemons, fresh mint, honey, ice, water',
-      ar: 'ليمون، نعناع فريش، عسل، تلج، ماء',
-      fr: 'Citrons, menthe fraîche, miel, glace, eau',
-    },
-    allergens: [],
-    price: 50,
-    prepMinutes: 5,
-    serves: 1,
-    vegetarian: true,
   },
 ];
 

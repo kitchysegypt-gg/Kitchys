@@ -1,4 +1,4 @@
-import { Tabs } from 'expo-router';
+import { Tabs, router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Modal, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -26,11 +26,18 @@ function TabIcon({ name, focused }: { name: EmojiName; focused: boolean }) {
 }
 
 export default function TabLayout() {
-  const { t, colors } = useSettings();
+  const { t, colors, wantsChefApply, setWantsChefApply } = useSettings();
   const { count } = useCart();
   const { freeDeliveriesLeft, loaded } = useOrders();
   const [showWelcome, setShowWelcome] = useState(false);
   const insets = useSafeAreaInsets();
+
+  useEffect(() => {
+    if (!wantsChefApply) return;
+    setWantsChefApply(false);
+    welcomeShown = true;
+    router.push('/apply');
+  }, [wantsChefApply, setWantsChefApply]);
 
   useEffect(() => {
     if (welcomeShown || !loaded || freeDeliveriesLeft === 0) return;

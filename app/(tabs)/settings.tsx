@@ -9,8 +9,10 @@ import { useCart } from '@/lib/cart';
 import { EmojiName } from '@/lib/emoji';
 import { LANGUAGES } from '@/lib/i18n';
 import { useSettings } from '@/lib/settings';
-import { supabase } from '@/lib/supabase';
-import { THEMES, ThemePreference } from '@/lib/theme';
+import { ACCENTS, AccentName, THEMES, ThemePreference } from '@/lib/theme';
+import { useCatalog } from '@/lib/catalog';
+import { useChefStatus } from '@/lib/chef';
+import { isDemo, supabase } from '@/lib/supabase';
 
 const THEME_OPTIONS: {
   id: ThemePreference;
@@ -25,7 +27,17 @@ const THEME_OPTIONS: {
 ];
 
 export default function SettingsScreen() {
-  const { t, colors, language, setLanguage, theme, setTheme, soundEnabled, setSoundEnabled } = useSettings();
+  const { t, colors, language, setLanguage, theme, setTheme, soundEnabled, setSoundEnabled, accent, setAccent } =
+    useSettings();
+  const chefStatus = useChefStatus();
+  const { refresh: refreshCatalog } = useCatalog();
+
+  const approveInDemo = async () => {
+    if (!chefStatus.application) return;
+    await supabase.rpc('approve_chef_application', { p_id: chefStatus.application.id });
+    await chefStatus.reload();
+    await refreshCatalog();
+  };
   const { session } = useAuth();
   const { clear } = useCart();
 
@@ -38,7 +50,7 @@ export default function SettingsScreen() {
     <Screen>
       <ScrollView contentContainerStyle={{ padding: 20, gap: 16, paddingBottom: 40 }}>
         <View style={styles.header}>
-          <Emoji3D name="gear" size={52} float sway />
+          <Emoji3D name="gear" size={52} />
           <Txt variant="title">{t('settings')}</Txt>
         </View>
 
@@ -59,6 +71,33 @@ export default function SettingsScreen() {
             ) : null}
           </View>
         </Card3D>
+
+        {/* Home chef */}
+        {chefStatus.kitchen ? (
+          <Pressable onPress={() => router.push('/kitchen')}>
+            <Card3D style={styles.row}>
+              <Emoji3D name="cooking" size={40} />
+              <Txt style={{ flex: 1, fontWeight: '800' }}>{t('myKitchen')}</Txt>
+              <Txt style={{ color: colors.primary, fontWeight: '900' }}>›</Txt>
+            </Card3D>
+          </Pressable>
+        ) : chefStatus.application?.status === 'pending' ? (
+          <Card3D style={{ gap: 10 }}>
+            <View style={styles.row}>
+              <Emoji3D name="clipboard" size={36} />
+              <Txt style={{ flex: 1, fontWeight: '700' }}>{t('applicationPending')}</Txt>
+            </View>
+            {isDemo && <Button3D small variant="secondary" title={t('demoApprove')} onPress={approveInDemo} />}
+          </Card3D>
+        ) : (
+          <Pressable onPress={() => router.push('/apply')}>
+            <Card3D style={styles.row}>
+              <Emoji3D name="chef_2" size={40} />
+              <Txt style={{ flex: 1, fontWeight: '800' }}>{t('becomeChef')}</Txt>
+              <Txt style={{ color: colors.primary, fontWeight: '900' }}>›</Txt>
+            </Card3D>
+          </Pressable>
+        )}
 
         {/* Language */}
         <Section emoji="globe" title={t('language')}>
@@ -95,6 +134,36 @@ export default function SettingsScreen() {
                       {t(opt.label)}
                     </Txt>
                   </View>
+                </Pressable>
+              );
+            })}
+          </View>
+        </Section>
+
+        {/* Accent colour */}
+        <Section emoji="sparkles" title={t('accentColor')}>
+          <View style={styles.accentRow}>
+            {(Object.keys(ACCENTS) as AccentName[]).map((name) => {
+              const selected = accent === name;
+              return (
+                <Pressable
+                  key={name}
+                  onPress={() => setAccent(name)}
+                  accessibilityLabel={t(`ac_${name}`)}
+                  style={styles.accentItem}>
+                  <View
+                    style={[
+                      styles.swatchBig,
+                      {
+                        backgroundColor: ACCENTS[name].primary,
+                        borderColor: selected ? colors.text : 'transparent',
+                        borderBottomColor: selected ? colors.text : ACCENTS[name].deep,
+                      },
+                    ]}
+                  />
+                  <Txt variant="caption" center style={{ fontWeight: selected ? '900' : '600' }}>
+                    {t(`ac_${name}`)}
+                  </Txt>
                 </Pressable>
               );
             })}
@@ -168,5 +237,8 @@ const styles = StyleSheet.create({
   option: { flexDirection: 'row', alignItems: 'center', padding: 12, borderRadius: 14, borderWidth: 1.5 },
   themeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   themeTile: { borderRadius: 16, padding: 10, alignItems: 'center', gap: 6 },
+  accentRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  accentItem: { alignItems: 'center', gap: 4, width: 56 },
+  swatchBig: { width: 44, height: 44, borderRadius: 22, borderWidth: 3, borderBottomWidth: 5 },
   swatch: { width: 28, height: 8, borderRadius: 4 },
 });

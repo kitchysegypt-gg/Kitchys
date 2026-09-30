@@ -1,8 +1,10 @@
+import { router } from 'expo-router';
 import { FlatList, Linking, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 
 import { Emoji3D } from '@/components/Emoji3D';
-import { Card3D, EmptyState, Screen, Txt } from '@/components/ui';
-import { getDish } from '@/data/menu';
+import { Button3D, Card3D, EmptyState, Screen, Txt } from '@/components/ui';
+import { formatSlot } from '@/lib/schedule';
+import { useCatalog } from '@/lib/catalog';
 import { EmojiName } from '@/lib/emoji';
 import { OrderStatus, useOrders } from '@/lib/orders';
 import { useSettings } from '@/lib/settings';
@@ -18,6 +20,7 @@ const STATUS_EMOJI: Record<OrderStatus, EmojiName> = {
 export default function OrdersScreen() {
   const { t, l, colors, formatPrice, language } = useSettings();
   const { orders, loading, refresh } = useOrders();
+  const { getDish } = useCatalog();
 
   return (
     <Screen>
@@ -90,6 +93,14 @@ export default function OrdersScreen() {
                   </View>
                 )}
               </View>
+              {item.scheduled_for && (
+                <View style={styles.row}>
+                  <Emoji3D name="stopwatch" size={20} />
+                  <Txt variant="caption" style={{ fontWeight: '800' }}>
+                    {t('scheduledFor', { time: formatSlot(new Date(item.scheduled_for), language) })}
+                  </Txt>
+                </View>
+              )}
               {item.delivery_lat != null && item.delivery_lng != null && (
                 <Pressable
                   onPress={() =>
@@ -103,6 +114,15 @@ export default function OrdersScreen() {
                     {item.address ?? t('openInMaps')} ↗
                   </Txt>
                 </Pressable>
+              )}
+              {item.status !== 'cancelled' && (
+                <Button3D
+                  small
+                  variant="secondary"
+                  emoji="star"
+                  title={t('rateOrder')}
+                  onPress={() => router.push(`/review/${item.id}`)}
+                />
               )}
             </Card3D>
           );

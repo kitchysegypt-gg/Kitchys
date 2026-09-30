@@ -3,13 +3,15 @@ import { router } from 'expo-router';
 import { Animated, Pressable, StyleSheet, View } from 'react-native';
 
 import { useAnimatedValue } from '@/lib/useAnimatedValue';
-import { ALLERGEN_EMOJI, Allergen, Chef, Dish, getChef } from '@/data/menu';
+import { ALLERGEN_EMOJI, Allergen, Chef, Dish } from '@/data/menu';
+import { useCatalog } from '@/lib/catalog';
 import { useCart } from '@/lib/cart';
 import { useOrders } from '@/lib/orders';
 import { useSettings } from '@/lib/settings';
 import { useSounds } from '@/lib/sound';
 import { DELIVERY_FEE } from '@/lib/supabase';
 import { Emoji3D } from './Emoji3D';
+import { ChefAvatar, DishArt, RatingBadge } from './media';
 import { Button3D, Card3D, PressableScale, Txt } from './ui';
 
 /** Adds to the cart and plays the "add to cart" sound + haptic. */
@@ -49,17 +51,20 @@ export function QuickAddButton({ dish }: { dish: Dish }) {
 
 export function DishCard({ dish, wide }: { dish: Dish; wide?: boolean }) {
   const { l, colors, formatPrice } = useSettings();
+  const { getChef } = useCatalog();
   const chef = getChef(dish.chefId);
   return (
     <PressableScale onPress={() => router.push(`/dish/${dish.id}`)} style={wide ? undefined : { width: 190 }}>
       <Card3D style={{ padding: 0, overflow: 'hidden' }}>
-        <View style={[styles.dishHero, { backgroundColor: chef?.color ?? colors.surfaceAlt }]}>
-          <Emoji3D name={dish.emoji} size={wide ? 84 : 92} float />
-          <View style={styles.badges}>
-            {dish.spicy && <Emoji3D name="hot_pepper" size={22} />}
-            {dish.vegetarian && <Emoji3D name="leaf" size={22} />}
-            {dish.allergens.length === 0 && <Emoji3D name="check" size={22} />}
-          </View>
+        <View>
+          <DishArt dish={dish} height={120} emojiSize={wide ? 84 : 92} color={chef?.color} />
+          {(dish.spicy || dish.vegetarian || dish.allergens.length === 0) && (
+            <View style={styles.badges}>
+              {dish.spicy && <Emoji3D name="hot_pepper" size={22} />}
+              {dish.vegetarian && <Emoji3D name="leaf" size={22} />}
+              {dish.allergens.length === 0 && <Emoji3D name="check" size={22} />}
+            </View>
+          )}
         </View>
         <View style={{ padding: 12, gap: 2 }}>
           <Txt variant="heading" numberOfLines={1} style={{ fontSize: 17 }}>
@@ -80,10 +85,11 @@ export function DishCard({ dish, wide }: { dish: Dish; wide?: boolean }) {
 
 export function ChefCard({ chef, dishCount }: { chef: Chef; dishCount: number }) {
   const { l, t } = useSettings();
+  const { ratings } = useCatalog();
   return (
     <PressableScale onPress={() => router.push(`/chef/${chef.id}`)}>
       <Card3D style={styles.chefCard} color={chef.color}>
-        <Emoji3D name={chef.emoji} size={76} float />
+        <ChefAvatar chef={chef} size={76} />
         <View style={{ flex: 1, gap: 2 }}>
           <Txt variant="heading" color="#1E1B18">
             {l(chef.name)}
@@ -92,10 +98,7 @@ export function ChefCard({ chef, dishCount }: { chef: Chef; dishCount: number })
             {l(chef.specialty)} · {l(chef.area)}
           </Txt>
           <View style={styles.chefMeta}>
-            <Emoji3D name="star" size={18} />
-            <Txt variant="caption" color="#1E1B18" style={{ fontWeight: '800' }}>
-              {chef.rating.toFixed(1)}
-            </Txt>
+            <RatingBadge rating={ratings[chef.id]} color="#1E1B18" />
             <Emoji3D name="pot" size={18} style={{ marginStart: 8 }} />
             <Txt variant="caption" color="#1E1B18" style={{ fontWeight: '800' }}>
               {dishCount} {t('dishes')}
@@ -189,8 +192,15 @@ export function QuantityStepper({ value, onChange }: { value: number; onChange: 
 export { Button3D };
 
 const styles = StyleSheet.create({
-  dishHero: { height: 120, alignItems: 'center', justifyContent: 'center' },
-  badges: { position: 'absolute', top: 8, end: 8, gap: 2 },
+  badges: {
+    position: 'absolute',
+    top: 8,
+    end: 8,
+    gap: 2,
+    padding: 2,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.75)',
+  },
   priceRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 6 },
   quickAdd: {
     width: 38,

@@ -3,7 +3,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { useColorScheme } from 'react-native';
 
 import { Language, Localized, TranslationKey, translate } from './i18n';
-import { Palette, THEMES, ThemeName, ThemePreference } from './theme';
+import { ACCENTS, AccentName, Palette, THEMES, ThemeName, ThemePreference } from './theme';
 
 const STORAGE_KEY = 'kitchys.settings.v1';
 
@@ -22,6 +22,9 @@ type StoredSettings = {
   soundEnabled: boolean;
   onboarded: boolean;
   location: SavedLocation | null;
+  accent: AccentName;
+  /** Set when someone taps "Apply as a home chef" before signing in. */
+  wantsChefApply: boolean;
 };
 
 const DEFAULTS: StoredSettings = {
@@ -30,6 +33,8 @@ const DEFAULTS: StoredSettings = {
   soundEnabled: true,
   onboarded: false,
   location: null,
+  accent: 'orange',
+  wantsChefApply: false,
 };
 
 type SettingsContextValue = StoredSettings & {
@@ -42,11 +47,19 @@ type SettingsContextValue = StoredSettings & {
   setSoundEnabled: (enabled: boolean) => void;
   setOnboarded: (onboarded: boolean) => void;
   setLocation: (location: SavedLocation | null) => void;
+  setAccent: (accent: AccentName) => void;
+  setWantsChefApply: (value: boolean) => void;
   t: (key: TranslationKey, params?: Record<string, string | number>) => string;
   /** Pick the current language from a piece of localized content. */
   l: (text: Localized) => string;
   formatPrice: (amount: number) => string;
 };
+
+function withAccent(palette: Palette, accent: AccentName): Palette {
+  if (accent === 'orange' || !ACCENTS[accent]) return palette;
+  const a = ACCENTS[accent];
+  return { ...palette, primary: a.primary, primaryDeep: a.deep, heroGradient: [a.light, a.primary] };
+}
 
 const SettingsContext = createContext<SettingsContextValue | null>(null);
 
@@ -80,13 +93,15 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       ...settings,
       loaded,
       themeName,
-      colors: THEMES[themeName],
+      colors: withAccent(THEMES[themeName], settings.accent),
       isRTL: language === 'ar',
       setLanguage: (l) => update({ language: l }),
       setTheme: (theme) => update({ theme }),
       setSoundEnabled: (soundEnabled) => update({ soundEnabled }),
       setOnboarded: (onboarded) => update({ onboarded }),
       setLocation: (location) => update({ location }),
+      setAccent: (accent) => update({ accent }),
+      setWantsChefApply: (wantsChefApply) => update({ wantsChefApply }),
       t: (key, params) => translate(language, key, params),
       l: (text) => text[language] ?? text.en,
       formatPrice: (amount) =>

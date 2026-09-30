@@ -11,7 +11,7 @@ import { useSettings } from '@/lib/settings';
 import { isDemo, isSupabaseConfigured, supabase } from '@/lib/supabase';
 
 export default function AuthScreen() {
-  const { t, colors, language, setLanguage, isRTL } = useSettings();
+  const { t, colors, language, setLanguage, isRTL, wantsChefApply, setWantsChefApply } = useSettings();
   const [mode, setMode] = useState<'signIn' | 'signUp'>('signIn');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -134,6 +134,26 @@ export default function AuthScreen() {
             <Emoji3D name="gift" size={36} float />
             <Txt style={{ flex: 1, fontWeight: '700' }}>{t('onb7Body')}</Txt>
           </View>
+
+          <Pressable
+            onPress={() => {
+              setWantsChefApply(true);
+              setMode('signUp');
+            }}
+            style={[
+              styles.chefApply,
+              { borderColor: wantsChefApply ? colors.primary : colors.border, backgroundColor: colors.surface },
+            ]}>
+            <Emoji3D name="chef_2" size={44} />
+            <View style={{ flex: 1 }}>
+              <Txt style={{ fontWeight: '800', color: colors.primary }}>{t('applyChefLink')}</Txt>
+              {wantsChefApply && (
+                <Txt variant="caption" muted>
+                  {t('applyChefNote')}
+                </Txt>
+              )}
+            </View>
+          </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
     </Screen>
@@ -142,6 +162,16 @@ export default function AuthScreen() {
 
 const styles = StyleSheet.create({
   scroll: { padding: 20, paddingBottom: 40 },
+  chefApply: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 14,
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderBottomWidth: 4,
+    marginTop: 14,
+  },
   langRow: { flexDirection: 'row', justifyContent: 'center', gap: 8, marginBottom: 8 },
   lang: { paddingVertical: 6, paddingHorizontal: 10, borderRadius: 14, borderWidth: 1.5 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 4 },

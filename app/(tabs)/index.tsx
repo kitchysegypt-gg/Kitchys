@@ -6,7 +6,8 @@ import { FlatList, Pressable, ScrollView, StyleSheet, TextInput, View } from 're
 import { Emoji3D } from '@/components/Emoji3D';
 import { ChefCard, DishCard, FreeDeliveryBanner } from '@/components/menu';
 import { Chip, Screen, Txt } from '@/components/ui';
-import { CATEGORIES, CHEFS, Category, DISHES, dishesByChef, getChef } from '@/data/menu';
+import { CATEGORIES, Category } from '@/data/menu';
+import { useCatalog } from '@/lib/catalog';
 import { useAuth } from '@/lib/auth';
 import { useOrders } from '@/lib/orders';
 import { useSettings } from '@/lib/settings';
@@ -15,6 +16,7 @@ export default function HomeScreen() {
   const { t, colors, isRTL, location } = useSettings();
   const { session } = useAuth();
   const { points, rank } = useOrders();
+  const { chefs: CHEFS, dishes: DISHES, dishesByChef, getChef } = useCatalog();
   const [category, setCategory] = useState<Category | 'all'>('all');
   const [query, setQuery] = useState('');
 
@@ -30,7 +32,7 @@ export default function HomeScreen() {
         s.toLowerCase().includes(q)
       );
     });
-  }, [category, query]);
+  }, [category, query, DISHES, getChef]);
 
   const popular = DISHES.filter((d) => d.popular);
   const browsing = query.trim() !== '' || category !== 'all';

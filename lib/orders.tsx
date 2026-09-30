@@ -26,6 +26,8 @@ export type Order = {
   notes: string | null;
   delivery_lat: number | null;
   delivery_lng: number | null;
+  /** Chosen delivery time, or null for as soon as possible. */
+  scheduled_for: string | null;
   status: OrderStatus;
   created_at: string;
 };
@@ -40,7 +42,7 @@ export type Voucher = {
 };
 
 type NewOrder = Pick<Order, 'items' | 'subtotal' | 'address' | 'notes'> &
-  Partial<Pick<Order, 'voucher_id' | 'delivery_lat' | 'delivery_lng'>>;
+  Partial<Pick<Order, 'voucher_id' | 'delivery_lat' | 'delivery_lng' | 'scheduled_for'>>;
 
 type OrdersContextValue = {
   orders: Order[];

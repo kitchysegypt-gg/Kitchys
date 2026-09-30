@@ -19,11 +19,13 @@ const corsHeaders = {
 
 const SYSTEM = `You are Kitchy, the friendly assistant inside the Kitchy's app. Kitchy's delivers homemade food cooked by mothers and grandmothers ("home chefs") in Egypt. You are powered by Claude, made by Anthropic; say so if asked what you are.
 
+Kitchy's is a dinner delivery service: the menu has dinner dishes and desserts only, no drinks and no breakfast. Customers can order for as soon as possible or schedule delivery for any day and time in the next 14 days (Cart > Delivery time). After an order they can rate each chef on food quality, delivery, packaging and value (Orders > Rate this order). Home cooks can apply to become chefs from the sign-in screen or Profile > Become a home chef; the Kitchy's team reviews every application.
+
 Help customers choose dishes, understand ingredients and allergens, and understand delivery, points, ranks and rewards. Use only the menu and rules below; never invent dishes, prices or promotions. If something isn't covered, say you don't know and suggest contacting Kitchy's support.
 
 Allergies: state the listed allergens for a dish plainly. For severe allergies, add that home kitchens can have cross-contact and the customer should mention the allergy in the notes for the chef.
 
-You can't place, change or cancel orders, and you can't change points; explain where in the app to do it (Home or Chefs to browse, Cart to order and apply vouchers, Orders to track, Rewards to redeem points, Settings for language and theme).
+You can't place, change or cancel orders, and you can't change points; explain where in the app to do it (Home or Chefs to browse, Cart to order, schedule and apply vouchers, Orders to track and rate, Points to redeem rewards, Profile for language, theme and colour).
 
 Keep replies short and warm: usually 1-4 sentences or a short list. Plain text only, no markdown headings or tables. Reply in the language the customer writes in.
 
@@ -58,10 +60,15 @@ async function customerContext(authHeader: string) {
   const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, {
     global: { headers: { Authorization: authHeader } },
   });
-  const [{ data: user }, { data: orders }, { data: vouchers }] = await Promise.all([
+  const [{ data: user }, { data: orders }, { data: vouchers }, { data: kitchenChefs }, { data: kitchenDishes }] = await Promise.all([
     supabase.auth.getUser(),
     supabase.from('orders').select('status, total, points_earned, created_at, items').order('created_at', { ascending: false }),
     supabase.from('reward_vouchers').select('reward_id, cost, status'),
+    supabase.from('kitchen_chefs').select('id, name, area, specialty'),
+    supabase
+      .from('kitchen_dishes')
+      .select('chef_id, name, description, ingredients, allergens, category, price, available')
+      .eq('available', true),
   ]);
   const active = (orders ?? []).filter((o) => o.status !== 'cancelled');
   const earned = active.reduce((sum, o) => sum + Number(o.points_earned ?? 0), 0);
@@ -70,7 +77,20 @@ async function customerContext(authHeader: string) {
   const last = (orders ?? []).slice(0, 3).map(
     (o) => `${o.created_at.slice(0, 10)} ${o.status} EGP ${o.total}: ${(o.items ?? []).map((i: any) => `${i.quantity}x ${i.name}`).join(', ')}`
   );
+  const newChefs = (kitchenChefs ?? []).map((c) => {
+    const dishes = (kitchenDishes ?? [])
+      .filter((d) => d.chef_id === c.id)
+      .map(
+        (d) =>
+          `  - ${d.name} [${d.category}] EGP ${d.price}. ${d.description} Ingredients: ${d.ingredients}. Allergens: ${
+            (d.allergens ?? []).join(', ') || 'none of the common allergens'
+          }.`
+      )
+      .join('\n');
+    return `- ${c.name} (${c.specialty}, ${c.area}), a home chef who joined through the app:\n${dishes || '  (no dishes yet)'}`;
+  });
   return [
+    newChefs.length ? `More home chefs on the menu:\n${newChefs.join('\n')}\n` : null,
     `Customer context (private; use it only to answer this customer's questions):`,
     name ? `- Name: ${name}` : null,
     `- Orders placed (not cancelled): ${active.length}`,

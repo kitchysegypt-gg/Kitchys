@@ -7,7 +7,9 @@ import { useAnimatedValue } from '@/lib/useAnimatedValue';
 import { Emoji3D } from '@/components/Emoji3D';
 import { AllergenList, QuantityStepper, useAddToCart } from '@/components/menu';
 import { Button3D, Card3D, EmptyState, Screen, Txt } from '@/components/ui';
-import { getChef, getDish } from '@/data/menu';
+import { ChefAvatar, DishArt, RatingBadge } from '@/components/media';
+import { useCatalog } from '@/lib/catalog';
+import { DISH_PHOTOS } from '@/lib/photos';
 import { EmojiName } from '@/lib/emoji';
 import { useSettings } from '@/lib/settings';
 
@@ -18,6 +20,7 @@ export default function DishScreen() {
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
   const bounce = useAnimatedValue(1);
+  const { getChef, getDish, ratings } = useCatalog();
   const dish = getDish(id);
   const chef = dish && getChef(dish.chefId);
 
@@ -46,16 +49,27 @@ export default function DishScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 140 }}>
-        <View style={[styles.hero, { backgroundColor: chef.color }]}>
-          <SafeAreaView edges={['top']} style={{ alignSelf: 'stretch' }}>
-            <Pressable onPress={() => router.back()} style={styles.close} hitSlop={10}>
-              <Emoji3D name="cross_mark" size={22} />
-            </Pressable>
-          </SafeAreaView>
-          <Animated.View style={{ transform: [{ scale: bounce }] }}>
-            <Emoji3D name={dish.emoji} size={190} float sway />
-          </Animated.View>
-        </View>
+        {DISH_PHOTOS[dish.id] ? (
+          <View style={styles.photoHero}>
+            <DishArt dish={dish} height={320} emojiSize={190} />
+            <SafeAreaView edges={['top']} style={styles.photoClose}>
+              <Pressable onPress={() => router.back()} style={styles.close} hitSlop={10}>
+                <Emoji3D name="cross_mark" size={22} />
+              </Pressable>
+            </SafeAreaView>
+          </View>
+        ) : (
+          <View style={[styles.hero, { backgroundColor: chef.color }]}>
+            <SafeAreaView edges={['top']} style={{ alignSelf: 'stretch' }}>
+              <Pressable onPress={() => router.back()} style={styles.close} hitSlop={10}>
+                <Emoji3D name="cross_mark" size={22} />
+              </Pressable>
+            </SafeAreaView>
+            <Animated.View style={{ transform: [{ scale: bounce }] }}>
+              <Emoji3D name={dish.emoji} size={190} float />
+            </Animated.View>
+          </View>
+        )}
 
         <View style={{ padding: 20, gap: 16 }}>
           <View>
@@ -80,7 +94,7 @@ export default function DishScreen() {
 
           <Pressable onPress={() => router.push(`/chef/${chef.id}`)}>
             <Card3D style={styles.chef} color={chef.color}>
-              <Emoji3D name={chef.emoji} size={48} />
+              <ChefAvatar chef={chef} size={48} />
               <View style={{ flex: 1 }}>
                 <Txt variant="caption" color="#5B4F48">
                   {t('cookedBy')}
@@ -89,10 +103,7 @@ export default function DishScreen() {
                   {l(chef.name)}
                 </Txt>
               </View>
-              <Emoji3D name="star" size={20} />
-              <Txt style={{ fontWeight: '900' }} color="#1E1B18">
-                {chef.rating.toFixed(1)}
-              </Txt>
+              <RatingBadge rating={ratings[chef.id]} color="#1E1B18" />
             </Card3D>
           </Pressable>
 
@@ -140,6 +151,8 @@ function Section({ emoji, title, children }: { emoji: EmojiName; title: string; 
 }
 
 const styles = StyleSheet.create({
+  photoHero: { height: 320, borderBottomLeftRadius: 36, borderBottomRightRadius: 36, overflow: 'hidden' },
+  photoClose: { position: 'absolute', top: 0, right: 0 },
   hero: { alignItems: 'center', paddingBottom: 24, borderBottomLeftRadius: 36, borderBottomRightRadius: 36 },
   close: {
     alignSelf: 'flex-end',

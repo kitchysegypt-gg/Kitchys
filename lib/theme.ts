@@ -94,3 +94,15 @@ export const THEMES: Record<ThemeName, Palette> = {
     heroGradient: ['#20C997', '#0E8A6A'],
   },
 };
+
+export type AccentName = 'orange' | 'red' | 'green' | 'blue' | 'purple' | 'pink';
+
+/** Main colour choices. Orange keeps each theme's own brand look. */
+export const ACCENTS: Record<AccentName, { primary: string; deep: string; light: string }> = {
+  orange: { primary: '#F4511E', deep: '#B8330D', light: '#FF7A45' },
+  red: { primary: '#E53935', deep: '#A31F1C', light: '#FF6F60' },
+  green: { primary: '#2E9E5B', deep: '#1B6B3C', light: '#4CC47F' },
+  blue: { primary: '#1E88E5', deep: '#11589A', light: '#5AAEF2' },
+  purple: { primary: '#8E44AD', deep: '#5E2B75', light: '#B26FD0' },
+  pink: { primary: '#D6336C', deep: '#96204A', light: '#F06595' },
+};
