@@ -3,16 +3,15 @@ import { router } from 'expo-router';
 import { Animated, Pressable, StyleSheet, View } from 'react-native';
 
 import { useAnimatedValue } from '@/lib/useAnimatedValue';
-import { ALLERGEN_EMOJI, Allergen, Chef, Dish } from '@/data/menu';
+import { Allergen, Chef, Dish } from '@/data/menu';
 import { useCatalog } from '@/lib/catalog';
 import { useCart } from '@/lib/cart';
 import { useOrders } from '@/lib/orders';
 import { useSettings } from '@/lib/settings';
 import { useSounds } from '@/lib/sound';
 import { DELIVERY_FEE } from '@/lib/supabase';
-import { Emoji3D } from './Emoji3D';
 import { ChefAvatar, DishArt, RatingBadge } from './media';
-import { Button3D, Card3D, PressableScale, Txt } from './ui';
+import { Button, Card, Icon, PressableScale, Txt } from './ui';
 
 /** Adds to the cart and plays the "add to cart" sound + haptic. */
 export function useAddToCart() {
@@ -32,18 +31,14 @@ export function QuickAddButton({ dish }: { dish: Dish }) {
 
   const onPress = () => {
     addToCart(dish);
-    pop.setValue(0.6);
-    Animated.spring(pop, { toValue: 1, useNativeDriver: true, speed: 14, bounciness: 18 }).start();
+    pop.setValue(0.8);
+    Animated.spring(pop, { toValue: 1, useNativeDriver: true, speed: 20, bounciness: 10 }).start();
   };
 
   return (
-    <Pressable onPress={onPress} hitSlop={8}>
-      <Animated.View
-        style={[
-          styles.quickAdd,
-          { backgroundColor: colors.primary, borderColor: colors.primaryDeep, transform: [{ scale: pop }] },
-        ]}>
-        <Emoji3D name="plus" size={22} />
+    <Pressable onPress={onPress} hitSlop={8} accessibilityLabel="Add to cart">
+      <Animated.View style={[styles.quickAdd, { backgroundColor: colors.primary, transform: [{ scale: pop }] }]}>
+        <Icon name="add" size={22} color={colors.onPrimary} />
       </Animated.View>
     </Pressable>
   );
@@ -54,58 +49,55 @@ export function DishCard({ dish, wide }: { dish: Dish; wide?: boolean }) {
   const { getChef } = useCatalog();
   const chef = getChef(dish.chefId);
   return (
-    <PressableScale onPress={() => router.push(`/dish/${dish.id}`)} style={wide ? undefined : { width: 190 }}>
-      <Card3D style={{ padding: 0, overflow: 'hidden' }}>
+    <PressableScale onPress={() => router.push(`/dish/${dish.id}`)} style={wide ? undefined : { width: 170 }}>
+      <Card style={{ padding: 0, overflow: 'hidden' }}>
         <View>
-          <DishArt dish={dish} height={120} emojiSize={wide ? 84 : 92} color={chef?.color} />
-          {(dish.spicy || dish.vegetarian || dish.allergens.length === 0) && (
+          <DishArt dish={dish} height={wide ? 120 : 130} emojiSize={wide ? 72 : 80} color={chef?.color} />
+          {(dish.spicy || dish.vegetarian) && (
             <View style={styles.badges}>
-              {dish.spicy && <Emoji3D name="hot_pepper" size={22} />}
-              {dish.vegetarian && <Emoji3D name="leaf" size={22} />}
-              {dish.allergens.length === 0 && <Emoji3D name="check" size={22} />}
+              {dish.spicy && <Icon name="flame" size={14} color="#E53935" />}
+              {dish.vegetarian && <Icon name="leaf" size={14} color="#2E9E5B" />}
             </View>
           )}
         </View>
         <View style={{ padding: 12, gap: 2 }}>
-          <Txt variant="heading" numberOfLines={1} style={{ fontSize: 17 }}>
+          <Txt numberOfLines={1} style={{ fontSize: 15, fontWeight: '700' }}>
             {l(dish.name)}
           </Txt>
-          <Txt muted variant="caption" numberOfLines={2} style={{ minHeight: 34 }}>
-            {l(dish.short)}
+          <Txt muted variant="caption" numberOfLines={1}>
+            {chef ? l(chef.name) : l(dish.short)}
           </Txt>
           <View style={styles.priceRow}>
-            <Txt style={{ fontWeight: '900', color: colors.primary }}>{formatPrice(dish.price)}</Txt>
+            <Txt style={{ fontWeight: '700', color: colors.text }}>{formatPrice(dish.price)}</Txt>
             <QuickAddButton dish={dish} />
           </View>
         </View>
-      </Card3D>
+      </Card>
     </PressableScale>
   );
 }
 
 export function ChefCard({ chef, dishCount }: { chef: Chef; dishCount: number }) {
-  const { l, t } = useSettings();
+  const { l, t, colors, isRTL } = useSettings();
   const { ratings } = useCatalog();
   return (
     <PressableScale onPress={() => router.push(`/chef/${chef.id}`)}>
-      <Card3D style={styles.chefCard} color={chef.color}>
-        <ChefAvatar chef={chef} size={76} />
+      <Card style={styles.chefCard}>
+        <ChefAvatar chef={chef} size={64} />
         <View style={{ flex: 1, gap: 2 }}>
-          <Txt variant="heading" color="#1E1B18">
-            {l(chef.name)}
-          </Txt>
-          <Txt variant="caption" color="#5B4F48">
+          <Txt style={{ fontSize: 16, fontWeight: '700' }}>{l(chef.name)}</Txt>
+          <Txt variant="caption" muted numberOfLines={1}>
             {l(chef.specialty)} · {l(chef.area)}
           </Txt>
           <View style={styles.chefMeta}>
-            <RatingBadge rating={ratings[chef.id]} color="#1E1B18" />
-            <Emoji3D name="pot" size={18} style={{ marginStart: 8 }} />
-            <Txt variant="caption" color="#1E1B18" style={{ fontWeight: '800' }}>
-              {dishCount} {t('dishes')}
+            <RatingBadge rating={ratings[chef.id]} color={colors.text} />
+            <Txt variant="caption" muted>
+              ·  {dishCount} {t('dishes')}
             </Txt>
           </View>
         </View>
-      </Card3D>
+        <Icon name={isRTL ? 'chevron-back' : 'chevron-forward'} size={20} color={colors.textMuted} />
+      </Card>
     </PressableScale>
   );
 }
@@ -114,28 +106,29 @@ export function AllergenList({ allergens }: { allergens: Allergen[] }) {
   const { t, colors } = useSettings();
   if (allergens.length === 0) {
     return (
-      <Card3D style={[styles.noAllergens, { backgroundColor: colors.surfaceAlt }]}>
-        <Emoji3D name="check" size={40} float />
+      <View style={[styles.noAllergens, { backgroundColor: colors.successBg }]}>
+        <Icon name="checkmark-circle" size={26} color={colors.success} />
         <View style={{ flex: 1 }}>
-          <Txt style={{ fontWeight: '800', color: colors.success }}>{t('noAllergens')}</Txt>
+          <Txt style={{ fontWeight: '700', color: colors.success }}>{t('noAllergens')}</Txt>
           <Txt variant="caption" muted>
             {t('noAllergensBody')}
           </Txt>
         </View>
-      </Card3D>
+      </View>
     );
   }
   return (
     <View style={{ gap: 8 }}>
       <View style={styles.row}>
-        <Emoji3D name="warning" size={22} />
-        <Txt style={{ fontWeight: '800', color: colors.danger }}>{t('containsAllergens')}:</Txt>
+        <Icon name="warning-outline" size={18} color={colors.danger} />
+        <Txt style={{ fontWeight: '700', color: colors.danger }}>{t('containsAllergens')}:</Txt>
       </View>
       <View style={styles.allergenWrap}>
         {allergens.map((a) => (
-          <View key={a} style={[styles.allergen, { backgroundColor: colors.surface, borderColor: colors.danger }]}>
-            <Emoji3D name={ALLERGEN_EMOJI[a]} size={26} />
-            <Txt style={{ fontWeight: '700' }}>{t(`al_${a}`)}</Txt>
+          <View key={a} style={[styles.allergen, { borderColor: colors.danger }]}>
+            <Txt variant="caption" style={{ fontWeight: '600' }}>
+              {t(`al_${a}`)}
+            </Txt>
           </View>
         ))}
       </View>
@@ -143,31 +136,35 @@ export function AllergenList({ allergens }: { allergens: Allergen[] }) {
   );
 }
 
+/** Promo banner: free delivery on the first 3 orders. */
 export function FreeDeliveryBanner() {
-  const { t, formatPrice } = useSettings();
+  const { t, colors, formatPrice } = useSettings();
   const { freeDeliveriesLeft } = useOrders();
+  const free = freeDeliveriesLeft > 0;
   return (
     <LinearGradient
-      colors={freeDeliveriesLeft > 0 ? ['#34B96B', '#1B7A43'] : ['#7A6F68', '#5B4F48']}
+      colors={free ? colors.heroGradient : ['#55555C', '#2F2F34']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
       style={styles.banner}>
-      <Emoji3D name={freeDeliveriesLeft > 0 ? 'truck' : 'scooter'} size={56} float />
-      <View style={{ flex: 1 }}>
-        <Txt variant="heading" color="#fff">
-          {freeDeliveriesLeft > 0 ? t('freeDeliveryTitle') : t('delivery')}
+      <View style={{ flex: 1, gap: 4 }}>
+        <Txt variant="heading" color="#fff" style={{ fontSize: 20, fontWeight: '800' }}>
+          {free ? t('freeDeliveryTitle') : t('delivery')}
         </Txt>
-        <Txt variant="caption" color="#EFFFF5">
-          {freeDeliveriesLeft > 0
-            ? t('freeDeliveryBanner', { n: freeDeliveriesLeft })
-            : t('freeDeliveryUsed', { fee: formatPrice(DELIVERY_FEE) })}
+        <Txt variant="caption" color="rgba(255,255,255,0.85)">
+          {free ? t('freeDeliveryBanner', { n: freeDeliveriesLeft }) : t('freeDeliveryUsed', { fee: formatPrice(DELIVERY_FEE) })}
         </Txt>
       </View>
-      {freeDeliveriesLeft > 0 && (
-        <View style={styles.bannerCount}>
-          <Txt variant="title" color="#1B7A43" center style={{ fontSize: 22 }}>
-            {freeDeliveriesLeft}
-          </Txt>
-        </View>
-      )}
+      <View style={styles.bannerIcon}>
+        <Icon name="bicycle" size={34} color="#fff" />
+        {free && (
+          <View style={styles.bannerCount}>
+            <Txt color={colors.primaryDeep} style={{ fontWeight: '800', fontSize: 13 }} center>
+              {freeDeliveriesLeft}
+            </Txt>
+          </View>
+        )}
+      </View>
     </LinearGradient>
   );
 }
@@ -175,69 +172,58 @@ export function FreeDeliveryBanner() {
 export function QuantityStepper({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   const { colors } = useSettings();
   return (
-    <View style={[styles.stepper, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}>
-      <Pressable onPress={() => onChange(value - 1)} hitSlop={6}>
-        <Emoji3D name="minus" size={26} />
+    <View style={[styles.stepper, { borderColor: colors.border }]}>
+      <Pressable onPress={() => onChange(value - 1)} hitSlop={6} accessibilityLabel="Less">
+        <Icon name={value <= 1 ? 'trash-outline' : 'remove'} size={18} color={colors.primary} />
       </Pressable>
-      <Txt style={{ fontWeight: '900', minWidth: 22 }} center>
+      <Txt style={{ fontWeight: '700', minWidth: 20 }} center>
         {value}
       </Txt>
-      <Pressable onPress={() => onChange(value + 1)} hitSlop={6}>
-        <Emoji3D name="plus" size={26} />
+      <Pressable onPress={() => onChange(value + 1)} hitSlop={6} accessibilityLabel="More">
+        <Icon name="add" size={18} color={colors.primary} />
       </Pressable>
     </View>
   );
 }
 
-export { Button3D };
+export { Button };
 
 const styles = StyleSheet.create({
   badges: {
     position: 'absolute',
     top: 8,
     end: 8,
-    gap: 2,
-    padding: 2,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.75)',
+    flexDirection: 'row',
+    gap: 4,
+    paddingVertical: 4,
+    paddingHorizontal: 6,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.92)',
   },
-  priceRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 6 },
-  quickAdd: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderBottomWidth: 4,
-  },
+  priceRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 },
+  quickAdd: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   chefCard: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  chefMeta: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6 },
-  noAllergens: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  chefMeta: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
+  noAllergens: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 14 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   allergenWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  allergen: {
-    flexDirection: 'row',
+  allergen: { paddingVertical: 5, paddingHorizontal: 12, borderRadius: 14, borderWidth: 1 },
+  banner: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 20, paddingHorizontal: 20, borderRadius: 20 },
+  bannerIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: 'rgba(255,255,255,0.16)',
     alignItems: 'center',
-    gap: 6,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderBottomWidth: 3,
-  },
-  banner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    padding: 14,
-    borderRadius: 22,
-    borderBottomWidth: 5,
-    borderBottomColor: 'rgba(0,0,0,0.2)',
+    justifyContent: 'center',
   },
   bannerCount: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    position: 'absolute',
+    top: -2,
+    end: -2,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
@@ -245,11 +231,10 @@ const styles = StyleSheet.create({
   stepper: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 16,
+    gap: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 12,
     borderWidth: 1,
-    borderBottomWidth: 3,
   },
 });

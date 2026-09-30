@@ -11,8 +11,7 @@ import {
   slotDate,
 } from '@/lib/schedule';
 import { useSettings } from '@/lib/settings';
-import { Emoji3D } from './Emoji3D';
-import { Card3D, Chip, Txt } from './ui';
+import { Card, Chip, Icon, Txt } from './ui';
 
 export type ScheduleValue = { mode: 'asap' } | { mode: 'later'; day: number; minutes: number };
 
@@ -40,9 +39,9 @@ export function SchedulePicker({ value, onChange }: { value: ScheduleValue; onCh
   const tooSoon = value.mode === 'later' && isTooSoon(slotDate(value.day, value.minutes));
 
   return (
-    <Card3D style={{ gap: 12 }}>
+    <Card style={{ gap: 12 }}>
       <View style={styles.row}>
-        <Emoji3D name="stopwatch" size={24} />
+        <Icon name="time-outline" size={18} color={colors.textMuted} />
         <Txt variant="label" muted>
           {t('deliveryTime')}
         </Txt>
@@ -50,11 +49,11 @@ export function SchedulePicker({ value, onChange }: { value: ScheduleValue; onCh
       <View style={styles.row}>
         <Chip
           label={t('asap')}
-          emoji="scooter"
+          icon="bicycle-outline"
           active={value.mode === 'asap'}
           onPress={() => onChange({ mode: 'asap' })}
         />
-        <Chip label={t('schedule')} emoji="stopwatch" active={value.mode === 'later'} onPress={pickLater} />
+        <Chip label={t('schedule')} icon="calendar-outline" active={value.mode === 'later'} onPress={pickLater} />
       </View>
 
       {value.mode === 'later' && (
@@ -75,7 +74,7 @@ export function SchedulePicker({ value, onChange }: { value: ScheduleValue; onCh
               onPress={() => setMinutes(value.day, value.minutes - STEP_MINUTES)}
               hitSlop={8}
               accessibilityLabel="-15">
-              <Emoji3D name="minus" size={30} />
+              <Icon name="remove-circle-outline" size={32} color={colors.primary} />
             </Pressable>
             <View style={{ alignItems: 'center', flex: 1 }}>
               <Txt variant="caption" muted>
@@ -89,7 +88,7 @@ export function SchedulePicker({ value, onChange }: { value: ScheduleValue; onCh
               onPress={() => setMinutes(value.day, value.minutes + STEP_MINUTES)}
               hitSlop={8}
               accessibilityLabel="+15">
-              <Emoji3D name="plus" size={30} />
+              <Icon name="add-circle-outline" size={32} color={colors.primary} />
             </Pressable>
           </View>
 
@@ -105,13 +104,13 @@ export function SchedulePicker({ value, onChange }: { value: ScheduleValue; onCh
           </View>
 
           {tooSoon && (
-            <Txt variant="caption" style={{ color: colors.danger, fontWeight: '700' }}>
+            <Txt variant="caption" style={{ color: colors.danger, fontWeight: '600' }}>
               {t('timeTooSoon')}
             </Txt>
           )}
         </>
       )}
-    </Card3D>
+    </Card>
   );
 }
 
@@ -122,8 +121,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     padding: 12,
-    borderRadius: 18,
+    borderRadius: 14,
     borderWidth: 1,
-    borderBottomWidth: 3,
   },
 });

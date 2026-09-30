@@ -1,4 +1,4 @@
-import type { EmojiName } from './emoji';
+import type { IconName } from '@/components/ui';
 import type { TranslationKey } from './i18n';
 
 /**
@@ -17,17 +17,17 @@ export type Rank = {
   minOrders: number;
   /** Points multiplier for orders placed at this rank. */
   multiplier: number;
-  emoji: EmojiName;
+  icon: IconName;
   color: string;
 };
 
 export const RANKS: Rank[] = [
-  { id: 'starter', level: 0, minOrders: 0, multiplier: 1, emoji: 'seedling', color: '#8BC34A' },
-  { id: 'bronze', level: 1, minOrders: 3, multiplier: 1.1, emoji: 'medal_bronze', color: '#CD7F32' },
-  { id: 'silver', level: 2, minOrders: 10, multiplier: 1.25, emoji: 'medal_silver', color: '#9EA7B3' },
-  { id: 'gold', level: 3, minOrders: 25, multiplier: 1.5, emoji: 'medal_gold', color: '#F5B301' },
-  { id: 'platinum', level: 4, minOrders: 50, multiplier: 1.75, emoji: 'crown', color: '#7E8CE0' },
-  { id: 'diamond', level: 5, minOrders: 100, multiplier: 2, emoji: 'gem', color: '#26C6DA' },
+  { id: 'starter', level: 0, minOrders: 0, multiplier: 1, icon: 'leaf', color: '#8BC34A' },
+  { id: 'bronze', level: 1, minOrders: 3, multiplier: 1.1, icon: 'medal', color: '#CD7F32' },
+  { id: 'silver', level: 2, minOrders: 10, multiplier: 1.25, icon: 'medal', color: '#9EA7B3' },
+  { id: 'gold', level: 3, minOrders: 25, multiplier: 1.5, icon: 'medal', color: '#F5B301' },
+  { id: 'platinum', level: 4, minOrders: 50, multiplier: 1.75, icon: 'ribbon', color: '#7E8CE0' },
+  { id: 'diamond', level: 5, minOrders: 100, multiplier: 2, icon: 'diamond', color: '#26C6DA' },
 ];
 
 export function rankFor(orderCount: number): Rank {
@@ -54,7 +54,7 @@ export type Reward = {
   maxDiscount?: number;
   cost: number;
   minRank: number;
-  emoji: EmojiName;
+  icon: IconName;
   label: TranslationKey;
 };
 
@@ -66,10 +66,10 @@ export const REWARDS: Reward[] = [
     value: 0,
     cost: 80,
     minRank: 0,
-    emoji: 'truck',
+    icon: 'bicycle',
     label: 'rw_free_delivery',
   },
-  { id: 'off_25', kind: 'fixed', value: 25, cost: 100, minRank: 0, emoji: 'coin', label: 'rw_off_25' },
+  { id: 'off_25', kind: 'fixed', value: 25, cost: 100, minRank: 0, icon: 'pricetag', label: 'rw_off_25' },
   {
     id: 'pct_10',
     kind: 'percent',
@@ -77,10 +77,10 @@ export const REWARDS: Reward[] = [
     maxDiscount: 60,
     cost: 150,
     minRank: 1,
-    emoji: 'ticket',
+    icon: 'pricetags',
     label: 'rw_pct_10',
   },
-  { id: 'off_50', kind: 'fixed', value: 50, cost: 180, minRank: 1, emoji: 'money', label: 'rw_off_50' },
+  { id: 'off_50', kind: 'fixed', value: 50, cost: 180, minRank: 1, icon: 'pricetag', label: 'rw_off_50' },
   {
     id: 'pct_20',
     kind: 'percent',
@@ -88,10 +88,10 @@ export const REWARDS: Reward[] = [
     maxDiscount: 120,
     cost: 300,
     minRank: 2,
-    emoji: 'money_wings',
+    icon: 'pricetags',
     label: 'rw_pct_20',
   },
-  { id: 'off_100', kind: 'fixed', value: 100, cost: 350, minRank: 2, emoji: 'gift', label: 'rw_off_100' },
+  { id: 'off_100', kind: 'fixed', value: 100, cost: 350, minRank: 2, icon: 'gift', label: 'rw_off_100' },
   {
     id: 'pct_30',
     kind: 'percent',
@@ -99,7 +99,7 @@ export const REWARDS: Reward[] = [
     maxDiscount: 200,
     cost: 600,
     minRank: 3,
-    emoji: 'trophy',
+    icon: 'trophy',
     label: 'rw_pct_30',
   },
 ];

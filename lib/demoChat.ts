@@ -72,9 +72,9 @@ export function demoChatReply(question: string, language: Language): string {
     const cheapest = REWARDS[0];
     return (
       {
-        en: `You earn 1 point per EGP 10 spent. Ranks: ${ranks}. Rewards start at ${cheapest.cost} points for ${t(cheapest.label)}. Redeem them in the Rewards tab.`,
-        ar: `بتكسب نقطة مع كل ١٠ ج.م. المستويات: ${ranks}. المكافآت بتبدأ من ${cheapest.cost} نقطة لـ ${t(cheapest.label)}. استبدلها من تبويب المكافآت.`,
-        fr: `1 point par tranche de 10 EGP. Rangs : ${ranks}. Les avantages commencent à ${cheapest.cost} points pour ${t(cheapest.label)}. Échangez-les dans Avantages.`,
+        en: `You earn 1 point per EGP 10 spent. Ranks: ${ranks}. Rewards start at ${cheapest.cost} points for ${t(cheapest.label)}. Redeem them in More > Kitchy's Points.`,
+        ar: `بتكسب نقطة مع كل ١٠ ج.م. المستويات: ${ranks}. المكافآت بتبدأ من ${cheapest.cost} نقطة لـ ${t(cheapest.label)}. استبدلها من المزيد > نقاط كيتشيز.`,
+        fr: `1 point par tranche de 10 EGP. Rangs : ${ranks}. Les avantages commencent à ${cheapest.cost} points pour ${t(cheapest.label)}. Échangez-les dans Plus > Points Kitchy's.`,
       }[language] + note
     );
   }

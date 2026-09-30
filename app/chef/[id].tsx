@@ -3,17 +3,16 @@ import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Emoji3D } from '@/components/Emoji3D';
 import { ChefAvatar, Stars } from '@/components/media';
 import { DishCard } from '@/components/menu';
-import { Card3D, EmptyState, Screen, Txt } from '@/components/ui';
+import { Card, EmptyState, Icon, Screen, Txt } from '@/components/ui';
 import { useCatalog } from '@/lib/catalog';
 import { RATING_PARTS, Review, fetchChefReviews } from '@/lib/reviews';
 import { useSettings } from '@/lib/settings';
 
 export default function ChefScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { t, l, colors, language } = useSettings();
+  const { t, l, colors, language, isRTL } = useSettings();
   const { getChef, dishesByChef, ratings, refresh } = useCatalog();
   const [reviews, setReviews] = useState<Review[]>([]);
   const chef = getChef(id);
@@ -31,7 +30,7 @@ export default function ChefScreen() {
   if (!chef)
     return (
       <Screen>
-        <EmptyState emoji="warning" title={t('error')} />
+        <EmptyState icon="alert-circle-outline" title={t('error')} />
       </Screen>
     );
   const dishes = dishesByChef(chef.id);
@@ -41,33 +40,31 @@ export default function ChefScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
-        <View style={[styles.hero, { backgroundColor: chef.color }]}>
+        <View style={[styles.hero, { backgroundColor: colors.surface }]}>
           <SafeAreaView edges={['top']} style={{ alignSelf: 'stretch' }}>
             <Pressable onPress={() => router.back()} style={styles.back} hitSlop={10}>
-              <Txt style={{ fontSize: 22, fontWeight: '900' }} color="#1E1B18">
-                ←
-              </Txt>
+              <Icon name={isRTL ? 'chevron-forward' : 'chevron-back'} size={24} />
             </Pressable>
           </SafeAreaView>
-          <ChefAvatar chef={chef} size={150} />
-          <Txt variant="title" color="#1E1B18" center>
+          <ChefAvatar chef={chef} size={120} />
+          <Txt variant="title" center style={{ marginTop: 8 }}>
             {l(chef.name)}
           </Txt>
-          <Txt color="#5B4F48" center style={{ fontWeight: '700' }}>
+          <Txt muted center>
             {l(chef.specialty)} · {l(chef.area)}
           </Txt>
           <View style={styles.stats}>
-            <View style={styles.stat}>
-              <Emoji3D name={rating ? 'star' : 'sparkles'} size={24} />
-              <Txt color="#1E1B18" style={{ fontWeight: '900' }}>
+            <View style={[styles.stat, { backgroundColor: colors.surfaceAlt }]}>
+              <Icon name={rating ? 'star' : 'sparkles'} size={16} color="#FFB300" />
+              <Txt style={{ fontWeight: '600' }}>
                 {rating
                   ? `${rating.overall.toFixed(1)} · ${t('reviewsCount', { n: rating.review_count })}`
                   : t('newChef')}
               </Txt>
             </View>
-            <View style={styles.stat}>
-              <Emoji3D name="pot" size={24} />
-              <Txt color="#1E1B18" style={{ fontWeight: '900' }}>
+            <View style={[styles.stat, { backgroundColor: colors.surfaceAlt }]}>
+              <Icon name="restaurant-outline" size={16} color={colors.textMuted} />
+              <Txt style={{ fontWeight: '600' }}>
                 {dishes.length} {t('dishes')}
               </Txt>
             </View>
@@ -80,31 +77,29 @@ export default function ChefScreen() {
               {l(chef.bio)}
             </Txt>
           )}
-          <View style={styles.sectionTitle}>
-            <Emoji3D name="clipboard" size={28} />
-            <Txt variant="heading">{t('menu')}</Txt>
-          </View>
+          <Txt variant="heading" style={styles.sectionTitle}>
+            {t('menu')}
+          </Txt>
           <View style={styles.grid}>
             {dishes.map((d) => (
-              <View key={d.id} style={{ width: '48%' }}>
+              <View key={d.id} style={{ width: '48.5%' }}>
                 <DishCard dish={d} wide />
               </View>
             ))}
           </View>
 
-          <View style={styles.sectionTitle}>
-            <Emoji3D name="star" size={28} />
-            <Txt variant="heading">{t('reviews')}</Txt>
-          </View>
+          <Txt variant="heading" style={styles.sectionTitle}>
+            {t('reviews')}
+          </Txt>
 
           {rating ? (
-            <Card3D style={{ gap: 10 }}>
+            <Card style={{ gap: 10 }}>
               {RATING_PARTS.map((part) => {
                 const value = rating[part.key];
                 return (
                   <View key={part.key} style={styles.ratingRow}>
-                    <Emoji3D name={part.emoji} size={22} />
-                    <Txt style={{ flex: 1, fontWeight: '700' }}>{t(part.label)}</Txt>
+                    <Icon name={part.icon} size={18} color={colors.textMuted} />
+                    <Txt style={{ flex: 1, fontWeight: '500' }}>{t(part.label)}</Txt>
                     <View style={[styles.bar, { backgroundColor: colors.surfaceAlt }]}>
                       <View
                         style={[styles.barFill, { width: `${(value / 5) * 100}%`, backgroundColor: colors.primary }]}
@@ -114,17 +109,19 @@ export default function ChefScreen() {
                   </View>
                 );
               })}
-            </Card3D>
+            </Card>
           ) : (
             <Txt muted>{t('noReviews')}</Txt>
           )}
 
           {reviews.map((r) => (
-            <Card3D key={r.id} style={{ gap: 6 }}>
+            <Card key={r.id} style={{ gap: 6 }}>
               <View style={styles.reviewHead}>
-                <Emoji3D name="user" size={28} />
+                <View style={[styles.reviewer, { backgroundColor: colors.surfaceAlt }]}>
+                  <Icon name="person" size={16} color={colors.textMuted} />
+                </View>
                 <View style={{ flex: 1 }}>
-                  <Txt style={{ fontWeight: '800' }}>{r.reviewer_name || t('customer')}</Txt>
+                  <Txt style={{ fontWeight: '700' }}>{r.reviewer_name || t('customer')}</Txt>
                   <Txt variant="caption" muted>
                     {new Date(r.created_at).toLocaleDateString(locale, { dateStyle: 'medium' })}
                   </Txt>
@@ -139,7 +136,7 @@ export default function ChefScreen() {
                 ))}
               </View>
               {!!r.comment && <Txt>{r.comment}</Txt>}
-            </Card3D>
+            </Card>
           ))}
         </View>
       </ScrollView>
@@ -153,15 +150,14 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingBottom: 24,
     paddingHorizontal: 20,
-    borderBottomLeftRadius: 36,
-    borderBottomRightRadius: 36,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
   },
   back: {
     alignSelf: 'flex-start',
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: 'rgba(255,255,255,0.8)',
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 8,
@@ -171,17 +167,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(255,255,255,0.75)',
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 14,
   },
-  sectionTitle: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 14 },
+  sectionTitle: { marginTop: 8 },
+  reviewer: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 12 },
   ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   bar: { width: 90, height: 8, borderRadius: 4, overflow: 'hidden' },
   barFill: { height: '100%', borderRadius: 4 },
-  score: { width: 32, textAlign: 'right', fontWeight: '900', fontVariant: ['tabular-nums'] },
+  score: { width: 32, textAlign: 'right', fontWeight: '700', fontVariant: ['tabular-nums'] },
   reviewHead: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   reviewParts: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 12 },
 });

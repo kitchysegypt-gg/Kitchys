@@ -3,8 +3,7 @@ import { Pressable, StyleSheet, Switch, TextInput, View } from 'react-native';
 import { ALLERGEN_EMOJI, Allergen, CATEGORIES, Category } from '@/data/menu';
 import { DishDraft } from '@/lib/chef';
 import { useSettings } from '@/lib/settings';
-import { Emoji3D } from './Emoji3D';
-import { Card3D, Chip, Txt } from './ui';
+import { Card, Chip, Icon, Txt } from './ui';
 
 const ALLERGENS = Object.keys(ALLERGEN_EMOJI) as Allergen[];
 
@@ -36,13 +35,12 @@ export function DishEditor({
     set({ allergens: value.allergens.includes(a) ? value.allergens.filter((x) => x !== a) : [...value.allergens, a] });
 
   return (
-    <Card3D style={{ gap: 10 }}>
+    <Card style={{ gap: 10 }}>
       <View style={styles.row}>
-        <Emoji3D name="pot" size={26} />
-        <Txt style={{ flex: 1, fontWeight: '900' }}>{title}</Txt>
+        <Txt style={{ flex: 1, fontWeight: '700', fontSize: 16 }}>{title}</Txt>
         {onRemove && (
           <Pressable onPress={onRemove} hitSlop={8}>
-            <Txt style={{ color: colors.danger, fontWeight: '800' }}>{t('removeDish')}</Txt>
+            <Txt style={{ color: colors.danger, fontWeight: '600' }}>{t('removeDish')}</Txt>
           </Pressable>
         )}
       </View>
@@ -133,7 +131,6 @@ export function DishEditor({
           <Chip
             key={a}
             label={t(`al_${a}`)}
-            emoji={ALLERGEN_EMOJI[a]}
             active={value.allergens.includes(a)}
             onPress={() => toggleAllergen(a)}
           />
@@ -141,12 +138,12 @@ export function DishEditor({
       </View>
 
       <View style={styles.row}>
-        <Emoji3D name="hot_pepper" size={22} />
+        <Icon name="flame-outline" size={20} color="#E53935" />
         <Txt style={{ flex: 1 }}>{t('spicy')}</Txt>
         <Switch value={value.spicy} onValueChange={(spicy) => set({ spicy })} trackColor={{ true: colors.primary }} />
       </View>
       <View style={styles.row}>
-        <Emoji3D name="leaf" size={22} />
+        <Icon name="leaf-outline" size={20} color="#2E9E5B" />
         <Txt style={{ flex: 1 }}>{t('vegetarian')}</Txt>
         <Switch
           value={value.vegetarian}
@@ -154,7 +151,7 @@ export function DishEditor({
           trackColor={{ true: colors.primary }}
         />
       </View>
-    </Card3D>
+    </Card>
   );
 }
 

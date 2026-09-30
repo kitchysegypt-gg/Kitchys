@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
-import { Emoji3D } from '@/components/Emoji3D';
+import { ChefPhoto } from '@/components/media';
 import { Logo } from '@/components/Logo';
-import { Button3D, Card3D, Screen, Txt } from '@/components/ui';
-import { EmojiName } from '@/lib/emoji';
+import { Button, Card, Icon, IconName, Screen, Txt } from '@/components/ui';
 import { LANGUAGES } from '@/lib/i18n';
 import { showAlert } from '@/lib/alert';
 import { useSettings } from '@/lib/settings';
@@ -36,14 +35,14 @@ export default function AuthScreen() {
     if (error) return showAlert(t('error'), error.message);
     // With "Confirm email" on in Supabase, sign-up returns no session until the link is clicked.
     if (mode === 'signUp' && !data.session) {
-      showAlert('📧', t('checkEmail'));
+      showAlert(t('email'), t('checkEmail'));
       setMode('signIn');
     }
   };
 
-  const input = (icon: EmojiName, props: React.ComponentProps<typeof TextInput>) => (
+  const input = (icon: IconName, props: React.ComponentProps<typeof TextInput>) => (
     <View style={[styles.inputWrap, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}>
-      <Emoji3D name={icon} size={26} />
+      <Icon name={icon} size={20} color={colors.textMuted} />
       <TextInput
         placeholderTextColor={colors.textMuted}
         style={[styles.input, { color: colors.text, textAlign: isRTL ? 'right' : 'left' }]}
@@ -68,8 +67,8 @@ export default function AuthScreen() {
                     backgroundColor: colors.surface,
                   },
                 ]}>
-                <Txt variant="caption" style={{ fontWeight: '700' }}>
-                  {lang.flag} {lang.label}
+                <Txt variant="caption" style={{ fontWeight: '600', color: language === lang.code ? colors.primary : colors.text }}>
+                  {lang.label}
                 </Txt>
               </Pressable>
             ))}
@@ -84,22 +83,21 @@ export default function AuthScreen() {
 
           {isDemo && (
             <View style={[styles.freeHint, { backgroundColor: colors.surfaceAlt, marginBottom: 14 }]}>
-              <Emoji3D name="sparkles" size={28} />
-              <Txt variant="caption" style={{ flex: 1, fontWeight: '700' }}>
+              <Icon name="information-circle-outline" size={22} color={colors.primary} />
+              <Txt variant="caption" style={{ flex: 1, fontWeight: '500' }}>
                 {t('demoHint')}
               </Txt>
             </View>
           )}
 
-          <Card3D style={{ gap: 12, padding: 18 }}>
-            <View style={styles.titleRow}>
-              <Emoji3D name={mode === 'signIn' ? 'wave' : 'sparkles'} size={40} />
-              <Txt variant="heading">{mode === 'signIn' ? t('signIn') : t('signUp')}</Txt>
-            </View>
+          <Card style={{ gap: 12, padding: 18 }}>
+            <Txt variant="heading" style={{ marginBottom: 4 }}>
+              {mode === 'signIn' ? t('signIn') : t('signUp')}
+            </Txt>
 
             {mode === 'signUp' &&
-              input('user', { placeholder: t('fullName'), value: name, onChangeText: setName, autoComplete: 'name' })}
-            {input('email', {
+              input('person-outline', { placeholder: t('fullName'), value: name, onChangeText: setName, autoComplete: 'name' })}
+            {input('mail-outline', {
               placeholder: t('email'),
               value: email,
               onChangeText: setEmail,
@@ -107,7 +105,7 @@ export default function AuthScreen() {
               keyboardType: 'email-address',
               autoComplete: 'email',
             })}
-            {input('key', {
+            {input('lock-closed-outline', {
               placeholder: t('password'),
               value: password,
               onChangeText: setPassword,
@@ -115,24 +113,23 @@ export default function AuthScreen() {
               autoComplete: mode === 'signIn' ? 'current-password' : 'new-password',
             })}
 
-            <Button3D
+            <Button
               title={mode === 'signIn' ? t('signIn') : t('signUp')}
-              emoji={mode === 'signIn' ? 'locked' : 'sparkles'}
               onPress={submit}
               loading={busy}
               style={{ marginTop: 6 }}
             />
-          </Card3D>
+          </Card>
 
           <Pressable onPress={() => setMode(mode === 'signIn' ? 'signUp' : 'signIn')} style={{ padding: 16 }}>
-            <Txt center style={{ color: colors.primary, fontWeight: '700' }}>
+            <Txt center style={{ color: colors.primary, fontWeight: '600' }}>
               {mode === 'signIn' ? t('noAccount') : t('haveAccount')}
             </Txt>
           </Pressable>
 
-          <View style={[styles.freeHint, { backgroundColor: colors.surfaceAlt }]}>
-            <Emoji3D name="gift" size={36} float />
-            <Txt style={{ flex: 1, fontWeight: '700' }}>{t('onb7Body')}</Txt>
+          <View style={[styles.freeHint, { backgroundColor: colors.successBg }]}>
+            <Icon name="bicycle-outline" size={26} color={colors.success} />
+            <Txt style={{ flex: 1, fontWeight: '500', color: colors.success }}>{t('onb7Body')}</Txt>
           </View>
 
           <Pressable
@@ -144,15 +141,16 @@ export default function AuthScreen() {
               styles.chefApply,
               { borderColor: wantsChefApply ? colors.primary : colors.border, backgroundColor: colors.surface },
             ]}>
-            <Emoji3D name="chef_2" size={44} />
+            <ChefPhoto size={48} />
             <View style={{ flex: 1 }}>
-              <Txt style={{ fontWeight: '800', color: colors.primary }}>{t('applyChefLink')}</Txt>
+              <Txt style={{ fontWeight: '700', color: colors.primary }}>{t('applyChefLink')}</Txt>
               {wantsChefApply && (
                 <Txt variant="caption" muted>
                   {t('applyChefNote')}
                 </Txt>
               )}
             </View>
+            <Icon name={isRTL ? 'chevron-back' : 'chevron-forward'} size={20} color={colors.textMuted} />
           </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -168,22 +166,19 @@ const styles = StyleSheet.create({
     gap: 12,
     padding: 14,
     borderRadius: 18,
-    borderWidth: 1.5,
-    borderBottomWidth: 4,
-    marginTop: 14,
+    borderWidth: 1,
+    marginTop: 12,
   },
   langRow: { flexDirection: 'row', justifyContent: 'center', gap: 8, marginBottom: 8 },
-  lang: { paddingVertical: 6, paddingHorizontal: 10, borderRadius: 14, borderWidth: 1.5 },
-  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 4 },
+  lang: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 14, borderWidth: 1 },
   inputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    borderRadius: 16,
+    borderRadius: 14,
     borderWidth: 1,
-    borderBottomWidth: 3,
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
   },
   input: { flex: 1, paddingVertical: 14, fontSize: 16 },
-  freeHint: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 18 },
+  freeHint: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 16 },
 });

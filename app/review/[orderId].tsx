@@ -1,11 +1,10 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Emoji3D } from '@/components/Emoji3D';
 import { ChefAvatar, Stars } from '@/components/media';
-import { Button3D, Card3D, EmptyState, Screen, Txt } from '@/components/ui';
+import { Button, Card, EmptyState, Icon, Screen, ScreenHeader, Txt } from '@/components/ui';
 import { showAlert } from '@/lib/alert';
 import { useAuth } from '@/lib/auth';
 import { useCatalog } from '@/lib/catalog';
@@ -42,7 +41,7 @@ export default function ReviewScreen() {
   if (!order)
     return (
       <Screen>
-        <EmptyState emoji="warning" title={t('error')} />
+        <EmptyState icon="alert-circle-outline" title={t('error')} />
       </Screen>
     );
 
@@ -71,18 +70,12 @@ export default function ReviewScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <SafeAreaView edges={['top']} style={styles.header}>
-        <Pressable
-          onPress={() => router.back()}
-          hitSlop={10}
-          style={[styles.close, { backgroundColor: colors.surface }]}>
-          <Emoji3D name="cross_mark" size={20} />
-        </Pressable>
-        <Txt variant="heading">{t('rateTitle')}</Txt>
+      <SafeAreaView edges={['top']}>
+        <ScreenHeader title={t('rateTitle')} />
       </SafeAreaView>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView
-          contentContainerStyle={{ padding: 20, gap: 16, paddingBottom: 40 }}
+          contentContainerStyle={{ padding: 16, paddingTop: 4, gap: 12, paddingBottom: 40 }}
           keyboardShouldPersistTaps="handled">
           {chefIds.map((chefId) => {
             const chef = getChef(chefId);
@@ -90,11 +83,11 @@ export default function ReviewScreen() {
             const s = { ...EMPTY, ...scores[chefId] };
             const reviewed = done.includes(chefId);
             return (
-              <Card3D key={chefId} style={{ gap: 12 }}>
+              <Card key={chefId} style={{ gap: 12 }}>
                 <View style={styles.chefRow}>
                   <ChefAvatar chef={chef} size={48} />
                   <View style={{ flex: 1 }}>
-                    <Txt style={{ fontWeight: '900' }}>{l(chef.name)}</Txt>
+                    <Txt style={{ fontWeight: '700' }}>{l(chef.name)}</Txt>
                     <Txt variant="caption" muted>
                       {reviewed ? `✓ ${t('rated')}` : t('rateBody', { chef: l(chef.name) })}
                     </Txt>
@@ -104,8 +97,8 @@ export default function ReviewScreen() {
                   <>
                     {RATING_PARTS.map((part) => (
                       <View key={part.key} style={styles.partRow}>
-                        <Emoji3D name={part.emoji} size={22} />
-                        <Txt style={{ flex: 1, fontWeight: '700' }}>{t(part.label)}</Txt>
+                        <Icon name={part.icon} size={18} color={colors.textMuted} />
+                        <Txt style={{ flex: 1, fontWeight: '500' }}>{t(part.label)}</Txt>
                         <Stars value={s[part.key]} size={26} onChange={(v) => update(chefId, { [part.key]: v })} />
                       </View>
                     ))}
@@ -128,13 +121,12 @@ export default function ReviewScreen() {
                     />
                   </>
                 )}
-              </Card3D>
+              </Card>
             );
           })}
           {pending.length > 0 && (
-            <Button3D
+            <Button
               title={t('submitReview')}
-              emoji="star"
               onPress={send}
               loading={busy}
               disabled={ready.length === 0}
@@ -147,8 +139,6 @@ export default function ReviewScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingBottom: 8 },
-  close: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginTop: 8 },
   chefRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   partRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   input: { borderRadius: 14, borderWidth: 1, padding: 12, fontSize: 15, minHeight: 70 },

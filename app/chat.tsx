@@ -1,4 +1,5 @@
 import { FunctionsHttpError } from '@supabase/supabase-js';
+import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
   Animated,
@@ -11,10 +12,7 @@ import {
   View,
 } from 'react-native';
 
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
-import { Emoji3D } from '@/components/Emoji3D';
-import { Chip, Screen, Txt } from '@/components/ui';
+import { Chip, Icon, Screen, Txt } from '@/components/ui';
 import { useSettings } from '@/lib/settings';
 import { supabase } from '@/lib/supabase';
 import { useAnimatedValue } from '@/lib/useAnimatedValue';
@@ -23,8 +21,6 @@ type ChatMessage = { role: 'user' | 'assistant'; content: string; failed?: boole
 
 export default function ChatScreen() {
   const { t, colors, language, isRTL } = useSettings();
-  // Matches the tab bar height set in (tabs)/_layout.tsx.
-  const tabBarHeight = 68 + useSafeAreaInsets().bottom;
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState('');
   const [thinking, setThinking] = useState(false);
@@ -58,9 +54,12 @@ export default function ChatScreen() {
   };
 
   return (
-    <Screen>
+    <Screen edges={['top', 'bottom']}>
       <View style={[styles.header, { borderColor: colors.border }]}>
-        <Emoji3D name="robot" size={44} float />
+        <Pressable onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} hitSlop={12}>
+          <Icon name={isRTL ? 'chevron-forward' : 'chevron-back'} size={26} />
+        </Pressable>
+        <BotAvatar size={40} />
         <View style={{ flex: 1 }}>
           <Txt variant="heading">{t('chatTitle')}</Txt>
           <Txt variant="caption" muted numberOfLines={1}>
@@ -71,9 +70,9 @@ export default function ChatScreen() {
           <Pressable
             onPress={() => setMessages([])}
             hitSlop={8}
-            style={[styles.newChat, { borderColor: colors.border, backgroundColor: colors.surface }]}>
-            <Emoji3D name="sparkles" size={18} />
-            <Txt variant="caption" style={{ fontWeight: '800' }}>
+            style={[styles.newChat, { borderColor: colors.border }]}>
+            <Icon name="create-outline" size={16} />
+            <Txt variant="caption" style={{ fontWeight: '600' }}>
               {t('newChat')}
             </Txt>
           </Pressable>
@@ -82,8 +81,7 @@ export default function ChatScreen() {
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? tabBarHeight : 0}>
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView
           ref={scroll}
           contentContainerStyle={{ padding: 16, gap: 12 }}
@@ -129,15 +127,9 @@ export default function ChatScreen() {
             disabled={!draft.trim() || thinking}
             style={[
               styles.send,
-              {
-                backgroundColor: colors.primary,
-                borderColor: colors.primaryDeep,
-                opacity: !draft.trim() || thinking ? 0.5 : 1,
-              },
+              { backgroundColor: colors.primary, opacity: !draft.trim() || thinking ? 0.5 : 1 },
             ]}>
-            <Txt color={colors.onPrimary} style={{ fontSize: 20, fontWeight: '900' }}>
-              ↑
-            </Txt>
+            <Icon name="arrow-up" size={22} color={colors.onPrimary} />
           </Pressable>
         </View>
       </KeyboardAvoidingView>
@@ -150,7 +142,7 @@ function Bubble({ role, content, failed }: ChatMessage) {
   const mine = role === 'user';
   return (
     <View style={[styles.bubbleRow, { flexDirection: mine ? 'row-reverse' : 'row' }]}>
-      {!mine && <Emoji3D name="robot" size={30} />}
+      {!mine && <BotAvatar size={30} />}
       <View
         style={[
           styles.bubble,
@@ -171,6 +163,24 @@ function Bubble({ role, content, failed }: ChatMessage) {
   );
 }
 
+/** Kitchy AI's avatar: a sparkle on the brand colour. */
+function BotAvatar({ size }: { size: number }) {
+  const { colors } = useSettings();
+  return (
+    <View
+      style={{
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        backgroundColor: colors.primary,
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+      <Icon name="sparkles" size={size * 0.5} color={colors.onPrimary} />
+    </View>
+  );
+}
+
 function TypingBubble() {
   const { colors } = useSettings();
   const pulse = useAnimatedValue(0);
@@ -181,7 +191,7 @@ function TypingBubble() {
   }, [pulse]);
   return (
     <View style={[styles.bubbleRow, { flexDirection: 'row' }]}>
-      <Emoji3D name="robot" size={30} />
+      <BotAvatar size={30} />
       <View style={[styles.bubble, styles.typing, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         {[0, 1, 2].map((i) => (
           <Animated.View
@@ -220,7 +230,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderRadius: 14,
     borderWidth: 1,
-    borderBottomWidth: 3,
   },
   suggestions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingStart: 38 },
   bubbleRow: { alignItems: 'flex-end', gap: 8 },
@@ -236,6 +245,5 @@ const styles = StyleSheet.create({
     borderRadius: 23,
     alignItems: 'center',
     justifyContent: 'center',
-    borderBottomWidth: 4,
   },
 });

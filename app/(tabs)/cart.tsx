@@ -3,11 +3,10 @@ import { useCallback, useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import { Confetti } from '@/components/Confetti';
-import { Emoji3D } from '@/components/Emoji3D';
 import { DishArt } from '@/components/media';
 import { ScheduleValue, SchedulePicker } from '@/components/SchedulePicker';
 import { FreeDeliveryBanner, QuantityStepper } from '@/components/menu';
-import { Button3D, Card3D, Chip, EmptyState, Screen, Txt } from '@/components/ui';
+import { Button, Card, Chip, EmptyState, Icon, Screen, Txt } from '@/components/ui';
 import { useCart } from '@/lib/cart';
 import { useCatalog } from '@/lib/catalog';
 import { applyReward, getReward, pointsFor } from '@/lib/loyalty';
@@ -90,44 +89,43 @@ export default function CartScreen() {
   return (
     <Screen>
       {lines.length === 0 ? (
-        <EmptyState emoji="cart" title={t('cartEmpty')} body={t('cartEmptyBody')}>
-          <Button3D title={t('browseDishes')} emoji="steaming_bowl" onPress={() => router.navigate('/')} />
+        <EmptyState icon="cart-outline" title={t('cartEmpty')} body={t('cartEmptyBody')}>
+          <Button title={t('browseDishes')} onPress={() => router.navigate('/')} />
         </EmptyState>
       ) : (
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
           <ScrollView
-            contentContainerStyle={{ padding: 20, gap: 14, paddingBottom: 40 }}
+            contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 40 }}
             keyboardShouldPersistTaps="handled">
-            <View style={styles.header}>
-              <Emoji3D name="cart" size={52} />
-              <Txt variant="title">{t('yourCart')}</Txt>
-            </View>
+            <Txt variant="title" style={{ marginTop: 8 }}>
+              {t('yourCart')}
+            </Txt>
 
             {lines.map(({ dish, quantity }) => (
-              <Card3D key={dish.id} style={styles.line}>
+              <Card key={dish.id} style={styles.line}>
                 <View style={styles.lineArt}>
-                  <DishArt dish={dish} height={64} emojiSize={48} radius={16} color={getChef(dish.chefId)?.color} />
+                  <DishArt dish={dish} height={64} emojiSize={42} radius={14} color={getChef(dish.chefId)?.color} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Txt style={{ fontWeight: '800' }} numberOfLines={1}>
+                  <Txt style={{ fontWeight: '700' }} numberOfLines={1}>
                     {l(dish.name)}
                   </Txt>
                   <Txt variant="caption" muted numberOfLines={1}>
                     {getChef(dish.chefId) ? l(getChef(dish.chefId)!.name) : ''}
                   </Txt>
-                  <Txt style={{ fontWeight: '900', color: colors.primary, marginTop: 2 }}>
+                  <Txt style={{ fontWeight: '700', marginTop: 2 }}>
                     {formatPrice(dish.price * quantity)}
                   </Txt>
                 </View>
                 <QuantityStepper value={quantity} onChange={(q) => setQuantity(dish.id, q)} />
-              </Card3D>
+              </Card>
             ))}
 
             <FreeDeliveryBanner />
 
-            <Card3D style={{ gap: 10 }}>
+            <Card style={{ gap: 10 }}>
               <View style={styles.row}>
-                <Emoji3D name="house" size={24} />
+                <Icon name="location-outline" size={18} color={colors.textMuted} />
                 <Txt variant="label" muted>
                   {t('address')}
                 </Txt>
@@ -140,15 +138,15 @@ export default function CartScreen() {
                 style={inputStyle}
                 multiline
               />
-              <Button3D
+              <Button
                 small
                 variant="secondary"
-                emoji="pin"
+                icon="map-outline"
                 title={location ? t('location') : t('pickOnMap')}
                 onPress={() => router.push('/location')}
               />
               <View style={styles.row}>
-                <Emoji3D name="clipboard" size={24} />
+                <Icon name="document-text-outline" size={18} color={colors.textMuted} />
                 <Txt variant="label" muted>
                   {t('notes')}
                 </Txt>
@@ -161,14 +159,14 @@ export default function CartScreen() {
                 style={inputStyle}
                 multiline
               />
-            </Card3D>
+            </Card>
 
             <SchedulePicker value={schedule} onChange={setSchedule} />
 
             {availableVouchers.length > 0 && (
-              <Card3D style={{ gap: 10 }}>
+              <Card style={{ gap: 10 }}>
                 <View style={styles.row}>
-                  <Emoji3D name="ticket" size={24} />
+                  <Icon name="pricetags-outline" size={18} color={colors.textMuted} />
                   <Txt variant="label" muted>
                     {t('applyVoucher')}
                   </Txt>
@@ -182,40 +180,39 @@ export default function CartScreen() {
                       <Chip
                         key={v.id}
                         label={reward ? t(reward.label) : v.reward_id}
-                        emoji={reward?.emoji}
+                        icon={reward?.icon}
                         active={voucher?.id === v.id}
                         onPress={() => (pointless ? showAlert(t('deliveryAlreadyFree')) : setVoucherId(v.id))}
                       />
                     );
                   })}
                 </View>
-              </Card3D>
+              </Card>
             )}
 
-            <Card3D style={{ gap: 8 }}>
+            <Card style={{ gap: 8 }}>
               <SummaryRow label={t('subtotal')} value={formatPrice(subtotal)} />
               {discount > 0 && (
                 <SummaryRow label={t('discount')} value={`− ${formatPrice(discount)}`} valueColor={colors.success} />
               )}
               <SummaryRow
                 label={t('delivery')}
-                value={deliveryFee === 0 ? `${t('free')} 🎉` : formatPrice(deliveryFee)}
+                value={deliveryFee === 0 ? t('free') : formatPrice(deliveryFee)}
                 valueColor={deliveryFee === 0 ? colors.success : undefined}
                 strike={deliveryFee === 0 ? formatPrice(DELIVERY_FEE) : undefined}
               />
               <View style={[styles.divider, { backgroundColor: colors.border }]} />
               <SummaryRow label={t('total')} value={formatPrice(total)} big />
               <View style={styles.row}>
-                <Emoji3D name="coin" size={20} />
-                <Txt variant="caption" style={{ fontWeight: '800', color: colors.primary }}>
+                <Icon name="sparkles-outline" size={16} color={colors.primary} />
+                <Txt variant="caption" style={{ fontWeight: '600', color: colors.primary }}>
                   {t('youWillEarn', { n: pointsFor(subtotal - discount, orderCount) })}
                 </Txt>
               </View>
-            </Card3D>
+            </Card>
 
-            <Button3D
+            <Button
               title={`${t('placeOrder')} · ${formatPrice(total)}`}
-              emoji="bags"
               onPress={submit}
               loading={busy}
             />
@@ -225,9 +222,11 @@ export default function CartScreen() {
 
       <Modal visible={success} transparent animationType="fade" onRequestClose={() => setSuccess(false)}>
         <View style={styles.backdrop}>
-          <Card3D style={{ padding: 24, alignItems: 'center' }}>
-            <Emoji3D name="party" size={130} float />
-            <Txt variant="title" center style={{ marginTop: 10 }}>
+          <Card style={{ padding: 24, alignItems: 'center' }}>
+            <View style={[styles.successIcon, { backgroundColor: colors.successBg }]}>
+              <Icon name="checkmark" size={48} color={colors.success} />
+            </View>
+            <Txt variant="title" center style={{ marginTop: 16 }}>
               {t('orderPlaced')}
             </Txt>
             <Txt muted center style={{ marginVertical: 12 }}>
@@ -235,22 +234,21 @@ export default function CartScreen() {
             </Txt>
             {earned > 0 && (
               <View style={[styles.row, styles.earnedPill, { backgroundColor: colors.surfaceAlt }]}>
-                <Emoji3D name="coin" size={26} />
+                <Icon name="sparkles" size={20} color={colors.primary} />
                 <Txt variant="heading" style={{ color: colors.primary }}>
                   {t('pointsEarned', { n: earned })}
                 </Txt>
               </View>
             )}
-            <Button3D
+            <Button
               title={t('viewOrders')}
-              emoji="receipt"
               style={{ alignSelf: 'stretch' }}
               onPress={() => {
                 setSuccess(false);
                 router.navigate('/orders');
               }}
             />
-          </Card3D>
+          </Card>
         </View>
         {/* Confetti sits above the success card, inside the modal so it's on top. */}
         <Confetti burstKey={burst} onDone={clearBurst} />
@@ -283,7 +281,7 @@ function SummaryRow({
             {strike}
           </Txt>
         )}
-        <Txt variant={big ? 'heading' : 'body'} color={valueColor} style={{ fontWeight: '900' }}>
+        <Txt variant={big ? 'heading' : 'body'} color={valueColor} style={{ fontWeight: big ? '700' : '600' }}>
           {value}
         </Txt>
       </View>
@@ -292,7 +290,7 @@ function SummaryRow({
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  successIcon: { width: 88, height: 88, borderRadius: 44, alignItems: 'center', justifyContent: 'center' },
   line: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 10 },
   lineArt: { width: 64, height: 64 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 6 },

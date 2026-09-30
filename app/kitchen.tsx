@@ -4,9 +4,8 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Swit
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { DishEditor } from '@/components/DishEditor';
-import { Emoji3D } from '@/components/Emoji3D';
-import { RatingBadge } from '@/components/media';
-import { Button3D, Card3D, EmptyState, Txt } from '@/components/ui';
+import { ChefPhoto, RatingBadge } from '@/components/media';
+import { Button, Card, EmptyState, Icon, ScreenHeader, Txt } from '@/components/ui';
 import { showAlert } from '@/lib/alert';
 import { useCatalog } from '@/lib/catalog';
 import {
@@ -60,24 +59,21 @@ export default function KitchenScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <SafeAreaView edges={['top']} style={styles.header}>
-        <Pressable onPress={close} hitSlop={10} style={[styles.close, { backgroundColor: colors.surface }]}>
-          <Emoji3D name="cross_mark" size={20} />
-        </Pressable>
-        <Txt variant="heading">{t('myKitchen')}</Txt>
+      <SafeAreaView edges={['top']}>
+        <ScreenHeader title={t('myKitchen')} onBack={close} />
       </SafeAreaView>
 
       {!kitchen ? (
         loading ? null : (
-          <EmptyState emoji="locked" title={t('applicationPending')} body={t('applicationSentBody')} />
+          <EmptyState icon="hourglass-outline" title={t('applicationPending')} body={t('applicationSentBody')} />
         )
       ) : (
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
           <ScrollView
-            contentContainerStyle={{ padding: 20, gap: 14, paddingBottom: 40 }}
+            contentContainerStyle={{ padding: 16, paddingTop: 4, gap: 12, paddingBottom: 40 }}
             keyboardShouldPersistTaps="handled">
-            <Card3D style={styles.hero}>
-              <Emoji3D name="cooking" size={56} float />
+            <Card style={styles.hero}>
+              <ChefPhoto size={56} />
               <View style={{ flex: 1, gap: 2 }}>
                 <Txt variant="heading">{kitchen.name}</Txt>
                 <Txt variant="caption" muted>
@@ -85,15 +81,15 @@ export default function KitchenScreen() {
                 </Txt>
                 <RatingBadge rating={ratings[kitchen.id]} />
               </View>
-            </Card3D>
+            </Card>
             <Txt muted>{t('kitchenBody')}</Txt>
 
             {dishes.length === 0 && !draft && <Txt muted>{t('noKitchenDishes')}</Txt>}
             {dishes.map((d) => (
-              <Card3D key={d.id} style={styles.dishRow}>
+              <Card key={d.id} style={styles.dishRow}>
                 <View style={{ flex: 1 }}>
-                  <Txt style={{ fontWeight: '800' }}>{d.name}</Txt>
-                  <Txt variant="caption" style={{ color: colors.primary, fontWeight: '800' }}>
+                  <Txt style={{ fontWeight: '700' }}>{d.name}</Txt>
+                  <Txt variant="caption" style={{ fontWeight: '600' }}>
                     {formatPrice(Number(d.price))}
                   </Txt>
                   <Txt variant="caption" muted>
@@ -106,18 +102,18 @@ export default function KitchenScreen() {
                   trackColor={{ true: colors.primary }}
                 />
                 <Pressable onPress={() => run(() => deleteKitchenDish(d.id))} hitSlop={8}>
-                  <Emoji3D name="cross_mark" size={22} />
+                  <Icon name="trash-outline" size={22} color={colors.danger} />
                 </Pressable>
-              </Card3D>
+              </Card>
             ))}
 
             {draft ? (
               <>
                 <DishEditor title={t('addDish')} value={draft} onChange={setDraft} onRemove={() => setDraft(null)} />
-                <Button3D title={t('saveDish')} emoji="check" onPress={save} loading={busy} />
+                <Button title={t('saveDish')} icon="checkmark" onPress={save} loading={busy} />
               </>
             ) : (
-              <Button3D title={t('addDish')} emoji="plus" onPress={() => setDraft(emptyDish())} />
+              <Button title={t('addDish')} icon="add" onPress={() => setDraft(emptyDish())} />
             )}
           </ScrollView>
         </KeyboardAvoidingView>
@@ -127,8 +123,6 @@ export default function KitchenScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingBottom: 8 },
-  close: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginTop: 8 },
   hero: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   dishRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
 });

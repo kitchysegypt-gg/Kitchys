@@ -2,25 +2,24 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, FlatList, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { EmojiName } from '@/lib/emoji';
 import { TranslationKey } from '@/lib/i18n';
 import { useSettings } from '@/lib/settings';
 import { useAnimatedValue } from '@/lib/useAnimatedValue';
-import { Emoji3D } from './Emoji3D';
 import { Logo } from './Logo';
-import { Button3D, Txt } from './ui';
+import { ChefPhoto } from './media';
+import { Button, Icon, IconName, Txt } from './ui';
 
-type Step = { emoji?: EmojiName; tint: string; title: TranslationKey; body: TranslationKey };
+type Step = { art?: IconName | 'chef'; title: TranslationKey; body: TranslationKey };
 
-// The first step shows the logo instead of an emoji.
+// The first step shows the logo; the chef step shows the chef photo.
 const STEPS: Step[] = [
-  { tint: '#FFE3D3', title: 'onb1Title', body: 'onb1Body' },
-  { emoji: 'chef_1', tint: '#FFE3D3', title: 'onb2Title', body: 'onb2Body' },
-  { emoji: 'search', tint: '#D9F0FF', title: 'onb3Title', body: 'onb3Body' },
-  { emoji: 'pin', tint: '#FFE0EC', title: 'onb4Title', body: 'onb4Body' },
-  { emoji: 'trophy', tint: '#FFF1C7', title: 'onb5Title', body: 'onb5Body' },
-  { emoji: 'robot', tint: '#E4E1FF', title: 'onb6Title', body: 'onb6Body' },
-  { emoji: 'gift', tint: '#DDF5EA', title: 'onb7Title', body: 'onb7Body' },
+  { title: 'onb1Title', body: 'onb1Body' },
+  { art: 'chef', title: 'onb2Title', body: 'onb2Body' },
+  { art: 'search-outline', title: 'onb3Title', body: 'onb3Body' },
+  { art: 'location-outline', title: 'onb4Title', body: 'onb4Body' },
+  { art: 'trophy-outline', title: 'onb5Title', body: 'onb5Body' },
+  { art: 'chatbubble-ellipses-outline', title: 'onb6Title', body: 'onb6Body' },
+  { art: 'bicycle-outline', title: 'onb7Title', body: 'onb7Body' },
 ];
 
 /** "How to use the app" — shown on first launch and from Settings. */
@@ -70,7 +69,7 @@ export function Walkthrough({ onDone }: { onDone: () => void }) {
           renderItem={({ item, index: i }) => (
             <View style={[styles.slide, { width }]}>
               <View style={styles.art}>
-                {item.emoji ? <Plate step={item} active={i === index} /> : <Logo width={Math.min(260, width - 80)} />}
+                {item.art ? <Plate step={item} active={i === index} /> : <Logo width={Math.min(260, width - 80)} />}
               </View>
               <Txt variant="title" center>
                 {t(item.title)}
@@ -83,15 +82,16 @@ export function Walkthrough({ onDone }: { onDone: () => void }) {
         />
 
         <View style={styles.bottom}>
-          <Button3D title={last ? t('getStarted') : t('next')} onPress={next} />
+          <Button title={last ? t('getStarted') : t('next')} onPress={next} />
         </View>
       </SafeAreaView>
     </View>
   );
 }
 
-/** A soft round "plate" with one 3D emoji that pops in when its slide becomes active. */
+/** A soft circle with the step's icon (or the chef photo) that fades in when its slide becomes active. */
 function Plate({ step, active }: { step: Step; active: boolean }) {
+  const { colors } = useSettings();
   const pop = useAnimatedValue(0);
 
   useEffect(() => {
@@ -99,41 +99,38 @@ function Plate({ step, active }: { step: Step; active: boolean }) {
     pop.setValue(0);
     Animated.timing(pop, {
       toValue: 1,
-      duration: 520,
-      easing: Easing.out(Easing.back(1.6)),
+      duration: 420,
+      easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
     }).start();
   }, [active, pop]);
 
   return (
-    <View style={[styles.plate, { backgroundColor: step.tint }]}>
-      <View style={styles.plateRing} />
-      <Animated.View
-        style={{
-          opacity: pop.interpolate({ inputRange: [0, 0.4, 1], outputRange: [0, 1, 1] }),
-          transform: [{ scale: pop.interpolate({ inputRange: [0, 1], outputRange: [0.6, 1] }) }],
-        }}>
-        <Emoji3D name={step.emoji!} size={140} float={active} />
-      </Animated.View>
-    </View>
+    <Animated.View
+      style={[
+        styles.plate,
+        { backgroundColor: colors.surfaceAlt },
+        {
+          opacity: pop,
+          transform: [{ scale: pop.interpolate({ inputRange: [0, 1], outputRange: [0.92, 1] }) }],
+        },
+      ]}>
+      {step.art === 'chef' ? (
+        <ChefPhoto size={220} />
+      ) : (
+        <Icon name={step.art as IconName} size={96} color={colors.primary} />
+      )}
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   top: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingHorizontal: 24, paddingTop: 12 },
   progress: { flex: 1, flexDirection: 'row', gap: 6 },
-  progressBar: { flex: 1, height: 5, borderRadius: 3 },
+  progressBar: { flex: 1, height: 4, borderRadius: 2 },
   slide: { paddingHorizontal: 32, justifyContent: 'center' },
   art: { alignItems: 'center', justifyContent: 'center', height: 290, marginBottom: 20 },
-  plate: { width: 240, height: 240, borderRadius: 120, alignItems: 'center', justifyContent: 'center' },
-  plateRing: {
-    position: 'absolute',
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.7)',
-  },
+  plate: { width: 220, height: 220, borderRadius: 110, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   body: { marginTop: 12, fontSize: 17, lineHeight: 25, maxWidth: 420, alignSelf: 'center' },
   bottom: { paddingHorizontal: 24, paddingBottom: 24, paddingTop: 12 },
 });

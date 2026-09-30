@@ -58,7 +58,7 @@ type SettingsContextValue = StoredSettings & {
 function withAccent(palette: Palette, accent: AccentName): Palette {
   if (accent === 'orange' || !ACCENTS[accent]) return palette;
   const a = ACCENTS[accent];
-  return { ...palette, primary: a.primary, primaryDeep: a.deep, heroGradient: [a.light, a.primary] };
+  return { ...palette, primary: a.primary, primaryDeep: a.deep, heroGradient: [a.primary, a.deep] };
 }
 
 const SettingsContext = createContext<SettingsContextValue | null>(null);

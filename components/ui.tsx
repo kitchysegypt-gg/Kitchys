@@ -1,3 +1,5 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { router } from 'expo-router';
 import {
   ActivityIndicator,
   Animated,
@@ -14,10 +16,28 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { useAnimatedValue } from '@/lib/useAnimatedValue';
 import { EmojiName } from '@/lib/emoji';
 import { useSettings } from '@/lib/settings';
+import { useAnimatedValue } from '@/lib/useAnimatedValue';
 import { Emoji3D } from './Emoji3D';
+
+export type IconName = React.ComponentProps<typeof Ionicons>['name'];
+
+/** Outline icon from Ionicons, tinted with the theme's text colour by default. */
+export function Icon({
+  name,
+  size = 22,
+  color,
+  style,
+}: {
+  name: IconName;
+  size?: number;
+  color?: React.ComponentProps<typeof Ionicons>['color'];
+  style?: StyleProp<TextStyle>;
+}) {
+  const { colors } = useSettings();
+  return <Ionicons name={name} size={size} color={color ?? colors.text} style={style} />;
+}
 
 type TxtProps = TextProps & {
   variant?: 'title' | 'heading' | 'body' | 'caption' | 'label';
@@ -53,26 +73,34 @@ export function Screen({ children, style, edges = ['top'] }: ViewProps & { edges
   );
 }
 
-/** A card with a thick bottom edge and soft shadow so it looks like a raised 3D tile. */
-export function Card3D({ children, style, color }: ViewProps & { color?: string }) {
+/** Title bar for pushed screens: back arrow, title and an optional action on the other side. */
+export function ScreenHeader({ title, right, onBack }: { title: string; right?: React.ReactNode; onBack?: () => void }) {
+  const { isRTL } = useSettings();
+  const back = onBack ?? (() => (router.canGoBack() ? router.back() : router.replace('/')));
+  return (
+    <View style={styles.header}>
+      <Pressable onPress={back} hitSlop={12} accessibilityRole="button" accessibilityLabel="Back">
+        <Icon name={isRTL ? 'chevron-forward' : 'chevron-back'} size={26} />
+      </Pressable>
+      <Txt variant="heading" numberOfLines={1} style={{ flex: 1 }}>
+        {title}
+      </Txt>
+      {right}
+    </View>
+  );
+}
+
+/** A plain white rounded card. */
+export function Card({ children, style, color }: ViewProps & { color?: string }) {
   const { colors } = useSettings();
   return (
-    <View
-      style={[
-        styles.card,
-        {
-          backgroundColor: color ?? colors.surface,
-          borderColor: colors.border,
-          shadowColor: colors.shadow,
-        },
-        style,
-      ]}>
+    <View style={[styles.card, { backgroundColor: color ?? colors.surface, shadowColor: colors.shadow }, style]}>
       {children}
     </View>
   );
 }
 
-/** Springy scale-on-press wrapper used by all tappable cards. */
+/** Slight shrink on press, used by tappable cards. */
 export function PressableScale({
   children,
   onPress,
@@ -86,10 +114,11 @@ export function PressableScale({
 }) {
   const scale = useAnimatedValue(1);
   const to = (v: number) =>
-    Animated.spring(scale, { toValue: v, useNativeDriver: true, speed: 40, bounciness: 8 }).start();
+    Animated.spring(scale, { toValue: v, useNativeDriver: true, speed: 50, bounciness: 0 }).start();
   return (
-    <Pressable onPress={onPress} onPressIn={() => to(0.96)} onPressOut={() => to(1)} disabled={disabled}>
-      <Animated.View style={[style, { transform: [{ scale }] }]}>{children}</Animated.View>
+    // Layout styles (width, flex) go on the outer Pressable so percentages size against the parent.
+    <Pressable onPress={onPress} onPressIn={() => to(0.98)} onPressOut={() => to(1)} disabled={disabled} style={style}>
+      <Animated.View style={{ flexGrow: 1, transform: [{ scale }] }}>{children}</Animated.View>
     </Pressable>
   );
 }
@@ -97,7 +126,7 @@ export function PressableScale({
 type ButtonProps = {
   title: string;
   onPress?: () => void;
-  emoji?: EmojiName;
+  icon?: IconName;
   variant?: 'primary' | 'secondary' | 'ghost';
   loading?: boolean;
   disabled?: boolean;
@@ -105,92 +134,132 @@ type ButtonProps = {
   small?: boolean;
 };
 
-/** Chunky 3D button: the face sinks into its darker "edge" when pressed. */
-export function Button3D({ title, onPress, emoji, variant = 'primary', loading, disabled, style, small }: ButtonProps) {
+export function Button({ title, onPress, icon, variant = 'primary', loading, disabled, style, small }: ButtonProps) {
   const { colors } = useSettings();
-  const press = useAnimatedValue(0);
-  const depth = small ? 4 : 6;
-  const animate = (v: number) => Animated.timing(press, { toValue: v, duration: 80, useNativeDriver: true }).start();
-
-  const face = variant === 'primary' ? colors.primary : variant === 'secondary' ? colors.surfaceAlt : 'transparent';
-  const edge = variant === 'primary' ? colors.primaryDeep : variant === 'secondary' ? colors.border : 'transparent';
-  const textColor = variant === 'primary' ? colors.onPrimary : colors.primary;
+  const background = variant === 'primary' ? colors.primary : variant === 'secondary' ? colors.surfaceAlt : 'transparent';
+  const textColor = variant === 'primary' ? colors.onPrimary : variant === 'secondary' ? colors.text : colors.primary;
 
   return (
     <Pressable
       onPress={onPress}
-      onPressIn={() => animate(1)}
-      onPressOut={() => animate(0)}
       disabled={disabled || loading}
-      style={[{ opacity: disabled ? 0.5 : 1 }, style]}>
-      <View style={{ borderRadius: 18, backgroundColor: edge, paddingBottom: variant === 'ghost' ? 0 : depth }}>
-        <Animated.View
-          style={[
-            styles.buttonFace,
-            small && styles.buttonFaceSmall,
-            {
-              backgroundColor: face,
-              transform: [{ translateY: press.interpolate({ inputRange: [0, 1], outputRange: [0, depth] }) }],
-            },
-          ]}>
-          {loading ? (
-            <ActivityIndicator color={textColor} />
-          ) : (
-            <>
-              {emoji && <Emoji3D name={emoji} size={small ? 20 : 26} />}
-              <Text style={[styles.buttonText, small && { fontSize: 14 }, { color: textColor }]}>{title}</Text>
-            </>
-          )}
-        </Animated.View>
-      </View>
+      style={({ pressed }) => [
+        styles.button,
+        small && styles.buttonSmall,
+        { backgroundColor: background, opacity: disabled ? 0.45 : pressed ? 0.85 : 1 },
+        style,
+      ]}>
+      {loading ? (
+        <ActivityIndicator color={textColor} />
+      ) : (
+        <>
+          {icon && <Icon name={icon} size={small ? 17 : 20} color={textColor} />}
+          <Text style={[styles.buttonText, small && { fontSize: 14 }, { color: textColor }]}>{title}</Text>
+        </>
+      )}
     </Pressable>
   );
 }
 
+/** Pill filter. Takes an outline icon, or a food emoji where a picture helps (menu categories). */
 export function Chip({
   label,
+  icon,
   emoji,
   active,
   onPress,
 }: {
   label: string;
+  icon?: IconName;
   emoji?: EmojiName;
   active?: boolean;
   onPress?: () => void;
 }) {
   const { colors } = useSettings();
+  const textColor = active ? colors.onPrimary : colors.text;
   return (
-    <PressableScale onPress={onPress}>
-      <View
-        style={[
-          styles.chip,
-          {
-            backgroundColor: active ? colors.primary : colors.surface,
-            borderColor: active ? colors.primaryDeep : colors.border,
-            shadowColor: colors.shadow,
-          },
-        ]}>
-        {emoji && <Emoji3D name={emoji} size={24} />}
-        <Text style={{ fontWeight: '700', color: active ? colors.onPrimary : colors.text }}>{label}</Text>
+    <Pressable
+      onPress={onPress}
+      style={[
+        styles.chip,
+        { backgroundColor: active ? colors.primary : colors.surface, borderColor: active ? colors.primary : colors.border },
+      ]}>
+      {icon && <Icon name={icon} size={16} color={textColor} />}
+      {emoji && <Emoji3D name={emoji} size={20} />}
+      <Text style={{ fontWeight: '600', color: textColor }}>{label}</Text>
+    </Pressable>
+  );
+}
+
+/** Rounded group of rows, like a settings list. */
+export function ListGroup({ title, children }: { title?: string; children: React.ReactNode }) {
+  const { colors } = useSettings();
+  return (
+    <View style={{ gap: 8 }}>
+      {title && (
+        <Txt variant="label" muted style={{ paddingHorizontal: 4 }}>
+          {title}
+        </Txt>
+      )}
+      <View style={[styles.group, { backgroundColor: colors.surface }]}>{children}</View>
+    </View>
+  );
+}
+
+export function ListRow({
+  icon,
+  label,
+  detail,
+  onPress,
+  right,
+  color,
+}: {
+  icon: IconName;
+  label: string;
+  detail?: string;
+  onPress?: () => void;
+  right?: React.ReactNode;
+  color?: string;
+}) {
+  const { colors, isRTL } = useSettings();
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={!onPress}
+      style={({ pressed }) => [styles.row, { backgroundColor: pressed ? colors.surfaceAlt : 'transparent' }]}>
+      <Icon name={icon} size={24} color={color} />
+      <View style={{ flex: 1 }}>
+        <Txt style={{ fontSize: 16, fontWeight: '500' }} color={color}>
+          {label}
+        </Txt>
+        {detail ? (
+          <Txt variant="caption" muted numberOfLines={1}>
+            {detail}
+          </Txt>
+        ) : null}
       </View>
-    </PressableScale>
+      {right ?? (onPress ? <Icon name={isRTL ? 'chevron-back' : 'chevron-forward'} size={20} color={colors.textMuted} /> : null)}
+    </Pressable>
   );
 }
 
 export function EmptyState({
-  emoji,
+  icon,
   title,
   body,
   children,
 }: {
-  emoji: EmojiName;
+  icon: IconName;
   title: string;
   body?: string;
   children?: React.ReactNode;
 }) {
+  const { colors } = useSettings();
   return (
     <View style={styles.empty}>
-      <Emoji3D name={emoji} size={120} float sway />
+      <View style={[styles.emptyIcon, { backgroundColor: colors.surfaceAlt }]}>
+        <Icon name={icon} size={40} color={colors.primary} />
+      </View>
       <Txt variant="heading" center style={{ marginTop: 16 }}>
         {title}
       </Txt>
@@ -207,23 +276,22 @@ export function EmptyState({
 export const scrollContent: ScrollViewProps['contentContainerStyle'] = { padding: 20, paddingBottom: 40 };
 
 const styles = StyleSheet.create({
-  title: { fontSize: 30, fontWeight: '900', letterSpacing: -0.5 } as TextStyle,
-  heading: { fontSize: 20, fontWeight: '800' },
+  title: { fontSize: 26, fontWeight: '800', letterSpacing: -0.4 } as TextStyle,
+  heading: { fontSize: 19, fontWeight: '700', letterSpacing: -0.2 } as TextStyle,
   body: { fontSize: 15, lineHeight: 22 },
-  caption: { fontSize: 13 },
-  label: { fontSize: 13, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6 },
+  caption: { fontSize: 13, lineHeight: 18 },
+  label: { fontSize: 13, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5 },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 12 },
   card: {
-    borderRadius: 22,
-    borderWidth: 1,
-    borderBottomWidth: 5,
-    padding: 14,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.12,
-    shadowRadius: 10,
-    elevation: 4,
-  },
-  buttonFace: {
     borderRadius: 18,
+    padding: 14,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 1,
+  },
+  button: {
+    borderRadius: 14,
     paddingVertical: 15,
     paddingHorizontal: 20,
     flexDirection: 'row',
@@ -231,8 +299,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
   },
-  buttonFaceSmall: { paddingVertical: 9, paddingHorizontal: 14, borderRadius: 14 },
-  buttonText: { fontSize: 17, fontWeight: '800' },
+  buttonSmall: { paddingVertical: 9, paddingHorizontal: 14, borderRadius: 12 },
+  buttonText: { fontSize: 16, fontWeight: '700' },
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -241,11 +309,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: 20,
     borderWidth: 1,
-    borderBottomWidth: 3,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
   },
+  group: { borderRadius: 18, overflow: 'hidden', paddingVertical: 4 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingVertical: 15, paddingHorizontal: 18 },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
+  emptyIcon: { width: 88, height: 88, borderRadius: 44, alignItems: 'center', justifyContent: 'center' },
 });

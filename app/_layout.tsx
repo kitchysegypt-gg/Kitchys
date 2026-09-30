@@ -83,6 +83,9 @@ function RootNavigator() {
           <Stack.Screen name="location" />
           <Stack.Screen name="apply" />
           <Stack.Screen name="kitchen" />
+          <Stack.Screen name="rewards" />
+          <Stack.Screen name="chat" />
+          <Stack.Screen name="settings" />
           <Stack.Screen name="review/[orderId]" options={{ presentation: 'modal' }} />
         </Stack.Protected>
       </Stack>

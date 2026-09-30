@@ -23,7 +23,7 @@ lines.push('\n# Points and ranks');
 lines.push(`- Customers earn 1 point per EGP ${EGP_PER_POINT} spent (after discounts, before delivery), times their rank multiplier.`);
 lines.push(`- Ranks by number of orders: ${RANKS.map((r) => `${r.id} ${r.minOrders}+ orders x${r.multiplier}`).join('; ')}.`);
 lines.push(
-  `- Rewards (redeem in the Points tab, then pick the voucher in the cart): ${REWARDS.map(
+  `- Rewards (redeem in More > Kitchy's Points, then pick the voucher in the cart): ${REWARDS.map(
     (r) =>
       `${r.id}: ${r.kind === 'free_delivery' ? 'free delivery' : r.kind === 'fixed' ? `EGP ${r.value} off` : `${r.value}% off up to EGP ${r.maxDiscount}`} for ${r.cost} points` +
       (r.minRank ? ` (needs ${RANKS[r.minRank].id} rank)` : '')

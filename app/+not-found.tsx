@@ -8,7 +8,7 @@ export default function NotFoundScreen() {
   return (
     <Screen>
       <Stack.Screen options={{ headerShown: false }} />
-      <EmptyState emoji="search" title={t('noResults')}>
+      <EmptyState icon="search" title={t('noResults')}>
         <Link href="/">
           <Txt style={{ color: colors.primary, fontWeight: '800' }}>{t('tabHome')}</Txt>
         </Link>

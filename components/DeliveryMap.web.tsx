@@ -1,8 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 
 import { useSettings } from '@/lib/settings';
-import { Emoji3D } from './Emoji3D';
-import { Txt } from './ui';
+import { Icon, Txt } from './ui';
 
 export type Coordinate = { latitude: number; longitude: number };
 
@@ -18,8 +17,8 @@ export function DeliveryMap({ coordinate }: Props) {
   return (
     <View style={[StyleSheet.absoluteFill, styles.wrap, { backgroundColor: colors.surfaceAlt }]}>
       <View style={[styles.grid, { borderColor: colors.border }]} />
-      <Emoji3D name="world_map" size={120} float />
-      <Emoji3D name="pin" size={56} style={styles.pin} />
+      <Icon name="map-outline" size={96} color={colors.border} />
+      <Icon name="location" size={48} color={colors.primary} style={styles.pin} />
       <Txt variant="caption" muted center style={styles.coords}>
         {coordinate.latitude.toFixed(5)}, {coordinate.longitude.toFixed(5)}
       </Txt>

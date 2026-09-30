@@ -3,8 +3,7 @@ import { useState } from 'react';
 import { Modal, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 
 import { Confetti } from '@/components/Confetti';
-import { Emoji3D } from '@/components/Emoji3D';
-import { Button3D, Card3D, Screen, Txt } from '@/components/ui';
+import { Button, Card, Icon, Screen, ScreenHeader, Txt } from '@/components/ui';
 import { showAlert } from '@/lib/alert';
 import { EGP_PER_POINT, RANKS, REWARDS, Reward, getReward } from '@/lib/loyalty';
 import { useOrders } from '@/lib/orders';
@@ -39,12 +38,15 @@ export default function RewardsScreen() {
 
   return (
     <Screen>
+      <ScreenHeader title={t('tabRewards')} />
       <ScrollView
-        contentContainerStyle={{ padding: 20, gap: 16, paddingBottom: 40 }}
+        contentContainerStyle={{ padding: 16, paddingTop: 4, gap: 16, paddingBottom: 40 }}
         refreshControl={<RefreshControl refreshing={loading} onRefresh={refresh} tintColor={colors.primary} />}>
-        <LinearGradient colors={[rank.color, colors.primaryDeep]} style={styles.hero}>
+        <LinearGradient colors={colors.heroGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.hero}>
           <View style={styles.heroTop}>
-            <Emoji3D name={rank.emoji} size={72} float />
+            <View style={[styles.rankBadge, { backgroundColor: rank.color }]}>
+              <Icon name={rank.icon} size={30} color="#fff" />
+            </View>
             <View style={{ flex: 1 }}>
               <Txt variant="label" color="rgba(255,255,255,0.85)">
                 {t('rank')}
@@ -57,8 +59,7 @@ export default function RewardsScreen() {
               </Txt>
             </View>
             <View style={styles.pointsBubble}>
-              <Emoji3D name="coin" size={28} />
-              <Txt variant="heading" color="#1E1B18" center style={styles.tabular}>
+              <Txt variant="heading" color="#1B1B1F" center style={styles.tabular}>
                 {points}
               </Txt>
               <Txt variant="caption" color="#5B4F48" center>
@@ -74,14 +75,13 @@ export default function RewardsScreen() {
           </Txt>
         </LinearGradient>
 
-        <Card3D style={styles.row}>
-          <Emoji3D name="sparkles" size={32} />
-          <Txt style={{ flex: 1, fontWeight: '700' }}>{t('earnRule')}</Txt>
-        </Card3D>
+        <Card style={styles.row}>
+          <Icon name="information-circle-outline" size={24} color={colors.primary} />
+          <Txt style={{ flex: 1, fontWeight: '500' }}>{t('earnRule')}</Txt>
+        </Card>
 
         {/* Vouchers the customer already owns */}
         <View style={styles.sectionTitle}>
-          <Emoji3D name="ticket" size={28} />
           <Txt variant="heading">{t('myVouchers')}</Txt>
         </View>
         {availableVouchers.length === 0 ? (
@@ -94,9 +94,8 @@ export default function RewardsScreen() {
                 <View
                   key={v.id}
                   style={[styles.voucher, { borderColor: colors.primary, backgroundColor: colors.surface }]}>
-                  <Emoji3D name={reward?.emoji ?? 'ticket'} size={36} />
-                  <Txt style={{ flex: 1, fontWeight: '800' }}>{reward ? t(reward.label) : v.reward_id}</Txt>
-                  <Emoji3D name="cart" size={24} />
+                  <Icon name={reward?.icon ?? 'pricetags'} size={26} color={colors.primary} />
+                  <Txt style={{ flex: 1, fontWeight: '600' }}>{reward ? t(reward.label) : v.reward_id}</Txt>
                 </View>
               );
             })}
@@ -105,7 +104,6 @@ export default function RewardsScreen() {
 
         {/* Catalogue */}
         <View style={styles.sectionTitle}>
-          <Emoji3D name="gift" size={28} />
           <Txt variant="heading">{t('rewards')}</Txt>
         </View>
         <View style={{ gap: 12 }}>
@@ -114,15 +112,14 @@ export default function RewardsScreen() {
             const short = reward.cost - points;
             const lockedRank = RANKS[reward.minRank];
             return (
-              <Card3D key={reward.id} style={[styles.row, locked && { opacity: 0.6 }]}>
+              <Card key={reward.id} style={[styles.row, locked && { opacity: 0.6 }]}>
                 <View style={[styles.rewardArt, { backgroundColor: colors.surfaceAlt }]}>
-                  <Emoji3D name={locked ? 'locked' : reward.emoji} size={40} />
+                  <Icon name={locked ? 'lock-closed-outline' : reward.icon} size={26} color={colors.primary} />
                 </View>
                 <View style={{ flex: 1, gap: 2 }}>
-                  <Txt style={{ fontWeight: '800' }}>{t(reward.label)}</Txt>
+                  <Txt style={{ fontWeight: '700' }}>{t(reward.label)}</Txt>
                   <View style={styles.costRow}>
-                    <Emoji3D name="coin" size={16} />
-                    <Txt variant="caption" style={[{ fontWeight: '800', color: colors.primary }, styles.tabular]}>
+                    <Txt variant="caption" style={[{ fontWeight: '700', color: colors.primary }, styles.tabular]}>
                       {reward.cost} {t('pts')}
                     </Txt>
                   </View>
@@ -136,41 +133,42 @@ export default function RewardsScreen() {
                     </Txt>
                   ) : null}
                 </View>
-                <Button3D
+                <Button
                   small
                   title={t('redeem')}
                   disabled={locked || short > 0}
                   onPress={() => setConfirming(reward)}
                 />
-              </Card3D>
+              </Card>
             );
           })}
         </View>
 
         {/* Rank ladder */}
         <View style={styles.sectionTitle}>
-          <Emoji3D name="trophy" size={28} />
           <Txt variant="heading">{t('ranks')}</Txt>
         </View>
-        <Card3D style={{ gap: 4, paddingVertical: 8 }}>
+        <Card style={{ gap: 4, paddingVertical: 8 }}>
           {RANKS.map((r) => {
             const current = r.id === rank.id;
             return (
               <View
                 key={r.id}
-                style={[styles.rankRow, current && { backgroundColor: colors.surfaceAlt, borderColor: r.color }]}>
-                <Emoji3D name={r.emoji} size={34} />
+                style={[styles.rankRow, current && { backgroundColor: colors.surfaceAlt }]}>
+                <View style={[styles.rankDot, { backgroundColor: r.color }]}>
+                  <Icon name={r.icon} size={18} color="#fff" />
+                </View>
                 <View style={{ flex: 1 }}>
-                  <Txt style={{ fontWeight: '800' }}>{t(`rank_${r.id}`)}</Txt>
+                  <Txt style={{ fontWeight: '700' }}>{t(`rank_${r.id}`)}</Txt>
                   <Txt variant="caption" muted>
                     {t('ordersNeeded', { n: r.minOrders })}
                   </Txt>
                 </View>
-                <Txt style={[{ fontWeight: '900', color: r.color }, styles.tabular]}>×{r.multiplier}</Txt>
+                <Txt style={[{ fontWeight: '700', color: colors.textMuted }, styles.tabular]}>×{r.multiplier}</Txt>
               </View>
             );
           })}
-        </Card3D>
+        </Card>
         <Txt variant="caption" muted center>
           1 {t('pts')} = EGP {EGP_PER_POINT}
         </Txt>
@@ -179,8 +177,10 @@ export default function RewardsScreen() {
       <Modal visible={!!confirming} transparent animationType="fade" onRequestClose={() => setConfirming(null)}>
         <View style={styles.backdrop}>
           {confirming && (
-            <Card3D style={{ padding: 24, alignItems: 'center', gap: 10 }}>
-              <Emoji3D name={confirming.emoji} size={96} float />
+            <Card style={{ padding: 24, alignItems: 'center', gap: 10 }}>
+              <View style={[styles.rewardArt, { backgroundColor: colors.surfaceAlt, width: 72, height: 72 }]}>
+                <Icon name={confirming.icon} size={36} color={colors.primary} />
+              </View>
               <Txt variant="heading" center>
                 {t('confirmRedeemTitle')}
               </Txt>
@@ -191,15 +191,15 @@ export default function RewardsScreen() {
                 {t('confirmRedeemBody', { cost: confirming.cost })}
               </Txt>
               <View style={{ flexDirection: 'row', gap: 10, alignSelf: 'stretch', marginTop: 8 }}>
-                <Button3D
+                <Button
                   title={t('cancel')}
                   variant="secondary"
                   onPress={() => setConfirming(null)}
                   style={{ flex: 1 }}
                 />
-                <Button3D title={t('redeem')} emoji="coin" onPress={onRedeem} loading={busy} style={{ flex: 1 }} />
+                <Button title={t('redeem')} onPress={onRedeem} loading={busy} style={{ flex: 1 }} />
               </View>
-            </Card3D>
+            </Card>
           )}
         </View>
       </Modal>
@@ -210,12 +210,12 @@ export default function RewardsScreen() {
 
 const styles = StyleSheet.create({
   hero: {
-    borderRadius: 26,
+    borderRadius: 20,
     padding: 18,
     gap: 12,
-    borderBottomWidth: 6,
-    borderBottomColor: 'rgba(0,0,0,0.2)',
   },
+  rankBadge: { width: 60, height: 60, borderRadius: 30, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: 'rgba(255,255,255,0.6)' },
+  rankDot: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
   heroTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   pointsBubble: {
     backgroundColor: '#fff',
@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     minWidth: 78,
   },
-  track: { height: 12, borderRadius: 6, backgroundColor: 'rgba(255,255,255,0.3)', overflow: 'hidden' },
+  track: { height: 8, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.3)', overflow: 'hidden' },
   fill: { height: '100%', borderRadius: 6, backgroundColor: '#fff' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   sectionTitle: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 },
@@ -234,11 +234,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     padding: 12,
-    borderRadius: 18,
-    borderWidth: 2,
+    borderRadius: 16,
+    borderWidth: 1.5,
     borderStyle: 'dashed',
   },
-  rewardArt: { width: 56, height: 56, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  rewardArt: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center' },
   costRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   rankRow: {
     flexDirection: 'row',
@@ -246,8 +246,6 @@ const styles = StyleSheet.create({
     gap: 12,
     padding: 8,
     borderRadius: 14,
-    borderWidth: 2,
-    borderColor: 'transparent',
   },
   tabular: { fontVariant: ['tabular-nums'] },
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', padding: 24 },

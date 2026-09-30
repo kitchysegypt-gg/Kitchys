@@ -17,10 +17,10 @@ export type Review = {
 export type NewReview = Pick<Review, 'chef_id' | 'order_id' | 'food' | 'delivery' | 'packaging' | 'value' | 'comment'>;
 
 export const RATING_PARTS = [
-  { key: 'food', label: 'ratingFood', emoji: 'pot' },
-  { key: 'delivery', label: 'ratingDelivery', emoji: 'scooter' },
-  { key: 'packaging', label: 'ratingPackaging', emoji: 'bags' },
-  { key: 'value', label: 'ratingValue', emoji: 'coin' },
+  { key: 'food', label: 'ratingFood', icon: 'restaurant-outline' },
+  { key: 'delivery', label: 'ratingDelivery', icon: 'bicycle-outline' },
+  { key: 'packaging', label: 'ratingPackaging', icon: 'bag-handle-outline' },
+  { key: 'value', label: 'ratingValue', icon: 'wallet-outline' },
 ] as const;
 
 export async function fetchChefReviews(chefId: string) {

@@ -14,13 +14,13 @@ Customer app for ordering homemade food from mothers and grandmothers ("home che
 - **Delivery location on a map**: drop a pin, drag it, or use your GPS location; the address fills in automatically and is saved with every order (with an "Open in Google Maps" link)
 - **Points, ranks and rewards**: 1 point per EGP 10, ranks from Starter to Diamond with point boosts, and rewards (free delivery, EGP and % discounts) bought with points and used as vouchers in the cart
 - **Kitchy AI**: an in-app assistant powered by Claude that knows the menu, allergens, and the customer's own orders and points
-- **3D emojis everywhere** (Microsoft Fluent 3D emoji), chunky 3D buttons and cards
+- **Clean food-app design**: line icons (Ionicons), flat white cards, a chef photo for every chef, and 3D food pictures for dishes and categories
 - **Sound effect + haptic** when you tap *Add to cart*
 - **Animated confetti + success sound** when you place an order or redeem a reward
 - **Free delivery on the first 3 orders**: a welcome popup when you open the app, a banner that counts down, and a database rule that enforces it
 - **"How to use the app" walkthrough** on first launch (you can open it again from Profile)
 - **Profile / settings**: language (English, العربية, Français), theme (System, Light, Dark, Sunset, Mint), accent colour (orange, red, green, blue, purple, pink), sound on/off, sign out
-- **7 tabs**: Home, Chefs, Cart, Orders, Points, Ask AI, Profile
+- **5 tabs**: Home, Chefs, Cart, Orders, More. More opens Points, Kitchy AI, delivery address, home chef, Settings and the how-to guide
 
 ## Run it on your phone with Expo Go
 
@@ -72,7 +72,7 @@ select approve_chef_application('<application id>');
 
 ## AI pictures
 
-Dish photos and chef portraits are generated with AI through your n8n workflow **"Kitchy's image generator"** (OpenAI image model, paid with n8n gateway credits). The app shows the 3D emoji for any dish or chef without a picture yet.
+Dish photos and chef portraits are generated with AI through your n8n workflow **"Kitchy's image generator"** (OpenAI image model, paid with n8n gateway credits). Until then, dishes show their 3D food picture and chefs show the shared chef photo (`assets/photos/chef.jpg`).
 
 1. Top up your n8n gateway credits, then **Publish** the workflow in n8n.
 2. Run (URL and key are in the workflow's webhook node):
@@ -91,7 +91,8 @@ In **Expo Go** the map works with no setup: Google Maps on Android, Apple Maps o
 
 ```
 app/                   Screens (Expo Router)
-  (tabs)/              Home, Chefs, Cart, Orders, Points (rewards), Ask AI (chat), Profile (settings)
+  (tabs)/              Home, Chefs, Cart, Orders, More
+  rewards, chat, settings  Points, Kitchy AI and Settings (opened from More)
   chef/[id].tsx        Chef profile, menu and reviews
   review/[orderId].tsx Rate the chefs from an order
   apply.tsx            Apply as a home chef
@@ -100,14 +101,15 @@ app/                   Screens (Expo Router)
   location.tsx         Delivery location on the map
   onboarding.tsx       First-launch "how to use" walkthrough
   auth.tsx             Sign in / create account
-components/            3D emoji, logo, 3D buttons/cards, confetti, map, dish & chef cards
+components/            UI kit (icons, buttons, cards, lists), logo, confetti, map, dish & chef cards
 data/menu.ts           Chefs and dishes (EN / AR / FR)
 lib/                   Supabase client, auth, cart, orders + points, loyalty rules, sounds, settings, translations, themes
 supabase/migrations/   Database schema and rules
 supabase/functions/    kitchy-chat (Claude) and chef-applications (email + approve) Edge Functions
 scripts/               Chat menu builder and AI picture generator
 assets/photos/         AI dish photos and chef portraits
-assets/emoji/          Fluent 3D emoji PNGs (MIT license, Microsoft)
+assets/emoji/          Fluent 3D emoji PNGs for food pictures (MIT license, Microsoft)
+assets/photos/chef.jpg Chef photo shown for every chef without their own portrait
 assets/sounds/         Sound effects
 ```
 

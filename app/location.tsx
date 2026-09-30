@@ -15,8 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Coordinate, DeliveryMap } from '@/components/DeliveryMap';
-import { Emoji3D } from '@/components/Emoji3D';
-import { Button3D, Txt } from '@/components/ui';
+import { Button, Icon, Txt } from '@/components/ui';
 import { showAlert } from '@/lib/alert';
 import { useSettings } from '@/lib/settings';
 
@@ -89,13 +88,13 @@ export default function LocationScreen() {
         <DeliveryMap coordinate={coordinate} onChange={moveTo} pinColor={colors.primary} />
         <SafeAreaView edges={['top']} style={styles.mapTop} pointerEvents="box-none">
           <Pressable onPress={() => router.back()} style={styles.round} hitSlop={10}>
-            <Emoji3D name="cross_mark" size={20} />
+            <Icon name="close" size={22} color="#1B1B1F" />
           </Pressable>
           <Pressable
             onPress={useMyLocation}
             style={[styles.locate, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            {locating ? <ActivityIndicator color={colors.primary} /> : <Emoji3D name="compass" size={24} />}
-            <Txt style={{ fontWeight: '800' }}>{locating ? t('locating') : t('useMyLocation')}</Txt>
+            {locating ? <ActivityIndicator color={colors.primary} /> : <Icon name="navigate" size={18} color={colors.primary} />}
+            <Txt style={{ fontWeight: '600' }}>{locating ? t('locating') : t('useMyLocation')}</Txt>
           </Pressable>
         </SafeAreaView>
       </View>
@@ -106,7 +105,7 @@ export default function LocationScreen() {
           contentContainerStyle={{ padding: 20, gap: 12 }}
           keyboardShouldPersistTaps="handled">
           <View style={styles.row}>
-            <Emoji3D name="pin" size={36} />
+            <Icon name="location" size={26} color={colors.primary} />
             <View style={{ flex: 1 }}>
               <Txt variant="heading">{t('location')}</Txt>
               <Txt variant="caption" muted>
@@ -117,7 +116,7 @@ export default function LocationScreen() {
 
           {denied && (
             <View style={[styles.notice, { backgroundColor: colors.surfaceAlt }]}>
-              <Emoji3D name="warning" size={22} />
+              <Icon name="warning-outline" size={20} color={colors.danger} />
               <Txt variant="caption" style={{ flex: 1 }}>
                 {t('locationDenied')}
               </Txt>
@@ -145,11 +144,11 @@ export default function LocationScreen() {
                 `https://www.google.com/maps/search/?api=1&query=${coordinate.latitude},${coordinate.longitude}`
               )
             }>
-            <Txt style={{ color: colors.primary, fontWeight: '700' }}>{t('openInMaps')} ↗</Txt>
+            <Txt style={{ color: colors.primary, fontWeight: '600' }}>{t('openInMaps')}</Txt>
           </Pressable>
 
           <SafeAreaView edges={['bottom']}>
-            <Button3D title={t('saveLocation')} emoji="check" onPress={save} />
+            <Button title={t('saveLocation')} onPress={save} />
           </SafeAreaView>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -178,9 +177,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: 22,
     borderWidth: 1,
-    borderBottomWidth: 3,
   },
-  sheet: { borderTopLeftRadius: 28, borderTopRightRadius: 28, borderWidth: 1, marginTop: -24, maxHeight: 460 },
+  sheet: { borderTopLeftRadius: 24, borderTopRightRadius: 24, borderWidth: 1, marginTop: -24, maxHeight: 460 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   notice: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 10, borderRadius: 14 },
   input: { borderRadius: 14, borderWidth: 1, padding: 12, fontSize: 15 },
