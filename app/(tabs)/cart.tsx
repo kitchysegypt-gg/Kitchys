@@ -104,7 +104,7 @@ export default function CartScreen() {
             {lines.map(({ dish, quantity }) => (
               <Card key={dish.id} style={styles.line}>
                 <View style={styles.lineArt}>
-                  <DishArt dish={dish} height={64} emojiSize={42} radius={14} color={getChef(dish.chefId)?.color} />
+                  <DishArt dish={dish} height={64} radius={14} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Txt style={{ fontWeight: '700' }} numberOfLines={1}>

@@ -5,35 +5,32 @@ import { Chef, Dish } from '@/data/menu';
 import { ChefRating } from '@/lib/catalog';
 import { CHEF_PHOTOS, DISH_PHOTOS } from '@/lib/photos';
 import { useSettings } from '@/lib/settings';
-import { Emoji3D } from './Emoji3D';
 import { Icon, Txt } from './ui';
 
 const DEFAULT_CHEF_PHOTO = require('@/assets/photos/chef.jpg');
+const DEFAULT_DISH_PHOTO = require('@/assets/photos/dish.jpg');
 const STAR = '#FFB300';
 
-/** The dish's AI photo, or its 3D emoji on the chef's colour when there's no photo yet. */
-export function DishArt({
-  dish,
-  height,
-  emojiSize,
-  radius = 0,
-  color,
-}: {
-  dish: Dish;
-  height: number;
-  emojiSize: number;
-  radius?: number;
-  color?: string;
-}) {
+/** The dish's own photo, or the shared Kitchy's dish photo until it has one. */
+export function DishArt({ dish, height, radius = 0 }: { dish: Dish; height: number; radius?: number }) {
   const { colors } = useSettings();
-  const photo = DISH_PHOTOS[dish.id];
   return (
-    <View style={[styles.art, { height, borderRadius: radius, backgroundColor: color ?? colors.surfaceAlt }]}>
-      {photo ? (
-        <Image source={photo} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} />
-      ) : (
-        <Emoji3D name={dish.emoji} size={emojiSize} />
-      )}
+    <View style={[styles.art, { height, borderRadius: radius, backgroundColor: colors.surfaceAlt }]}>
+      <Image
+        source={DISH_PHOTOS[dish.id] ?? DEFAULT_DISH_PHOTO}
+        style={StyleSheet.absoluteFill}
+        contentFit="cover"
+        transition={200}
+      />
+    </View>
+  );
+}
+
+/** The shared dish photo on its own, e.g. for menu category tiles. */
+export function FoodPhoto({ size, radius }: { size: number; radius?: number }) {
+  return (
+    <View style={[styles.art, { width: size, height: size, borderRadius: radius ?? size / 2 }]}>
+      <Image source={DEFAULT_DISH_PHOTO} style={StyleSheet.absoluteFill} contentFit="cover" />
     </View>
   );
 }

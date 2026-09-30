@@ -1,13 +1,14 @@
 import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
-import { FlatList, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { Animated, FlatList, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
-import { Emoji3D } from '@/components/Emoji3D';
+import { FoodPhoto } from '@/components/media';
 import { ChefCard, DishCard, FreeDeliveryBanner } from '@/components/menu';
 import { Chip, EmptyState, Icon, PressableScale, Screen, Txt } from '@/components/ui';
 import { CATEGORIES, Category } from '@/data/menu';
 import { useCatalog } from '@/lib/catalog';
 import { useSettings } from '@/lib/settings';
+import { useAnimatedValue } from '@/lib/useAnimatedValue';
 
 // Soft tile colours for the category grid, in CATEGORIES order (after "All").
 const TILE_COLORS = ['#FDE8DA', '#FBF1D9', '#DDEFF6', '#FBE3EA', '#E3F3E6'];
@@ -46,12 +47,7 @@ export default function HomeScreen() {
             </Txt>
             <Icon name="chevron-down" size={18} color={colors.primary} />
           </View>
-          <View style={styles.etaRow}>
-            <Txt style={{ fontSize: 16, fontWeight: '500' }}>{t('deliveryIn')}</Txt>
-            <View style={[styles.eta, { backgroundColor: colors.successBg }]}>
-              <Txt style={{ color: colors.success, fontWeight: '600', fontSize: 15 }}>{t('deliveryWindow')}</Txt>
-            </View>
-          </View>
+          <KitchenStatus />
         </Pressable>
         <Pressable onPress={() => router.push('/chat')} hitSlop={8} accessibilityLabel={t('chatTitle')}>
           <Icon name="chatbox-ellipses-outline" size={27} color={colors.primary} />
@@ -106,7 +102,7 @@ export default function HomeScreen() {
         ) : (
           <>
             <View style={{ paddingHorizontal: 16, marginTop: 16 }}>
-              <FreeDeliveryBanner />
+              <FreeDeliveryBanner showPoints />
             </View>
 
             {sectionHeader(t('popularDishes'))}
@@ -127,7 +123,9 @@ export default function HomeScreen() {
                     <Txt center color="#1B1B1F" style={{ fontWeight: '600', fontSize: 15 }}>
                       {t(c.label)}
                     </Txt>
-                    <Emoji3D name={c.emoji} size={62} style={styles.tileArt} />
+                    <View style={styles.tileArt}>
+                      <FoodPhoto size={72} />
+                    </View>
                   </View>
                 </PressableScale>
               ))}
@@ -171,11 +169,59 @@ export default function HomeScreen() {
   }
 }
 
+/** "Kitchens open · 45 - 60 min" with a softly pulsing live dot. */
+function KitchenStatus() {
+  const { t, colors } = useSettings();
+  const pulse = useAnimatedValue(0);
+  useEffect(() => {
+    const loop = Animated.loop(Animated.timing(pulse, { toValue: 1, duration: 1600, useNativeDriver: true }));
+    loop.start();
+    return () => loop.stop();
+  }, [pulse]);
+  return (
+    <View style={[styles.status, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+      <View style={styles.pulseWrap}>
+        <Animated.View
+          style={[
+            styles.pulseRing,
+            {
+              backgroundColor: colors.success,
+              opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.5, 0] }),
+              transform: [{ scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.6, 2] }) }],
+            },
+          ]}
+        />
+        <View style={[styles.pulseDot, { backgroundColor: colors.success }]} />
+      </View>
+      <Txt variant="caption" style={{ fontWeight: '600' }}>
+        {t('kitchensOpen')}
+      </Txt>
+      <Icon name="flame" size={13} color={colors.primary} />
+      <Txt variant="caption" style={{ fontWeight: '600', color: colors.primary }}>
+        {t('deliveryWindow')}
+      </Txt>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: 18, paddingHorizontal: 16, paddingTop: 10, paddingBottom: 8 },
   addressRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  etaRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
-  eta: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
+  status: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 6,
+    marginTop: 6,
+    paddingVertical: 5,
+    paddingStart: 8,
+    paddingEnd: 10,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  pulseWrap: { width: 10, height: 10, alignItems: 'center', justifyContent: 'center' },
+  pulseRing: { position: 'absolute', width: 10, height: 10, borderRadius: 5 },
+  pulseDot: { width: 6, height: 6, borderRadius: 3 },
   search: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -195,5 +241,5 @@ const styles = StyleSheet.create({
   tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, paddingHorizontal: 16 },
   tileWrap: { width: '31%' },
   tile: { height: 132, borderRadius: 18, paddingTop: 12, paddingHorizontal: 8, overflow: 'hidden' },
-  tileArt: { position: 'absolute', bottom: 8, end: 8 },
+  tileArt: { position: 'absolute', bottom: -10, end: -10 },
 });

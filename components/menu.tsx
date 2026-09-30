@@ -1,4 +1,3 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { Animated, Pressable, StyleSheet, View } from 'react-native';
 
@@ -9,7 +8,7 @@ import { useCart } from '@/lib/cart';
 import { useOrders } from '@/lib/orders';
 import { useSettings } from '@/lib/settings';
 import { useSounds } from '@/lib/sound';
-import { DELIVERY_FEE } from '@/lib/supabase';
+import { DELIVERY_FEE, FREE_DELIVERY_ORDERS } from '@/lib/supabase';
 import { ChefAvatar, DishArt, RatingBadge } from './media';
 import { Button, Card, Icon, PressableScale, Txt } from './ui';
 
@@ -52,7 +51,7 @@ export function DishCard({ dish, wide }: { dish: Dish; wide?: boolean }) {
     <PressableScale onPress={() => router.push(`/dish/${dish.id}`)} style={wide ? undefined : { width: 170 }}>
       <Card style={{ padding: 0, overflow: 'hidden' }}>
         <View>
-          <DishArt dish={dish} height={wide ? 120 : 130} emojiSize={wide ? 72 : 80} color={chef?.color} />
+          <DishArt dish={dish} height={wide ? 120 : 130} />
           {(dish.spicy || dish.vegetarian) && (
             <View style={styles.badges}>
               {dish.spicy && <Icon name="flame" size={14} color="#E53935" />}
@@ -136,36 +135,62 @@ export function AllergenList({ allergens }: { allergens: Allergen[] }) {
   );
 }
 
-/** Promo banner: free delivery on the first 3 orders. */
-export function FreeDeliveryBanner() {
-  const { t, colors, formatPrice } = useSettings();
-  const { freeDeliveriesLeft } = useOrders();
+/**
+ * Free-delivery stamp card: one stamp per free delivery, crossed off as orders are placed.
+ * With `showPoints` it also shows the points balance and rank, linking to rewards.
+ */
+export function FreeDeliveryBanner({ showPoints }: { showPoints?: boolean }) {
+  const { t, colors, formatPrice, isRTL } = useSettings();
+  const { freeDeliveriesLeft, points, rank } = useOrders();
   const free = freeDeliveriesLeft > 0;
+  const used = FREE_DELIVERY_ORDERS - freeDeliveriesLeft;
   return (
-    <LinearGradient
-      colors={free ? colors.heroGradient : ['#55555C', '#2F2F34']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.banner}>
-      <View style={{ flex: 1, gap: 4 }}>
-        <Txt variant="heading" color="#fff" style={{ fontSize: 20, fontWeight: '800' }}>
-          {free ? t('freeDeliveryTitle') : t('delivery')}
-        </Txt>
-        <Txt variant="caption" color="rgba(255,255,255,0.85)">
-          {free ? t('freeDeliveryBanner', { n: freeDeliveriesLeft }) : t('freeDeliveryUsed', { fee: formatPrice(DELIVERY_FEE) })}
-        </Txt>
+    <View style={[styles.stampCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+      <View style={styles.stampTop}>
+        <View style={{ flex: 1, gap: 2 }}>
+          <Txt style={{ fontSize: 17, fontWeight: '700' }}>{free ? t('freeDeliveryTitle') : t('delivery')}</Txt>
+          <Txt variant="caption" muted>
+            {free ? t('freeDeliveryBanner', { n: freeDeliveriesLeft }) : t('freeDeliveryUsed', { fee: formatPrice(DELIVERY_FEE) })}
+          </Txt>
+        </View>
+        <View style={styles.stamps}>
+          {Array.from({ length: FREE_DELIVERY_ORDERS }, (_, i) => {
+            const spent = i < used;
+            return (
+              <View
+                key={i}
+                style={[
+                  styles.stamp,
+                  spent
+                    ? { backgroundColor: colors.surfaceAlt, borderColor: colors.border }
+                    : { backgroundColor: colors.primary, borderColor: colors.primary },
+                ]}>
+                <Icon
+                  name={spent ? 'checkmark' : 'bicycle'}
+                  size={spent ? 16 : 18}
+                  color={spent ? colors.textMuted : colors.onPrimary}
+                />
+              </View>
+            );
+          })}
+        </View>
       </View>
-      <View style={styles.bannerIcon}>
-        <Icon name="bicycle" size={34} color="#fff" />
-        {free && (
-          <View style={styles.bannerCount}>
-            <Txt color={colors.primaryDeep} style={{ fontWeight: '800', fontSize: 13 }} center>
-              {freeDeliveriesLeft}
-            </Txt>
+      {showPoints && (
+        <Pressable
+          onPress={() => router.push('/rewards')}
+          style={[styles.pointsRow, { borderTopColor: colors.border }]}>
+          <View style={[styles.rankDot, { backgroundColor: rank.color }]}>
+            <Icon name={rank.icon} size={13} color="#fff" />
           </View>
-        )}
-      </View>
-    </LinearGradient>
+          <Txt style={{ flex: 1, fontWeight: '600' }}>
+            {t('pointsCount', { n: points.toLocaleString() })}
+            <Txt muted>{`  ·  ${t(`rank_${rank.id}`)}`}</Txt>
+          </Txt>
+          <Txt style={{ color: colors.primary, fontWeight: '600' }}>{t('seeRewards')}</Txt>
+          <Icon name={isRTL ? 'chevron-back' : 'chevron-forward'} size={16} color={colors.primary} />
+        </Pressable>
+      )}
+    </View>
   );
 }
 
@@ -208,26 +233,26 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   allergenWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   allergen: { paddingVertical: 5, paddingHorizontal: 12, borderRadius: 14, borderWidth: 1 },
-  banner: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 20, paddingHorizontal: 20, borderRadius: 20 },
-  bannerIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: 'rgba(255,255,255,0.16)',
+  stampCard: { borderRadius: 20, borderWidth: 1, overflow: 'hidden' },
+  stampTop: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16 },
+  stamps: { flexDirection: 'row', gap: 6 },
+  stamp: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  bannerCount: {
-    position: 'absolute',
-    top: -2,
-    end: -2,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#fff',
+  pointsRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderTopWidth: 1,
   },
+  rankDot: { width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
   stepper: {
     flexDirection: 'row',
     alignItems: 'center',

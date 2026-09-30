@@ -4,12 +4,10 @@ import { Animated, Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAnimatedValue } from '@/lib/useAnimatedValue';
-import { Emoji3D } from '@/components/Emoji3D';
 import { AllergenList, QuantityStepper, useAddToCart } from '@/components/menu';
 import { Button, Card, EmptyState, Icon, IconName, Screen, Txt } from '@/components/ui';
 import { ChefAvatar, DishArt, RatingBadge } from '@/components/media';
 import { useCatalog } from '@/lib/catalog';
-import { DISH_PHOTOS } from '@/lib/photos';
 import { useSettings } from '@/lib/settings';
 
 export default function DishScreen() {
@@ -33,8 +31,8 @@ export default function DishScreen() {
   const onAdd = () => {
     addToCart(dish, quantity);
     setAdded(true);
-    bounce.setValue(0.7);
-    Animated.spring(bounce, { toValue: 1, useNativeDriver: true, speed: 12, bounciness: 20 }).start();
+    bounce.setValue(0.97);
+    Animated.spring(bounce, { toValue: 1, useNativeDriver: true, speed: 20, bounciness: 8 }).start();
     setTimeout(() => setAdded(false), 1400);
   };
 
@@ -48,27 +46,16 @@ export default function DishScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 140 }}>
-        {DISH_PHOTOS[dish.id] ? (
-          <View style={styles.photoHero}>
-            <DishArt dish={dish} height={320} emojiSize={190} />
-            <SafeAreaView edges={['top']} style={styles.photoClose}>
-              <Pressable onPress={() => router.back()} style={styles.close} hitSlop={10}>
-                <Icon name="close" size={22} color="#1B1B1F" />
-              </Pressable>
-            </SafeAreaView>
-          </View>
-        ) : (
-          <View style={[styles.hero, { backgroundColor: chef.color }]}>
-            <SafeAreaView edges={['top']} style={{ alignSelf: 'stretch' }}>
-              <Pressable onPress={() => router.back()} style={styles.close} hitSlop={10}>
-                <Icon name="close" size={22} color="#1B1B1F" />
-              </Pressable>
-            </SafeAreaView>
-            <Animated.View style={{ transform: [{ scale: bounce }] }}>
-              <Emoji3D name={dish.emoji} size={170} />
-            </Animated.View>
-          </View>
-        )}
+        <View style={styles.photoHero}>
+          <Animated.View style={{ transform: [{ scale: bounce }] }}>
+            <DishArt dish={dish} height={320} />
+          </Animated.View>
+          <SafeAreaView edges={['top']} style={styles.photoClose}>
+            <Pressable onPress={() => router.back()} style={styles.close} hitSlop={10}>
+              <Icon name="close" size={22} color="#1B1B1F" />
+            </Pressable>
+          </SafeAreaView>
+        </View>
 
         <View style={{ padding: 20, gap: 16 }}>
           <View>
@@ -147,7 +134,6 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 const styles = StyleSheet.create({
   photoHero: { height: 320, overflow: 'hidden' },
   photoClose: { position: 'absolute', top: 0, right: 0 },
-  hero: { alignItems: 'center', paddingBottom: 24 },
   close: {
     alignSelf: 'flex-end',
     marginEnd: 16,
