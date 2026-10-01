@@ -59,7 +59,7 @@ Until the key is added, the chat shows "The assistant is not set up yet".
 Applications are emailed to **kitchysegypt@gmail.com** by the `chef-applications` Edge Function (already deployed), using [Resend](https://resend.com):
 
 1. Sign up at resend.com **with kitchysegypt@gmail.com** and create an API key.
-2. In Supabase → **Edge Functions** → **Secrets**, add `RESEND_API_KEY`.
+2. In Supabase → **Edge Functions** → **Secrets**, add `RESEND_API_KEY` (or store it in Vault: `select vault.create_secret('<key>', 'resend_api_key');`). This project already has it in Vault.
 
 Each email lists the applicant's details and dishes with **Approve** and **Reject** buttons. Approving publishes the chef and their dishes in the app immediately.
 (Resend's free test sender can only email the address you signed up with. To send from your own domain, verify it in Resend and add `EMAIL_FROM`, e.g. `Kitchy's <apply@yourdomain.com>`.)

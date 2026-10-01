@@ -2,7 +2,7 @@
 // one-click Approve / Reject links, and handles those links.
 //
 // Secrets (Supabase dashboard -> Edge Functions -> Secrets):
-//   RESEND_API_KEY  - from resend.com, used to send the email (required for emails)
+//   RESEND_API_KEY  - from resend.com, used to send the email (or store it in Vault as resend_api_key)
 //   OWNER_EMAIL     - where applications go (defaults to kitchysegypt@gmail.com)
 //   EMAIL_FROM      - sender, e.g. "Kitchy's <apply@yourdomain.com>" (defaults to Resend's test sender)
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
@@ -88,7 +88,9 @@ async function handleNotify(req: Request, functionUrl: string) {
   const { data: app } = await admin.from('chef_applications').select('*').eq('id', id).single();
   if (!app || app.user_id !== userData.user.id) return json({ error: 'Application not found' }, 404);
 
-  const apiKey = Deno.env.get('RESEND_API_KEY');
+  // The key can be an Edge Function secret, or saved in Supabase Vault as "resend_api_key".
+  const apiKey =
+    Deno.env.get('RESEND_API_KEY') ?? (await admin.rpc('app_secret', { p_name: 'resend_api_key' })).data ?? null;
   if (!apiKey) return json({ emailed: false, reason: 'RESEND_API_KEY is not set' });
 
   const link = async (action: string) =>
