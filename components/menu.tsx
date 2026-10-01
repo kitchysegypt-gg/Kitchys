@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { Animated, Pressable, StyleSheet, View } from 'react-native';
 
 import { useAnimatedValue } from '@/lib/useAnimatedValue';
-import { Allergen, Chef, Dish } from '@/data/menu';
+import { Allergen, Chef, Dish, formatPortion } from '@/data/menu';
 import { useCatalog } from '@/lib/catalog';
 import { useCart } from '@/lib/cart';
 import { useOrders } from '@/lib/orders';
@@ -64,7 +64,9 @@ export function DishCard({ dish, wide }: { dish: Dish; wide?: boolean }) {
             {l(dish.name)}
           </Txt>
           <Txt muted variant="caption" numberOfLines={1}>
-            {chef ? l(chef.name) : l(dish.short)}
+            {[chef ? l(chef.name) : l(dish.short), dish.portionGrams ? formatPortion(dish.portionGrams) : null]
+              .filter(Boolean)
+              .join(' · ')}
           </Txt>
           <View style={styles.priceRow}>
             <Txt style={{ fontWeight: '700', color: colors.text }}>{formatPrice(dish.price)}</Txt>

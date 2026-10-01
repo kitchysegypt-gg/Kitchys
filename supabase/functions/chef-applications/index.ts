@@ -98,7 +98,9 @@ async function handleNotify(req: Request, functionUrl: string) {
   const dishes = (app.dishes as any[])
     .map(
       (d) =>
-        `<li><b>${escapeHtml(d.name)}</b> — EGP ${escapeHtml(d.price)} · ${escapeHtml(d.category)}<br>` +
+        `<li>${d.photoUrl ? `<img src="${escapeHtml(d.photoUrl)}" alt="" width="240" style="border-radius:12px;display:block;margin:6px 0">` : ''}` +
+        `<b>${escapeHtml(d.name)}</b> — EGP ${escapeHtml(d.price)} · ${escapeHtml(d.category)}` +
+        `${d.portionGrams ? ` · ${escapeHtml(d.portionGrams >= 1000 ? `${d.portionGrams / 1000} kg` : `${d.portionGrams} g`)}` : ''}<br>` +
         `${escapeHtml(d.description)}<br><i>Ingredients:</i> ${escapeHtml(d.ingredients)}<br>` +
         `<i>Allergens:</i> ${escapeHtml((d.allergens ?? []).join(', ') || 'none')}</li>`
     )
@@ -108,6 +110,7 @@ async function handleNotify(req: Request, functionUrl: string) {
 
   const html = `<div style="font-family:system-ui,sans-serif;max-width:560px">
 <h2 style="color:#F4511E">New home-chef application</h2>
+${app.photo_url ? `<img src="${escapeHtml(app.photo_url)}" alt="" width="120" height="120" style="border-radius:60px;object-fit:cover">` : ''}
 <p><b>${escapeHtml(app.full_name)}</b> wants to cook for Kitchy's.</p>
 <table cellpadding="4">
 <tr><td>Email</td><td>${escapeHtml(app.email)}</td></tr>

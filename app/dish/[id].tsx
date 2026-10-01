@@ -7,6 +7,7 @@ import { useAnimatedValue } from '@/lib/useAnimatedValue';
 import { AllergenList, QuantityStepper, useAddToCart } from '@/components/menu';
 import { Button, Card, EmptyState, Icon, IconName, Screen, Txt } from '@/components/ui';
 import { ChefAvatar, DishArt, RatingBadge } from '@/components/media';
+import { formatPortion } from '@/data/menu';
 import { useCatalog } from '@/lib/catalog';
 import { useSettings } from '@/lib/settings';
 
@@ -39,6 +40,7 @@ export default function DishScreen() {
   const facts: { icon: IconName; text: string; color?: string }[] = [
     { icon: 'time-outline', text: `${dish.prepMinutes} ${t('prepTime')}` },
     { icon: 'people-outline', text: t('serves', { n: dish.serves }) },
+    ...(dish.portionGrams ? [{ icon: 'scale-outline' as IconName, text: formatPortion(dish.portionGrams) }] : []),
     ...(dish.spicy ? [{ icon: 'flame' as IconName, text: t('spicy'), color: '#E53935' }] : []),
     ...(dish.vegetarian ? [{ icon: 'leaf' as IconName, text: t('vegetarian'), color: '#2E9E5B' }] : []),
   ];

@@ -8,7 +8,7 @@ Customer app for ordering homemade food from mothers and grandmothers ("home che
 - **Dinner only**: 5 home chefs with 21 dinner dishes and after-dinner desserts (no drinks, no breakfast)
 - **Schedule delivery**: as soon as possible, or any day in the next 2 weeks at any time (15-minute steps)
 - **Chef reviews**: after ordering, customers rate each chef on food quality, delivery, packaging and value; chef pages show the averages and every review
-- **Become a home chef**: anyone can apply from the sign-in screen or Profile, with their dishes. Kitchy's gets an email with Approve / Reject buttons; approved chefs and their dishes appear for customers right away, and chefs manage their dishes in **My kitchen**
+- **Become a home chef**: anyone can apply from the sign-in screen or More, with an optional photo of themselves and their dishes (each with an optional photo and size in g or kg). Photos are stored in the `kitchen-photos` Supabase Storage bucket. Kitchy's gets an email with Approve / Reject buttons; approved chefs and their dishes appear for customers right away, and chefs manage their dishes in **My kitchen**
 - **AI pictures** for every dish and chef (see *AI pictures* below)
 - **Full dish details**: description, ingredients, prep time, portion size, and allergy information (or a clear "no common allergens" badge)
 - **Delivery location on a map**: drop a pin, drag it, or use your GPS location; the address fills in automatically and is saved with every order (with an "Open in Google Maps" link)

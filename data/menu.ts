@@ -40,6 +40,8 @@ export type Chef = {
   /** Set for chefs who joined through the app (they have a login and a kitchen). */
   kitchen?: boolean;
   color: string;
+  /** Photo link uploaded by a home chef. */
+  photo?: string;
 };
 
 export type Dish = {
@@ -60,7 +62,16 @@ export type Dish = {
   popular?: boolean;
   /** Dishes added by a home chef in the app. */
   kitchen?: boolean;
+  /** Photo link uploaded by the home chef. */
+  photo?: string;
+  /** Portion size in grams. */
+  portionGrams?: number;
 };
+
+/** "750 g" or "1.5 kg". */
+export function formatPortion(grams: number) {
+  return grams >= 1000 ? `${Math.round(grams / 100) / 10} kg` : `${grams} g`;
+}
 
 export const CHEFS: Chef[] = [
   {

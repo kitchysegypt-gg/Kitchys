@@ -24,6 +24,7 @@ export type KitchenChefRow = {
   area: string;
   specialty: string;
   bio: string;
+  photo_url?: string | null;
 };
 
 export type KitchenDishRow = {
@@ -40,6 +41,8 @@ export type KitchenDishRow = {
   spicy: boolean;
   vegetarian: boolean;
   available: boolean;
+  photo_url?: string | null;
+  portion_grams?: number | null;
 };
 
 const same = (text: string): Localized => ({ en: text, ar: text, fr: text });
@@ -72,6 +75,7 @@ export function kitchenChefToChef(row: KitchenChefRow): Chef {
     bio: same(row.bio),
     color: CHEF_COLORS[h % CHEF_COLORS.length],
     kitchen: true,
+    photo: row.photo_url ?? undefined,
   };
 }
 
@@ -93,6 +97,8 @@ export function kitchenDishToDish(row: KitchenDishRow): Dish {
     spicy: row.spicy,
     vegetarian: row.vegetarian,
     kitchen: true,
+    photo: row.photo_url ?? undefined,
+    portionGrams: row.portion_grams ?? undefined,
   };
 }
 

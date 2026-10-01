@@ -392,6 +392,7 @@ async function approveApplication(id: string): Promise<Result> {
       area: app.area,
       specialty: app.specialty,
       bio: app.bio ?? '',
+      photo_url: app.photo_url ?? null,
       created_at: new Date().toISOString(),
     };
     await writeTable('kitchen_chefs', [...chefs, chef]);
@@ -410,6 +411,8 @@ async function approveApplication(id: string): Promise<Result> {
     serves: d.serves ?? 1,
     spicy: !!d.spicy,
     vegetarian: !!d.vegetarian,
+    photo_url: d.photoUrl ?? null,
+    portion_grams: d.portionGrams ?? null,
     available: true,
     created_at: new Date().toISOString(),
   }));

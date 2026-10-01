@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Switch, TextInput, View } from 'react-native';
 import { ALLERGEN_EMOJI, Allergen, CATEGORIES, Category } from '@/data/menu';
 import { DishDraft } from '@/lib/chef';
 import { useSettings } from '@/lib/settings';
+import { PhotoPicker } from './PhotoPicker';
 import { Card, Chip, Icon, Txt } from './ui';
 
 const ALLERGENS = Object.keys(ALLERGEN_EMOJI) as Allergen[];
@@ -44,6 +45,7 @@ export function DishEditor({
           </Pressable>
         )}
       </View>
+      <PhotoPicker value={value.photo} onChange={(photo) => set({ photo })} label={t('dishPhoto')} />
       <TextInput
         value={value.name}
         onChangeText={(name) => set({ name })}
@@ -106,6 +108,23 @@ export function DishEditor({
             style={input}
           />
         </View>
+      </View>
+
+      <Txt variant="caption" muted>
+        {t('dishSize')}
+      </Txt>
+      <View style={styles.row}>
+        <TextInput
+          value={value.portionAmount}
+          onChangeText={(portionAmount) => set({ portionAmount: portionAmount.replace(/[^0-9.,]/g, '') })}
+          keyboardType="decimal-pad"
+          placeholder={value.portionUnit === 'kg' ? '1.5' : '500'}
+          placeholderTextColor={colors.textMuted}
+          maxLength={6}
+          style={[input, { flex: 1 }]}
+        />
+        <Chip label="g" active={value.portionUnit === 'g'} onPress={() => set({ portionUnit: 'g' })} />
+        <Chip label="kg" active={value.portionUnit === 'kg'} onPress={() => set({ portionUnit: 'kg' })} />
       </View>
 
       <Txt variant="caption" muted>

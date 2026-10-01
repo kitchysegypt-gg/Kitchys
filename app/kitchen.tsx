@@ -4,10 +4,11 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Swit
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { DishEditor } from '@/components/DishEditor';
-import { ChefPhoto, RatingBadge } from '@/components/media';
+import { ChefAvatar, RatingBadge } from '@/components/media';
+import { formatPortion } from '@/data/menu';
 import { Button, Card, EmptyState, Icon, ScreenHeader, Txt } from '@/components/ui';
 import { showAlert } from '@/lib/alert';
-import { useCatalog } from '@/lib/catalog';
+import { kitchenChefToChef, useCatalog } from '@/lib/catalog';
 import {
   DishDraft,
   addKitchenDish,
@@ -73,7 +74,7 @@ export default function KitchenScreen() {
             contentContainerStyle={{ padding: 16, paddingTop: 4, gap: 12, paddingBottom: 40 }}
             keyboardShouldPersistTaps="handled">
             <Card style={styles.hero}>
-              <ChefPhoto size={56} />
+              <ChefAvatar chef={kitchenChefToChef(kitchen)} size={56} />
               <View style={{ flex: 1, gap: 2 }}>
                 <Txt variant="heading">{kitchen.name}</Txt>
                 <Txt variant="caption" muted>
@@ -91,6 +92,7 @@ export default function KitchenScreen() {
                   <Txt style={{ fontWeight: '700' }}>{d.name}</Txt>
                   <Txt variant="caption" style={{ fontWeight: '600' }}>
                     {formatPrice(Number(d.price))}
+                    {d.portion_grams ? ` · ${formatPortion(d.portion_grams)}` : ''}
                   </Txt>
                   <Txt variant="caption" muted>
                     {d.available ? t('available') : t('hidden')}

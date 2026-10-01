@@ -4,6 +4,7 @@ import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, View
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { DishEditor } from '@/components/DishEditor';
+import { PhotoPicker } from '@/components/PhotoPicker';
 import { ChefPhoto } from '@/components/media';
 import { Button, Card, EmptyState, ScreenHeader, Txt } from '@/components/ui';
 import { showAlert } from '@/lib/alert';
@@ -20,6 +21,7 @@ export default function ApplyScreen() {
   const [area, setArea] = useState('');
   const [specialty, setSpecialty] = useState('');
   const [bio, setBio] = useState('');
+  const [photo, setPhoto] = useState<string | null>(null);
   const [dishes, setDishes] = useState<DishDraft[]>([emptyDish()]);
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
@@ -60,6 +62,7 @@ export default function ApplyScreen() {
         area: area.trim(),
         specialty: specialty.trim(),
         bio: bio.trim(),
+        photo,
         dishes: ready,
       });
       setSent(true);
@@ -108,6 +111,7 @@ export default function ApplyScreen() {
           )}
 
           <Card style={{ gap: 10 }}>
+            <PhotoPicker value={photo} onChange={setPhoto} label={t('yourPhoto')} round aspect={[1, 1]} />
             <TextInput
               value={name}
               onChangeText={setName}

@@ -17,7 +17,7 @@ export function DishArt({ dish, height, radius = 0 }: { dish: Dish; height: numb
   return (
     <View style={[styles.art, { height, borderRadius: radius, backgroundColor: colors.surfaceAlt }]}>
       <Image
-        source={DISH_PHOTOS[dish.id] ?? DEFAULT_DISH_PHOTO}
+        source={DISH_PHOTOS[dish.id] ?? (dish.photo ? { uri: dish.photo } : DEFAULT_DISH_PHOTO)}
         style={StyleSheet.absoluteFill}
         contentFit="cover"
         transition={200}
@@ -46,7 +46,7 @@ export function ChefPhoto({ size }: { size: number }) {
 
 /** Round chef portrait: the chef's own photo when there is one, otherwise the Kitchy's chef. */
 export function ChefAvatar({ chef, size }: { chef: Chef; size: number }) {
-  const photo = CHEF_PHOTOS[chef.id] ?? DEFAULT_CHEF_PHOTO;
+  const photo = CHEF_PHOTOS[chef.id] ?? (chef.photo ? { uri: chef.photo } : DEFAULT_CHEF_PHOTO);
   return (
     <View style={[styles.avatar, { width: size, height: size, borderRadius: size / 2 }]}>
       <Image source={photo} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} />

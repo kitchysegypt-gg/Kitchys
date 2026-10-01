@@ -4,7 +4,7 @@ import { useCallback, useState } from 'react';
 import type { Allergen, Category } from '@/data/menu';
 import { useAuth } from './auth';
 import type { KitchenChefRow, KitchenDishRow } from './catalog';
-import { supabase } from './supabase';
+import { isDemo, supabase } from './supabase';
 
 /** A dish as typed in the application or kitchen form. */
 export type DishDraft = {
@@ -18,6 +18,11 @@ export type DishDraft = {
   allergens: Allergen[];
   spicy: boolean;
   vegetarian: boolean;
+  /** Picked photo: a local file until it's uploaded, then its public link. */
+  photo: string | null;
+  /** Portion size as typed, in `portionUnit`. Optional. */
+  portionAmount: string;
+  portionUnit: 'g' | 'kg';
 };
 
 export const emptyDish = (): DishDraft => ({
@@ -31,12 +36,44 @@ export const emptyDish = (): DishDraft => ({
   allergens: [],
   spicy: false,
   vegetarian: false,
+  photo: null,
+  portionAmount: '',
+  portionUnit: 'g',
 });
+
+/** The typed size in grams, or null when it's left empty or out of range (10 g to 20 kg). */
+export function portionGrams(d: Pick<DishDraft, 'portionAmount' | 'portionUnit'>) {
+  const amount = Number(d.portionAmount.replace(',', '.'));
+  if (!d.portionAmount.trim() || !(amount > 0)) return null;
+  const grams = Math.round(d.portionUnit === 'kg' ? amount * 1000 : amount);
+  return grams >= 10 && grams <= 20000 ? grams : null;
+}
+
+/**
+ * Uploads a picked photo to the kitchen-photos bucket (into the person's own folder)
+ * and returns its public link. Links that are already uploaded are returned as they are.
+ */
+export async function uploadKitchenPhoto(uri: string | null): Promise<string | null> {
+  if (!uri) return null;
+  // The demo keeps photos in the browser.
+  if (isDemo || /^https?:\/\//.test(uri)) return uri;
+  const { data: auth } = await supabase.auth.getUser();
+  const userId = auth.user?.id;
+  if (!userId) throw new Error('Sign in first');
+  const response = await fetch(uri);
+  const body = await response.arrayBuffer();
+  const type = response.headers.get('content-type')?.split(';')[0] || 'image/jpeg';
+  const ext = type === 'image/png' ? 'png' : type === 'image/webp' ? 'webp' : 'jpg';
+  const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  const { error } = await supabase.storage.from('kitchen-photos').upload(path, body, { contentType: type });
+  if (error) throw error;
+  return supabase.storage.from('kitchen-photos').getPublicUrl(path).data.publicUrl;
+}
 
 export const isDishReady = (d: DishDraft) => d.name.trim().length >= 2 && Number(d.price) > 0;
 
 /** Shape stored in the application (read by approve_chef_application) and kitchen_dishes. */
-export function dishPayload(d: DishDraft) {
+export async function dishPayload(d: DishDraft) {
   return {
     name: d.name.trim(),
     description: d.description.trim(),
@@ -48,6 +85,8 @@ export function dishPayload(d: DishDraft) {
     allergens: d.allergens,
     spicy: d.spicy,
     vegetarian: d.vegetarian,
+    photoUrl: await uploadKitchenPhoto(d.photo),
+    portionGrams: portionGrams(d),
   };
 }
 
@@ -119,11 +158,14 @@ export async function submitApplication(form: {
   area: string;
   specialty: string;
   bio: string;
+  photo: string | null;
   dishes: DishDraft[];
 }) {
+  const { photo, dishes, ...details } = form;
+  const [photoUrl, dishRows] = await Promise.all([uploadKitchenPhoto(photo), Promise.all(dishes.map(dishPayload))]);
   const { data, error } = await supabase
     .from('chef_applications')
-    .insert({ ...form, dishes: form.dishes.map(dishPayload) })
+    .insert({ ...details, photo_url: photoUrl, dishes: dishRows })
     .select('id')
     .single();
   if (error) throw error;
@@ -135,7 +177,7 @@ export async function submitApplication(form: {
 }
 
 export async function addKitchenDish(chefId: string, draft: DishDraft) {
-  const d = dishPayload(draft);
+  const d = await dishPayload(draft);
   const { error } = await supabase.from('kitchen_dishes').insert({
     chef_id: chefId,
     name: d.name,
@@ -148,6 +190,8 @@ export async function addKitchenDish(chefId: string, draft: DishDraft) {
     allergens: d.allergens,
     spicy: d.spicy,
     vegetarian: d.vegetarian,
+    photo_url: d.photoUrl,
+    portion_grams: d.portionGrams,
   });
   if (error) throw error;
 }
