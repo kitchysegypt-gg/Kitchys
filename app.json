@@ -52,6 +52,13 @@
         {
           "locationWhenInUsePermission": "Kitchy's uses your location to set your delivery address on the map."
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Kitchy's uses your photos so home chefs can add pictures of themselves and their dishes.",
+          "cameraPermission": "Kitchy's uses the camera so home chefs can take pictures of their dishes."
+        }
       ]
     ],
     "experiments": {
