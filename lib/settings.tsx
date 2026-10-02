@@ -20,6 +20,8 @@ type StoredSettings = {
   language: Language;
   theme: ThemePreference;
   soundEnabled: boolean;
+  /** Cart reminders and "we miss you" notifications on this phone. */
+  notificationsEnabled: boolean;
   onboarded: boolean;
   location: SavedLocation | null;
   accent: AccentName;
@@ -31,6 +33,7 @@ const DEFAULTS: StoredSettings = {
   language: 'en',
   theme: 'system',
   soundEnabled: true,
+  notificationsEnabled: true,
   onboarded: false,
   location: null,
   accent: 'orange',
@@ -45,6 +48,7 @@ type SettingsContextValue = StoredSettings & {
   setLanguage: (language: Language) => void;
   setTheme: (theme: ThemePreference) => void;
   setSoundEnabled: (enabled: boolean) => void;
+  setNotificationsEnabled: (enabled: boolean) => void;
   setOnboarded: (onboarded: boolean) => void;
   setLocation: (location: SavedLocation | null) => void;
   setAccent: (accent: AccentName) => void;
@@ -98,6 +102,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       setLanguage: (l) => update({ language: l }),
       setTheme: (theme) => update({ theme }),
       setSoundEnabled: (soundEnabled) => update({ soundEnabled }),
+      setNotificationsEnabled: (notificationsEnabled) => update({ notificationsEnabled }),
       setOnboarded: (onboarded) => update({ onboarded }),
       setLocation: (location) => update({ location }),
       setAccent: (accent) => update({ accent }),

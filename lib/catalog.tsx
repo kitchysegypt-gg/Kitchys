@@ -106,6 +106,8 @@ type CatalogValue = {
   chefs: Chef[];
   dishes: Dish[];
   ratings: Record<string, ChefRating>;
+  /** True once the home chefs' dishes have been fetched for this account. */
+  loaded: boolean;
   getChef: (id: string) => Chef | undefined;
   getDish: (id: string) => Dish | undefined;
   dishesByChef: (chefId: string) => Dish[];
@@ -120,9 +122,13 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   const [kitchenChefs, setKitchenChefs] = useState<Chef[]>([]);
   const [kitchenDishes, setKitchenDishes] = useState<Dish[]>([]);
   const [ratings, setRatings] = useState<Record<string, ChefRating>>({});
+  const [loaded, setLoaded] = useState(false);
 
   const refresh = useCallback(async () => {
-    if (!session) return;
+    if (!session) {
+      setLoaded(false);
+      return;
+    }
     const [chefsRes, dishesRes, ratingsRes] = await Promise.all([
       supabase.from('kitchen_chefs').select('*').order('created_at', { ascending: true }),
       supabase.from('kitchen_dishes').select('*').order('created_at', { ascending: true }),
@@ -136,6 +142,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     if (!ratingsRes.error && ratingsRes.data) {
       setRatings(Object.fromEntries((ratingsRes.data as ChefRating[]).map((r) => [r.chef_id, r])));
     }
+    setLoaded(true);
   }, [session]);
 
   useEffect(() => {
@@ -149,12 +156,13 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
       chefs,
       dishes,
       ratings,
+      loaded,
       refresh,
       getChef: (id) => chefs.find((c) => c.id === id),
       getDish: (id) => dishes.find((d) => d.id === id),
       dishesByChef: (chefId) => dishes.filter((d) => d.chefId === chefId),
     };
-  }, [kitchenChefs, kitchenDishes, ratings, refresh]);
+  }, [kitchenChefs, kitchenDishes, ratings, loaded, refresh]);
 
   return <CatalogContext.Provider value={value}>{children}</CatalogContext.Provider>;
 }

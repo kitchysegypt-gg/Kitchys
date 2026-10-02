@@ -11,6 +11,7 @@ import { AuthProvider, useAuth } from '@/lib/auth';
 import { CartProvider } from '@/lib/cart';
 import { CatalogProvider } from '@/lib/catalog';
 import { FONT_FILES } from '@/lib/fonts';
+import { NotificationsBridge } from '@/lib/notifications';
 import { OrdersProvider } from '@/lib/orders';
 import { SettingsProvider, useSettings } from '@/lib/settings';
 import { SoundProvider } from '@/lib/sound';
@@ -96,6 +97,7 @@ function RootNavigator() {
           <Stack.Screen name="review/[orderId]" options={{ presentation: 'modal' }} />
         </Stack.Protected>
       </Stack>
+      {onboarded && session && <NotificationsBridge />}
     </ThemeProvider>
   );
 }

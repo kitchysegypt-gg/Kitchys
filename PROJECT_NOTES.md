@@ -20,7 +20,17 @@ Prices, delivery fees, discounts, points, referral cashback and credit are all c
 
 ## Features
 
-Dinner-only menu from home chefs; dish photos and sizes; cart with scheduling, vouchers, referral code and credit; orders and chef reviews; points, ranks and rewards; refer a friend (10% of the friend's first order as credit, no cap); Kitchy AI chat (Claude); apply as a chef (photos, dishes) → email to the owner with Approve / Reject links → approved chefs manage dishes and photos in My kitchen; languages (English, Arabic, French), themes and accent colours.
+Dinner-only menu from home chefs; dish photos and sizes; cart with scheduling, vouchers, referral code and credit; orders and chef reviews; points, ranks and rewards; refer a friend (10% of the friend's first order as credit, no cap); Kitchy AI chat (Claude); smart notifications (see below); apply as a chef (photos, dishes) → email to the owner with Approve / Reject links → approved chefs manage dishes and photos in My kitchen; languages (English, Arabic, French), themes and accent colours.
+
+## Smart notifications
+
+App saves the phone's push token (`push_devices`) and the cart (`saved_carts`) → every hour (pg_cron job `smart-notifications`, minute 7) Supabase calls the `smart-notifications` edge function → `notification_candidates()` picks who is due → Claude writes a short personal message in their language (built-in messages if `ANTHROPIC_API_KEY` is missing) → sent through Expo push → logged in `notification_log`.
+
+- "Your cart is calling": cart left 2+ hours (up to 3 days) without ordering; opens the cart.
+- "We miss you": no order for 7+ days, at most once a week; opens Home.
+- Max one notification per person per 20 hours, only 12:00-22:00 Cairo time. Customers can turn them off in Settings.
+- Test without sending: POST to the function with header `x-cron-secret` (Vault secret `notifications_cron_secret`) and body `{"dryRun": true}`.
+- **Android push needs Firebase** (one-time): create a Firebase project with package `com.kitchys.app`, put `google-services.json` in the project root and set `android.googleServicesFile` in `app.json`, upload the FCM V1 service account key in expo.dev → project → Credentials, then build a new APK. Until then the app schedules the same two reminders on the phone itself.
 
 ## Secrets and settings (values are NOT stored in the repo)
 
@@ -33,7 +43,7 @@ Dinner-only menu from home chefs; dish photos and sizes; cart with scheduling, v
 
 - Website: `npx expo export -p web --clear` then `npx eas-cli@latest deploy --prod` (needs `EXPO_TOKEN`).
 - Android APK (installable app): `npx eas-cli@latest build -p android --profile preview` (needs `EXPO_TOKEN`).
-- Over-the-air update to installed apps (JS/design/text changes, no reinstall): `npx eas-cli@latest update --channel preview --message "<what changed>" --environment preview`. Installed apps download it on next open and apply it on the open after that. Native changes (new native library, app.json permissions/plugins, app version bump) need a new APK build instead.
+- Over-the-air update to installed apps (JS/design/text changes, no reinstall): `npx eas-cli@latest update --channel preview --message "<what changed>" --environment preview`. Installed apps download it on next open and apply it on the open after that. Native changes (new native library, app.json permissions/plugins, app version bump) need a new APK build instead. Updates only reach APKs with the same app version (`runtimeVersion` follows `version` in app.json; 1.1.0 added notifications), so bump the version whenever a native library is added.
 - Native development build: `npx expo prebuild --clean`, then `npx expo run:android --device` (or iOS on a Mac), then `npx expo start`.
 - Expo Go from a computer: `npx expo start --go --tunnel` and scan the QR code.
 - After changing the menu or loyalty rules: `node --experimental-strip-types scripts/build-chat-menu.mjs` and redeploy the `kitchy-chat` function.
@@ -41,6 +51,7 @@ Dinner-only menu from home chefs; dish photos and sizes; cart with scheduling, v
 ## Open items
 
 - Add `ANTHROPIC_API_KEY` so Kitchy AI answers in the real app.
+- Set up Firebase for Android push (see Smart notifications), then rebuild the APK.
 - Owner wants to send custom sound files for add-to-cart and order-placed (`assets/sounds/`).
 - Real photos per dish (all dishes currently share one koshari photo; `lib/photos.ts` maps dish id → photo) and per chef.
 - Before launch: turn email confirmation back on, clear test accounts/orders, rotate any keys that were pasted into chats, publish to the Play Store.

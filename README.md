@@ -14,6 +14,7 @@ Customer app for ordering homemade food from mothers and grandmothers ("home che
 - **Delivery location on a map**: drop a pin, drag it, or use your GPS location; the address fills in automatically and is saved with every order (with an "Open in Google Maps" link)
 - **Points, ranks and rewards**: 1 point per EGP 10, ranks from Starter to Diamond with point boosts, and rewards (free delivery, EGP and % discounts) bought with points and used as vouchers in the cart
 - **Kitchy AI**: an in-app assistant powered by Claude that knows the menu, allergens, and the customer's own orders and points
+- **Smart notifications**: "your cart is calling" and a weekly "we miss you", written by Claude for each customer from their orders and cart (see `PROJECT_NOTES.md`)
 - **Clean food-app design**: line icons (Ionicons), flat white cards, a chef photo for every chef, and 3D food pictures for dishes and categories
 - **Sound effect + haptic** when you tap *Add to cart*
 - **Animated confetti + success sound** when you place an order or redeem a reward

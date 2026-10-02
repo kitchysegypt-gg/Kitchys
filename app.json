@@ -2,7 +2,7 @@
   "expo": {
     "name": "Kitchy's",
     "slug": "kitchys",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "kitchys",
@@ -59,6 +59,14 @@
           "photosPermission": "Kitchy's uses your photos so home chefs can add pictures of themselves and their dishes.",
           "cameraPermission": "Kitchy's uses the camera so home chefs can take pictures of their dishes.",
           "microphonePermission": false
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#F4511E",
+          "defaultChannel": "reminders"
         }
       ]
     ],

@@ -1,10 +1,11 @@
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 
 import { Icon, IconName, ListGroup, ListRow, Screen, ScreenHeader, Txt } from '@/components/ui';
 import { useCart } from '@/lib/cart';
 import { LANGUAGES } from '@/lib/i18n';
+import { forgetThisPhone } from '@/lib/notifications';
 import { useSettings } from '@/lib/settings';
 import { ACCENTS, AccentName, THEMES, ThemePreference } from '@/lib/theme';
 import { supabase } from '@/lib/supabase';
@@ -22,12 +23,25 @@ const THEME_OPTIONS: {
 ];
 
 export default function SettingsScreen() {
-  const { t, colors, language, setLanguage, theme, setTheme, soundEnabled, setSoundEnabled, accent, setAccent } =
-    useSettings();
+  const {
+    t,
+    colors,
+    language,
+    setLanguage,
+    theme,
+    setTheme,
+    soundEnabled,
+    setSoundEnabled,
+    notificationsEnabled,
+    setNotificationsEnabled,
+    accent,
+    setAccent,
+  } = useSettings();
   const { clear } = useCart();
 
   const signOut = async () => {
     clear();
+    await forgetThisPhone().catch(() => {});
     await supabase.auth.signOut();
   };
 
@@ -119,6 +133,21 @@ export default function SettingsScreen() {
               />
             }
           />
+          {Platform.OS !== 'web' && (
+            <ListRow
+              icon="notifications-outline"
+              label={t('notifications')}
+              detail={t('notificationsDetail')}
+              right={
+                <Switch
+                  value={notificationsEnabled}
+                  onValueChange={setNotificationsEnabled}
+                  trackColor={{ true: colors.primary, false: colors.border }}
+                  thumbColor="#fff"
+                />
+              }
+            />
+          )}
           <ListRow icon="log-out-outline" label={t('signOut')} onPress={signOut} color={colors.danger} right={<View />} />
         </ListGroup>
 
