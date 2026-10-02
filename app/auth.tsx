@@ -33,7 +33,13 @@ export default function AuthScreen() {
           });
     setBusy(false);
 
-    if (error) return showAlert(t('error'), error.message);
+    if (error) {
+      // A network failure (offline, or a page that isn't allowed to reach the server).
+      if (error.name === 'AuthRetryableFetchError' || /fetch|network/i.test(error.message)) {
+        return showAlert(t('error'), t('cantReachServer'));
+      }
+      return showAlert(t('error'), error.message);
+    }
     // With "Confirm email" on in Supabase, sign-up returns no session until the link is clicked.
     if (mode === 'signUp' && !data.session) {
       showAlert(t('email'), t('checkEmail'));
