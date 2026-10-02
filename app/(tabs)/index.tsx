@@ -1,8 +1,9 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Animated, FlatList, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
-import { FoodPhoto } from '@/components/media';
+import { CategoryPhoto } from '@/components/media';
 import { ChefCard, DishCard, FreeDeliveryBanner } from '@/components/menu';
 import { Button, Chip, EmptyState, Icon, PressableScale, Screen, Txt } from '@/components/ui';
 import { CATEGORIES, Category } from '@/data/menu';
@@ -10,9 +11,6 @@ import { DELIVERY_RADIUS_KM, useCatalog } from '@/lib/catalog';
 import { FONT } from '@/lib/fonts';
 import { useSettings } from '@/lib/settings';
 import { useAnimatedValue } from '@/lib/useAnimatedValue';
-
-// Soft tile colours for the category grid, in CATEGORIES order (after "All").
-const TILE_COLORS = ['#FDE8DA', '#FBF1D9', '#DDEFF6', '#FBE3EA', '#E3F3E6'];
 
 export default function HomeScreen() {
   const { t, colors, isRTL, location } = useSettings();
@@ -132,15 +130,18 @@ export default function HomeScreen() {
 
             {sectionHeader(t('categories'))}
             <View style={styles.tiles}>
-              {tiles.map((c, i) => (
+              {tiles.map((c) => (
                 <PressableScale key={c.id} onPress={() => setCategory(c.id)} style={styles.tileWrap}>
-                  <View style={[styles.tile, { backgroundColor: TILE_COLORS[i % TILE_COLORS.length] }]}>
-                    <Txt center color="#1B1B1F" style={{ fontWeight: '600', fontSize: 15 }}>
+                  <View style={[styles.tile, { backgroundColor: colors.surfaceAlt }]}>
+                    <CategoryPhoto category={c.id as Category} />
+                    <LinearGradient
+                      colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.68)']}
+                      locations={[0.35, 1]}
+                      style={StyleSheet.absoluteFill}
+                    />
+                    <Txt numberOfLines={1} color="#FFFFFF" style={styles.tileLabel}>
                       {t(c.label)}
                     </Txt>
-                    <View style={styles.tileArt}>
-                      <FoodPhoto size={72} />
-                    </View>
                   </View>
                 </PressableScale>
               ))}
@@ -263,6 +264,6 @@ const styles = StyleSheet.create({
   gridItem: { width: '48.5%' },
   tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, paddingHorizontal: 16 },
   tileWrap: { width: '31%' },
-  tile: { height: 132, borderRadius: 18, paddingTop: 12, paddingHorizontal: 8, overflow: 'hidden' },
-  tileArt: { position: 'absolute', bottom: -10, end: -10 },
+  tile: { height: 132, borderRadius: 18, overflow: 'hidden', justifyContent: 'flex-end' },
+  tileLabel: { fontWeight: '700', fontSize: 15, paddingHorizontal: 10, paddingBottom: 10 },
 });

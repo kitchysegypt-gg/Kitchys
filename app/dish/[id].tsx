@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAnimatedValue } from '@/lib/useAnimatedValue';
 import { AllergenList, QuantityStepper, useAddToCart } from '@/components/menu';
 import { Button, Card, EmptyState, Icon, IconName, Screen, Txt } from '@/components/ui';
-import { ChefAvatar, DishArt, RatingBadge } from '@/components/media';
+import { ChefAvatar, DishGallery, RatingBadge } from '@/components/media';
 import { formatPortion } from '@/data/menu';
 import { useCatalog } from '@/lib/catalog';
 import { useSettings } from '@/lib/settings';
@@ -50,7 +50,7 @@ export default function DishScreen() {
       <ScrollView contentContainerStyle={{ paddingBottom: 140 }}>
         <View style={styles.photoHero}>
           <Animated.View style={{ transform: [{ scale: bounce }] }}>
-            <DishArt dish={dish} height={320} />
+            <DishGallery dish={dish} height={320} />
           </Animated.View>
           <SafeAreaView edges={['top']} style={styles.photoClose}>
             <Pressable onPress={() => router.back()} style={styles.close} hitSlop={10}>

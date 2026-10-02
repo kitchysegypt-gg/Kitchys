@@ -98,7 +98,9 @@ async function handleNotify(req: Request, functionUrl: string) {
   const dishes = (app.dishes as any[])
     .map(
       (d) =>
-        `<li>${d.photoUrl ? `<img src="${escapeHtml(d.photoUrl)}" alt="" width="240" style="border-radius:12px;display:block;margin:6px 0">` : ''}` +
+        `<li>${(Array.isArray(d.photoUrls) && d.photoUrls.length ? d.photoUrls : d.photoUrl ? [d.photoUrl] : [])
+          .map((url: string) => `<img src="${escapeHtml(url)}" alt="" width="120" height="90" style="border-radius:10px;object-fit:cover;margin:6px 6px 6px 0">`)
+          .join('')}<br>` +
         `<b>${escapeHtml(d.name)}</b> — EGP ${escapeHtml(d.price)} · ${escapeHtml(d.category)}` +
         `${d.portionGrams ? ` · ${escapeHtml(d.portionGrams >= 1000 ? `${d.portionGrams / 1000} kg` : `${d.portionGrams} g`)}` : ''}<br>` +
         `${escapeHtml(d.description)}<br><i>Ingredients:</i> ${escapeHtml(d.ingredients)}<br>` +

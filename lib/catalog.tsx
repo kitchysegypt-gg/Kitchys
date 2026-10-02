@@ -46,6 +46,8 @@ export type KitchenDishRow = {
   vegetarian: boolean;
   available: boolean;
   photo_url?: string | null;
+  /** Up to 4 photos; the first is the cover (photo_url). */
+  photo_urls?: string[] | null;
   portion_grams?: number | null;
 };
 
@@ -101,7 +103,8 @@ export function kitchenDishToDish(row: KitchenDishRow): Dish {
     spicy: row.spicy,
     vegetarian: row.vegetarian,
     kitchen: true,
-    photo: row.photo_url ?? undefined,
+    photo: row.photo_urls?.[0] ?? row.photo_url ?? undefined,
+    photos: row.photo_urls?.length ? row.photo_urls : row.photo_url ? [row.photo_url] : undefined,
     portionGrams: row.portion_grams ?? undefined,
   };
 }

@@ -531,6 +531,7 @@ async function approveApplication(id: string): Promise<Result> {
     spicy: !!d.spicy,
     vegetarian: !!d.vegetarian,
     photo_url: d.photoUrl ?? null,
+    photo_urls: d.photoUrls ?? (d.photoUrl ? [d.photoUrl] : []),
     portion_grams: d.portionGrams ?? null,
     available: true,
     created_at: new Date().toISOString(),

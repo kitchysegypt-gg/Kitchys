@@ -1,12 +1,21 @@
 import { router } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { Coordinate } from '@/components/DeliveryMap';
 import { DishEditor } from '@/components/DishEditor';
 import { KitchenLocationPicker } from '@/components/KitchenLocationPicker';
-import { pickImage } from '@/components/PhotoPicker';
+import { PhotoStrip, pickImage } from '@/components/PhotoPicker';
 import { ChefAvatar, DishArt, RatingBadge } from '@/components/media';
 import { formatPortion } from '@/data/menu';
 import { Button, Card, EmptyState, Icon, ScreenHeader, Txt } from '@/components/ui';
@@ -20,7 +29,8 @@ import {
   fetchKitchenLocation,
   isDishReady,
   setDishAvailable,
-  setDishPhoto,
+  setDishPhotos,
+  MAX_DISH_PHOTOS,
   setKitchenLocation,
   setKitchenPhoto,
   useChefStatus,
@@ -84,17 +94,19 @@ export default function KitchenScreen() {
     }
   };
 
-  const changeDishPhoto = async (dishId: string) => {
+  // The dish whose photos are open for editing.
+  const [editingPhotos, setEditingPhotos] = useState<string | null>(null);
+  const [dishPhotosBusy, setDishPhotosBusy] = useState(false);
+
+  const saveDishPhotos = async (dishId: string, photos: string[]) => {
+    setDishPhotosBusy(true);
     try {
-      const uri = await pickImage([4, 3]);
-      if (!uri) return;
-      setPhotoBusy(true);
-      await setDishPhoto(dishId, uri);
+      await setDishPhotos(dishId, photos);
       await afterChange();
     } catch (e: any) {
       showAlert(t('error'), e?.message ?? String(e));
     } finally {
-      setPhotoBusy(false);
+      setDishPhotosBusy(false);
     }
   };
 
@@ -207,37 +219,48 @@ export default function KitchenScreen() {
 
             {dishes.length === 0 && !draft && <Txt muted>{t('noKitchenDishes')}</Txt>}
             {dishes.map((d) => (
-              <Card key={d.id} style={styles.dishRow}>
-                <Pressable
-                  onPress={() => changeDishPhoto(d.id)}
-                  disabled={photoBusy}
-                  accessibilityRole="button"
-                  accessibilityLabel={t('changePhoto')}
-                  style={{ width: 72 }}>
-                  <DishArt dish={kitchenDishToDish(d)} height={56} radius={12} />
-                  <View style={[styles.dishCamera, { backgroundColor: colors.primary, borderColor: colors.surface }]}>
-                    <Icon name="camera" size={11} color={colors.onPrimary} />
+              <View key={d.id} style={{ gap: 6 }}>
+                <Card style={styles.dishRow}>
+                  <Pressable
+                    onPress={() => setEditingPhotos((open) => (open === d.id ? null : d.id))}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('editPhotos')}
+                    style={{ width: 72 }}>
+                    <DishArt dish={kitchenDishToDish(d)} height={56} radius={12} />
+                    <View style={[styles.dishCamera, { backgroundColor: colors.primary, borderColor: colors.surface }]}>
+                      <Icon name="camera" size={11} color={colors.onPrimary} />
+                    </View>
+                  </Pressable>
+                  <View style={{ flex: 1 }}>
+                    <Txt style={{ fontWeight: '700' }}>{d.name}</Txt>
+                    <Txt variant="caption" style={{ fontWeight: '600' }}>
+                      {formatPrice(Number(d.price))}
+                      {d.portion_grams ? ` · ${formatPortion(d.portion_grams)}` : ''}
+                    </Txt>
+                    <Txt variant="caption" muted>
+                      {d.available ? t('available') : t('hidden')}
+                    </Txt>
                   </View>
-                </Pressable>
-                <View style={{ flex: 1 }}>
-                  <Txt style={{ fontWeight: '700' }}>{d.name}</Txt>
-                  <Txt variant="caption" style={{ fontWeight: '600' }}>
-                    {formatPrice(Number(d.price))}
-                    {d.portion_grams ? ` · ${formatPortion(d.portion_grams)}` : ''}
-                  </Txt>
-                  <Txt variant="caption" muted>
-                    {d.available ? t('available') : t('hidden')}
-                  </Txt>
-                </View>
-                <Switch
-                  value={d.available}
-                  onValueChange={(v) => run(() => setDishAvailable(d.id, v))}
-                  trackColor={{ true: colors.primary }}
-                />
-                <Pressable onPress={() => run(() => deleteKitchenDish(d.id))} hitSlop={8}>
-                  <Icon name="trash-outline" size={22} color={colors.danger} />
-                </Pressable>
-              </Card>
+                  <Switch
+                    value={d.available}
+                    onValueChange={(v) => run(() => setDishAvailable(d.id, v))}
+                    trackColor={{ true: colors.primary }}
+                  />
+                  <Pressable onPress={() => run(() => deleteKitchenDish(d.id))} hitSlop={8}>
+                    <Icon name="trash-outline" size={22} color={colors.danger} />
+                  </Pressable>
+                </Card>
+                {editingPhotos === d.id && (
+                  <Card>
+                    <PhotoStrip
+                      value={d.photo_urls?.length ? d.photo_urls : d.photo_url ? [d.photo_url] : []}
+                      onChange={(photos) => saveDishPhotos(d.id, photos)}
+                      max={MAX_DISH_PHOTOS}
+                      busy={dishPhotosBusy}
+                    />
+                  </Card>
+                )}
+              </View>
             ))}
 
             {draft ? (

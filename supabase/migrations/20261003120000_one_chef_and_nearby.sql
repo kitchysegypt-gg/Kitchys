@@ -264,7 +264,6 @@ $$;
 
 revoke execute on function public.check_order_chef() from public, anon, authenticated;
 
-drop trigger if exists orders_check_chef on public.orders;
-create trigger orders_check_chef
+create or replace trigger orders_check_chef
   before insert on public.orders
   for each row execute function public.check_order_chef();

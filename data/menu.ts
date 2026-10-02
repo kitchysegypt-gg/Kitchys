@@ -62,8 +62,10 @@ export type Dish = {
   popular?: boolean;
   /** Dishes added by a home chef in the app. */
   kitchen?: boolean;
-  /** Photo link uploaded by the home chef. */
+  /** Photo link uploaded by the home chef (the cover). */
   photo?: string;
+  /** All of the chef's photos of this dish (up to 4), cover first. */
+  photos?: string[];
   /** Portion size in grams. */
   portionGrams?: number;
 };

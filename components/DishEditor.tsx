@@ -1,10 +1,10 @@
 import { Pressable, StyleSheet, Switch, TextInput, View } from 'react-native';
 
 import { ALLERGEN_EMOJI, Allergen, CATEGORIES, Category } from '@/data/menu';
-import { DishDraft, MIN_DESCRIPTION_WORDS, MIN_INGREDIENT_WORDS, wordCount } from '@/lib/chef';
+import { DishDraft, MAX_DISH_PHOTOS, MIN_DESCRIPTION_WORDS, MIN_INGREDIENT_WORDS, wordCount } from '@/lib/chef';
 import { useSettings } from '@/lib/settings';
 import { FONT } from '@/lib/fonts';
-import { PhotoPicker } from './PhotoPicker';
+import { PhotoStrip } from './PhotoPicker';
 import { Card, Chip, Icon, Txt } from './ui';
 
 const ALLERGENS = Object.keys(ALLERGEN_EMOJI) as Allergen[];
@@ -46,7 +46,7 @@ export function DishEditor({
           </Pressable>
         )}
       </View>
-      <PhotoPicker value={value.photo} onChange={(photo) => set({ photo })} label={t('dishPhoto')} />
+      <PhotoStrip value={value.photos} onChange={(photos) => set({ photos })} max={MAX_DISH_PHOTOS} />
       <TextInput
         value={value.name}
         onChangeText={(name) => set({ name })}

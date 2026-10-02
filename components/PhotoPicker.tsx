@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
-import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { showAlert } from '@/lib/alert';
 import { useSettings } from '@/lib/settings';
@@ -131,4 +131,90 @@ const styles = StyleSheet.create({
   },
   removeCorner: { top: 8, end: 8 },
   removeRound: { top: 0, start: 72 },
+  stripRow: { flexDirection: 'row', alignItems: 'center' },
+  strip: { flexDirection: 'row', gap: 8 },
+  thumb: { flex: 1, maxWidth: '24%', aspectRatio: 1, borderRadius: 12, overflow: 'hidden', borderWidth: 1 },
+  coverTag: { position: 'absolute', bottom: 4, start: 4, paddingHorizontal: 6, paddingVertical: 1, borderRadius: 6 },
+  removeThumb: { top: 4, end: 4, width: 22, height: 22, borderRadius: 11 },
 });
+
+/**
+ * A row of up to `max` photo slots for a dish: the first photo is the cover,
+ * × removes one, and the dashed slot adds another from the library.
+ */
+export function PhotoStrip({
+  value,
+  onChange,
+  max,
+  busy,
+}: {
+  value: string[];
+  onChange: (uris: string[]) => void;
+  max: number;
+  /** Shows a spinner on the add slot while photos are being saved. */
+  busy?: boolean;
+}) {
+  const { t, colors } = useSettings();
+
+  const add = async () => {
+    try {
+      const uri = await pickImage([4, 3]);
+      if (uri) onChange([...value, uri].slice(0, max));
+    } catch (e: any) {
+      showAlert(t('error'), e?.message ?? String(e));
+    }
+  };
+
+  return (
+    <View style={{ gap: 6 }}>
+      <View style={styles.stripRow}>
+        <Txt style={{ fontWeight: '600', flex: 1 }}>{t('dishPhotos')}</Txt>
+        <Txt variant="caption" muted>
+          {value.length}/{max}
+        </Txt>
+      </View>
+      <View style={styles.strip}>
+        {value.map((uri, i) => (
+          <View key={`${uri}-${i}`} style={[styles.thumb, { borderColor: colors.border }]}>
+            <Image source={{ uri }} style={StyleSheet.absoluteFill} contentFit="cover" />
+            {i === 0 && (
+              <View style={[styles.coverTag, { backgroundColor: colors.primary }]}>
+                <Txt style={{ color: colors.onPrimary, fontSize: 10, fontWeight: '700' }}>{t('cover')}</Txt>
+              </View>
+            )}
+            <Pressable
+              onPress={() => onChange(value.filter((_, j) => j !== i))}
+              hitSlop={8}
+              disabled={busy}
+              accessibilityLabel={t('removePhoto')}
+              style={[styles.remove, styles.removeThumb]}>
+              <Icon name="close" size={14} color="#fff" />
+            </Pressable>
+          </View>
+        ))}
+        {value.length < max && (
+          <Pressable
+            onPress={add}
+            disabled={busy}
+            accessibilityRole="button"
+            accessibilityLabel={t('addPhoto')}
+            style={[styles.thumb, styles.slot, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }]}>
+            {busy ? (
+              <ActivityIndicator color={colors.primary} />
+            ) : (
+              <>
+                <Icon name="camera-outline" size={22} color={colors.textMuted} />
+                <Txt variant="caption" muted center style={{ fontSize: 11 }}>
+                  {t('addPhoto')}
+                </Txt>
+              </>
+            )}
+          </Pressable>
+        )}
+      </View>
+      <Txt variant="caption" muted>
+        {t('dishPhotosHint', { n: max })}
+      </Txt>
+    </View>
+  );
+}

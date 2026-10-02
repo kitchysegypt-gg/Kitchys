@@ -18,8 +18,8 @@ export type DishDraft = {
   allergens: Allergen[];
   spicy: boolean;
   vegetarian: boolean;
-  /** Picked photo: a local file until it's uploaded, then its public link. */
-  photo: string | null;
+  /** Picked photos (up to MAX_DISH_PHOTOS, cover first): local files until uploaded, then public links. */
+  photos: string[];
   /** Portion size as typed, in `portionUnit`. Optional. */
   portionAmount: string;
   portionUnit: 'g' | 'kg';
@@ -36,7 +36,7 @@ export const emptyDish = (): DishDraft => ({
   allergens: [],
   spicy: false,
   vegetarian: false,
-  photo: null,
+  photos: [],
   portionAmount: '',
   portionUnit: 'g',
 });
@@ -70,6 +70,9 @@ export async function uploadKitchenPhoto(uri: string | null): Promise<string | n
   return supabase.storage.from('kitchen-photos').getPublicUrl(path).data.publicUrl;
 }
 
+/** A dish can show up to this many photos; the first is the cover. */
+export const MAX_DISH_PHOTOS = 4;
+
 /** Dishes need a real description and ingredient list (also enforced by the database). */
 export const MIN_DESCRIPTION_WORDS = 10;
 export const MIN_INGREDIENT_WORDS = 3;
@@ -84,6 +87,7 @@ export const isDishReady = (d: DishDraft) =>
 
 /** Shape stored in the application (read by approve_chef_application) and kitchen_dishes. */
 export async function dishPayload(d: DishDraft) {
+  const photoUrls = await uploadDishPhotos(d.photos);
   return {
     name: d.name.trim(),
     description: d.description.trim(),
@@ -95,7 +99,8 @@ export async function dishPayload(d: DishDraft) {
     allergens: d.allergens,
     spicy: d.spicy,
     vegetarian: d.vegetarian,
-    photoUrl: await uploadKitchenPhoto(d.photo),
+    photoUrl: photoUrls[0] ?? null,
+    photoUrls,
     portionGrams: portionGrams(d),
   };
 }
@@ -208,7 +213,7 @@ export async function addKitchenDish(chefId: string, draft: DishDraft) {
     allergens: d.allergens,
     spicy: d.spicy,
     vegetarian: d.vegetarian,
-    photo_url: d.photoUrl,
+    photo_urls: d.photoUrls,
     portion_grams: d.portionGrams,
   });
   if (error) throw error;
@@ -232,9 +237,16 @@ export async function setKitchenPhoto(uri: string) {
 }
 
 /** Approved chefs: add or replace the photo of one of their dishes. */
-export async function setDishPhoto(dishId: string, uri: string) {
-  const url = await uploadKitchenPhoto(uri);
-  const { error } = await supabase.from('kitchen_dishes').update({ photo_url: url }).eq('id', dishId);
+/** Uploads any new photos (already-uploaded links are kept as they are). */
+async function uploadDishPhotos(photos: string[]) {
+  const urls = await Promise.all(photos.slice(0, MAX_DISH_PHOTOS).map(uploadKitchenPhoto));
+  return urls.filter((u): u is string => !!u);
+}
+
+/** Approved chefs: replace a dish's photos (cover first). */
+export async function setDishPhotos(dishId: string, photos: string[]) {
+  const photo_urls = await uploadDishPhotos(photos);
+  const { error } = await supabase.from('kitchen_dishes').update({ photo_urls }).eq('id', dishId);
   if (error) throw error;
 }
 
