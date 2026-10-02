@@ -62,7 +62,7 @@ export default function DishScreen() {
         <View style={{ padding: 20, gap: 16 }}>
           <View>
             <Txt variant="title">{l(dish.name)}</Txt>
-            <Txt variant="heading" style={{ marginTop: 4 }}>
+            <Txt variant="heading" style={{ marginTop: 4, color: colors.primary }}>
               {formatPrice(dish.price)}
             </Txt>
           </View>

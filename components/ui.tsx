@@ -115,7 +115,12 @@ export function ScreenHeader({ title, right, onBack }: { title: string; right?: 
 export function Card({ children, style, color }: ViewProps & { color?: string }) {
   const { colors } = useSettings();
   return (
-    <View style={[styles.card, { backgroundColor: color ?? colors.surface, shadowColor: colors.shadow }, style]}>
+    <View
+      style={[
+        styles.card,
+        { backgroundColor: color ?? colors.surface, shadowColor: colors.shadow, borderColor: colors.border },
+        style,
+      ]}>
       {children}
     </View>
   );
@@ -306,10 +311,11 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 18,
     padding: 14,
-    shadowOffset: { width: 0, height: 2 },
+    borderWidth: 1,
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 1,
+    shadowRadius: 12,
+    elevation: 0,
   },
   button: {
     borderRadius: 14,

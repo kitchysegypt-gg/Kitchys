@@ -22,28 +22,28 @@ export type Palette = {
   heroGradient: [string, string];
 };
 
-// Brand orange from the Kitchy's logo.
-const BRAND = '#F4511E';
-const BRAND_DEEP = '#B8330D';
+// Fresh green brand (Hoomade-inspired); the logo keeps its orange.
+const BRAND = '#2FB45F';
+const BRAND_DEEP = '#1E8646';
 
 export const THEMES: Record<ThemeName, Palette> = {
   light: {
     dark: false,
-    background: '#F7F6F4',
+    background: '#FFFFFF',
     surface: '#FFFFFF',
-    surfaceAlt: '#F2F0ED',
-    text: '#18181B',
-    textMuted: '#6B6B70',
-    border: '#ECEAE6',
+    surfaceAlt: '#F4F6F5',
+    text: '#1B1D1F',
+    textMuted: '#7A7F86',
+    border: '#ECEFED',
     primary: BRAND,
     primaryDeep: BRAND_DEEP,
     onPrimary: '#FFFFFF',
     accent: '#FFB300',
     success: '#1E9E4F',
-    successBg: '#E3F6EA',
-    danger: '#D93025',
-    shadow: '#101018',
-    heroGradient: ['#F4511E', '#9E2A0C'],
+    successBg: '#E6F7EC',
+    danger: '#E5484D',
+    shadow: '#0F1A14',
+    heroGradient: ['#2FB45F', '#16683A'],
   },
   dark: {
     dark: true,
@@ -53,15 +53,15 @@ export const THEMES: Record<ThemeName, Palette> = {
     text: '#F4F4F6',
     textMuted: '#A0A0A8',
     border: '#2C2C31',
-    primary: '#FF6A3D',
-    primaryDeep: '#B8330D',
+    primary: '#3DCB72',
+    primaryDeep: '#1E8646',
     onPrimary: '#FFFFFF',
     accent: '#FFC247',
     success: '#4CC47F',
     successBg: '#16301F',
     danger: '#FF6B61',
     shadow: '#000000',
-    heroGradient: ['#FF6A3D', '#7A2208'],
+    heroGradient: ['#2FB45F', '#0E4A28'],
   },
   sunset: {
     dark: false,
@@ -89,8 +89,8 @@ export const THEMES: Record<ThemeName, Palette> = {
     text: '#12261E',
     textMuted: '#5D7068',
     border: '#DDEBE5',
-    primary: '#F4511E',
-    primaryDeep: '#B8330D',
+    primary: '#14A37F',
+    primaryDeep: '#0B5E49',
     onPrimary: '#FFFFFF',
     accent: '#14A37F',
     success: '#14A37F',
@@ -101,13 +101,13 @@ export const THEMES: Record<ThemeName, Palette> = {
   },
 };
 
-export type AccentName = 'orange' | 'red' | 'green' | 'blue' | 'purple' | 'pink';
+export type AccentName = 'green' | 'orange' | 'red' | 'blue' | 'purple' | 'pink';
 
-/** Main colour choices. Orange keeps each theme's own brand look. */
+/** Main colour choices. Green keeps each theme's own brand look. */
 export const ACCENTS: Record<AccentName, { primary: string; deep: string; light: string }> = {
+  green: { primary: '#2FB45F', deep: '#1E8646', light: '#4CC47F' },
   orange: { primary: '#F4511E', deep: '#B8330D', light: '#FF7A45' },
   red: { primary: '#E53935', deep: '#A31F1C', light: '#FF6F60' },
-  green: { primary: '#2E9E5B', deep: '#1B6B3C', light: '#4CC47F' },
   blue: { primary: '#1E88E5', deep: '#11589A', light: '#5AAEF2' },
   purple: { primary: '#8E44AD', deep: '#5E2B75', light: '#B26FD0' },
   pink: { primary: '#D6336C', deep: '#96204A', light: '#F06595' },

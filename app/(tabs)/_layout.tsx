@@ -38,12 +38,12 @@ export default function TabLayout() {
     return () => clearTimeout(timer);
   }, [loaded, freeDeliveriesLeft]);
 
-  // Outline icon normally; filled, in a soft brand-tinted pill when the tab is selected.
+  // Outline icon normally, filled in the brand colour when the tab is selected.
   const icon = (outline: TabGlyph, filled: TabGlyph) =>
     function TabIcon({ focused, color }: { focused: boolean; color: ColorValue }) {
       return (
-        <View style={[styles.tabPill, focused && { backgroundColor: `${colors.primary}1F` }]}>
-          <MaterialCommunityIcons name={focused ? filled : outline} size={24} color={color} />
+        <View style={styles.tabIcon}>
+          <MaterialCommunityIcons name={focused ? filled : outline} size={25} color={color} />
         </View>
       );
     };
@@ -105,7 +105,7 @@ export default function TabLayout() {
 }
 
 const styles = StyleSheet.create({
-  tabPill: { width: 54, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
+  tabIcon: { height: 28, alignItems: 'center', justifyContent: 'center' },
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', padding: 24 },
   welcome: { padding: 24 },
   welcomeArt: {

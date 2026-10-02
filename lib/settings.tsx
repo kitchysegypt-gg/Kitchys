@@ -27,7 +27,12 @@ type StoredSettings = {
   accent: AccentName;
   /** Set when someone taps "Apply as a home chef" before signing in. */
   wantsChefApply: boolean;
+  /** Bumped when the default look changes, to move everyone to it once. */
+  styleVersion: number;
 };
+
+/** Version 2: the green look; everyone starts on it once, and can still pick another accent. */
+const STYLE_VERSION = 2;
 
 const DEFAULTS: StoredSettings = {
   language: 'en',
@@ -36,8 +41,9 @@ const DEFAULTS: StoredSettings = {
   notificationsEnabled: true,
   onboarded: false,
   location: null,
-  accent: 'orange',
+  accent: 'green',
   wantsChefApply: false,
+  styleVersion: STYLE_VERSION,
 };
 
 type SettingsContextValue = StoredSettings & {
@@ -60,7 +66,7 @@ type SettingsContextValue = StoredSettings & {
 };
 
 function withAccent(palette: Palette, accent: AccentName): Palette {
-  if (accent === 'orange' || !ACCENTS[accent]) return palette;
+  if (accent === 'green' || !ACCENTS[accent]) return palette;
   const a = ACCENTS[accent];
   return { ...palette, primary: a.primary, primaryDeep: a.deep, heroGradient: [a.primary, a.deep] };
 }
@@ -75,7 +81,14 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY)
       .then((raw) => {
-        if (raw) setSettings({ ...DEFAULTS, ...JSON.parse(raw) });
+        if (!raw) return;
+        const stored = JSON.parse(raw) as Partial<StoredSettings>;
+        const saved: StoredSettings = { ...DEFAULTS, ...stored };
+        if ((stored.styleVersion ?? 1) < STYLE_VERSION) {
+          saved.accent = 'green';
+          saved.styleVersion = STYLE_VERSION;
+        }
+        setSettings(saved);
       })
       .catch(() => {})
       .finally(() => setLoaded(true));

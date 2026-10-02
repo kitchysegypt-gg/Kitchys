@@ -97,7 +97,7 @@ export function DishCard({ dish, wide }: { dish: Dish; wide?: boolean }) {
               .join(' · ')}
           </Txt>
           <View style={styles.priceRow}>
-            <Txt style={{ fontWeight: '700', color: colors.text }}>{formatPrice(dish.price)}</Txt>
+            <Txt style={{ fontWeight: '800', color: colors.primary, fontSize: 15 }}>{formatPrice(dish.price)}</Txt>
             <QuickAddButton dish={dish} />
           </View>
         </View>
