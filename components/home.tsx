@@ -11,11 +11,13 @@ import { DELIVERY_FEE } from '@/lib/supabase';
 import { CategoryPhoto, ChefAvatar, DishArt } from './media';
 import { Icon, PressableScale, Txt } from './ui';
 
-const PROMO_PHOTOS = {
-  delivery: require('@/assets/photos/dish.jpg'),
-  refer: require('@/assets/photos/categories/desserts.jpg'),
-  points: require('@/assets/photos/categories/main.jpg'),
+// Kitchy's promo banners (1200 x 676).
+const PROMO_BANNERS = {
+  freeDelivery: require('@/assets/promos/free-delivery.jpg'),
+  points: require('@/assets/promos/points.jpg'),
+  cashback: require('@/assets/promos/cashback.jpg'),
 };
+const BANNER_RATIO = 1200 / 676;
 
 /** Round photo bubbles for the menu categories; tap again to show everything. */
 export function CategoryBubbles({ value, onChange }: { value: Category | 'all'; onChange: (c: Category | 'all') => void }) {
@@ -54,23 +56,12 @@ export function CategoryBubbles({ value, onChange }: { value: Category | 'all'; 
   );
 }
 
-type Promo = {
-  key: string;
-  title: string;
-  body: string;
-  action: string;
-  onPress: () => void;
-  photo: number;
-  background: string;
-  ink: string;
-  buttonBg: string;
-  buttonInk: string;
-};
+type Promo = { key: string; image: number; label: string; onPress: () => void };
 
-/** Swipeable promo banners: free delivery, refer a friend, points. */
+/** Swipeable promo banners: free delivery (while it lasts), points, cashback for referrals. */
 export function PromoCarousel() {
   const { t, colors } = useSettings();
-  const { freeDeliveriesLeft, points, rank } = useOrders();
+  const { freeDeliveriesLeft } = useOrders();
   const { width: screen } = useWindowDimensions();
   const width = Math.min(screen, 560) - 32;
   const [index, setIndex] = useState(0);
@@ -80,49 +71,20 @@ export function PromoCarousel() {
       ? [
           {
             key: 'delivery',
-            title: t('promoFreeTitle'),
-            body: t('promoFreeBody', { n: freeDeliveriesLeft }),
-            action: t('orderNow'),
+            image: PROMO_BANNERS.freeDelivery,
+            label: t('promoFreeTitle'),
             onPress: () => router.navigate('/chefs'),
-            photo: PROMO_PHOTOS.delivery,
-            background: '#1E2A23',
-            ink: '#FFFFFF',
-            buttonBg: colors.primary,
-            buttonInk: '#FFFFFF',
           },
         ]
       : []),
-    {
-      key: 'refer',
-      title: t('promoReferTitle'),
-      body: t('promoReferBody'),
-      action: t('invite'),
-      onPress: () => router.push('/refer'),
-      photo: PROMO_PHOTOS.refer,
-      background: colors.primary,
-      ink: '#FFFFFF',
-      buttonBg: '#FFFFFF',
-      buttonInk: colors.primaryDeep,
-    },
-    {
-      key: 'points',
-      title: t('pointsCount', { n: points.toLocaleString() }),
-      body: t('promoPointsBody', { rank: t(`rank_${rank.id}`) }),
-      action: t('seeRewards'),
-      onPress: () => router.push('/rewards'),
-      photo: PROMO_PHOTOS.points,
-      background: '#FFF3DF',
-      ink: '#2A1D0C',
-      buttonBg: '#2A1D0C',
-      buttonInk: '#FFFFFF',
-    },
+    { key: 'points', image: PROMO_BANNERS.points, label: t('seeRewards'), onPress: () => router.push('/rewards') },
+    { key: 'cashback', image: PROMO_BANNERS.cashback, label: t('referFriend'), onPress: () => router.push('/refer') },
   ];
 
   return (
     <View>
       <ScrollView
         horizontal
-        pagingEnabled={false}
         snapToInterval={width + 12}
         decelerationRate="fast"
         showsHorizontalScrollIndicator={false}
@@ -130,21 +92,13 @@ export function PromoCarousel() {
         onScroll={(e) => setIndex(Math.round(e.nativeEvent.contentOffset.x / (width + 12)))}
         scrollEventThrottle={64}>
         {promos.map((p) => (
-          <Pressable key={p.key} onPress={p.onPress} style={[styles.promo, { width, backgroundColor: p.background }]}>
-            <View style={styles.promoText}>
-              <Txt numberOfLines={2} style={{ color: p.ink, fontSize: 22, fontWeight: '800', lineHeight: 27 }}>
-                {p.title}
-              </Txt>
-              <Txt numberOfLines={2} style={{ color: p.ink, opacity: 0.8, fontSize: 13, marginTop: 4 }}>
-                {p.body}
-              </Txt>
-              <View style={[styles.promoButton, { backgroundColor: p.buttonBg }]}>
-                <Txt style={{ color: p.buttonInk, fontWeight: '700', fontSize: 13 }}>{p.action}</Txt>
-              </View>
-            </View>
-            <View style={styles.promoPhoto}>
-              <Image source={p.photo} style={StyleSheet.absoluteFill} contentFit="cover" />
-            </View>
+          <Pressable
+            key={p.key}
+            onPress={p.onPress}
+            accessibilityRole="button"
+            accessibilityLabel={p.label}
+            style={[styles.promo, { width, height: width / BANNER_RATIO, borderColor: colors.border }]}>
+            <Image source={p.image} style={StyleSheet.absoluteFill} contentFit="cover" transition={150} />
           </Pressable>
         ))}
       </ScrollView>
@@ -223,10 +177,7 @@ const styles = StyleSheet.create({
   bubbleItem: { width: 78, alignItems: 'center', gap: 6 },
   bubbleRing: { width: 66, height: 66, borderRadius: 33, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   bubble: { width: 56, height: 56, borderRadius: 28, overflow: 'hidden' },
-  promo: { height: 148, borderRadius: 20, flexDirection: 'row', overflow: 'hidden' },
-  promoText: { flex: 1, padding: 16, justifyContent: 'center' },
-  promoButton: { alignSelf: 'flex-start', marginTop: 10, paddingVertical: 7, paddingHorizontal: 14, borderRadius: 10 },
-  promoPhoto: { width: 128, height: 128, borderRadius: 64, overflow: 'hidden', alignSelf: 'center', marginEnd: -16 },
+  promo: { borderRadius: 20, overflow: 'hidden', borderWidth: 1 },
   dots: { flexDirection: 'row', justifyContent: 'center', gap: 5, marginTop: 10 },
   dot: { height: 6, borderRadius: 3 },
   kitchen: { borderRadius: 18, overflow: 'hidden', borderWidth: 1 },
