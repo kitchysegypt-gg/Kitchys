@@ -7,6 +7,7 @@ import { Button, Card, Icon, IconName, Screen, Txt } from '@/components/ui';
 import { LANGUAGES } from '@/lib/i18n';
 import { showAlert } from '@/lib/alert';
 import { useSettings } from '@/lib/settings';
+import { FONT } from '@/lib/fonts';
 import { isDemo, isSupabaseConfigured, supabase } from '@/lib/supabase';
 
 export default function AuthScreen() {
@@ -179,6 +180,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingHorizontal: 14,
   },
-  input: { flex: 1, paddingVertical: 14, fontSize: 16 },
+  input: { flex: 1, paddingVertical: 14, fontSize: 16, fontFamily: FONT.regular },
   freeHint: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 16 },
 });

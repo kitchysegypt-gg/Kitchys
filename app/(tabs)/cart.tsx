@@ -14,6 +14,7 @@ import { isTooSoon, slotDate } from '@/lib/schedule';
 import { useOrders } from '@/lib/orders';
 import { showAlert } from '@/lib/alert';
 import { useSettings } from '@/lib/settings';
+import { FONT } from '@/lib/fonts';
 import { useSounds } from '@/lib/sound';
 import { DELIVERY_FEE } from '@/lib/supabase';
 
@@ -346,7 +347,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   earnedPill: { borderRadius: 16, paddingVertical: 8, paddingHorizontal: 14, marginBottom: 14 },
-  input: { borderRadius: 14, borderWidth: 1, padding: 12, fontSize: 15, minHeight: 48 },
+  input: { borderRadius: 14, borderWidth: 1, padding: 12, fontSize: 15, fontFamily: FONT.regular, minHeight: 48 },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   divider: { height: 1, marginVertical: 4 },
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', padding: 24 },

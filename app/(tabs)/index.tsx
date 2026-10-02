@@ -7,6 +7,7 @@ import { ChefCard, DishCard, FreeDeliveryBanner } from '@/components/menu';
 import { Chip, EmptyState, Icon, PressableScale, Screen, Txt } from '@/components/ui';
 import { CATEGORIES, Category } from '@/data/menu';
 import { useCatalog } from '@/lib/catalog';
+import { FONT } from '@/lib/fonts';
 import { useSettings } from '@/lib/settings';
 import { useAnimatedValue } from '@/lib/useAnimatedValue';
 
@@ -39,21 +40,31 @@ export default function HomeScreen() {
     <Screen>
       <View style={styles.header}>
         <Pressable onPress={() => router.push('/location')} style={{ flex: 1 }} hitSlop={6}>
+          <Txt variant="caption" muted style={{ fontWeight: '500' }}>
+            {t('deliverTo')}
+          </Txt>
           <View style={styles.addressRow}>
-            <Txt
-              numberOfLines={1}
-              style={{ color: colors.primary, fontSize: 20, fontWeight: '700', flexShrink: 1 }}>
+            <Icon name="location" size={16} color={colors.primary} />
+            <Txt numberOfLines={1} style={{ fontSize: 16, fontWeight: '700', flexShrink: 1 }}>
               {location?.address || t('setLocation')}
             </Txt>
-            <Icon name="chevron-down" size={18} color={colors.primary} />
+            <Icon name="chevron-down" size={16} color={colors.textMuted} />
           </View>
           <KitchenStatus />
         </Pressable>
-        <Pressable onPress={() => router.push('/chat')} hitSlop={8} accessibilityLabel={t('chatTitle')}>
-          <Icon name="chatbox-ellipses-outline" size={27} color={colors.primary} />
+        <Pressable
+          onPress={() => router.push('/chat')}
+          hitSlop={8}
+          accessibilityLabel={t('chatTitle')}
+          style={[styles.headerButton, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Icon name="chatbubble-ellipses-outline" size={21} />
         </Pressable>
-        <Pressable onPress={() => router.push('/rewards')} hitSlop={8} accessibilityLabel={t('tabRewards')}>
-          <Icon name="gift-outline" size={27} color={colors.primary} />
+        <Pressable
+          onPress={() => router.push('/rewards')}
+          hitSlop={8}
+          accessibilityLabel={t('tabRewards')}
+          style={[styles.headerButton, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Icon name="gift-outline" size={21} />
         </Pressable>
       </View>
 
@@ -155,7 +166,7 @@ export default function HomeScreen() {
   function sectionHeader(title: string, onSeeAll?: () => void) {
     return (
       <View style={styles.sectionHeader}>
-        <Txt variant="title" style={{ flex: 1, fontSize: 22 }}>
+        <Txt variant="heading" style={{ flex: 1, fontSize: 20 }}>
           {title}
         </Txt>
         {onSeeAll && (
@@ -205,8 +216,16 @@ function KitchenStatus() {
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', gap: 18, paddingHorizontal: 16, paddingTop: 10, paddingBottom: 8 },
-  addressRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingTop: 10, paddingBottom: 8 },
+  addressRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 1 },
+  headerButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   status: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -232,7 +251,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 1,
   },
-  searchInput: { flex: 1, paddingVertical: 12, fontSize: 15 },
+  searchInput: { flex: 1, paddingVertical: 12, fontSize: 15, fontFamily: FONT.regular },
   chips: { gap: 8, paddingHorizontal: 16, paddingVertical: 14 },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginTop: 26, marginBottom: 12 },
   seeAll: { flexDirection: 'row', alignItems: 'center', gap: 2 },

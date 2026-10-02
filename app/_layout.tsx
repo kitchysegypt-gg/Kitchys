@@ -1,4 +1,5 @@
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
+import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -8,6 +9,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from '@/lib/auth';
 import { CartProvider } from '@/lib/cart';
 import { CatalogProvider } from '@/lib/catalog';
+import { FONT_FILES } from '@/lib/fonts';
 import { OrdersProvider } from '@/lib/orders';
 import { SettingsProvider, useSettings } from '@/lib/settings';
 import { SoundProvider } from '@/lib/sound';
@@ -39,7 +41,9 @@ export default function RootLayout() {
 function RootNavigator() {
   const { loaded, onboarded, colors } = useSettings();
   const { session, loading } = useAuth();
-  const ready = loaded && !loading;
+  // A font that fails to load falls back to the system font rather than blocking the app.
+  const [fontsLoaded, fontError] = useFonts(FONT_FILES);
+  const ready = loaded && !loading && (fontsLoaded || !!fontError);
 
   useEffect(() => {
     if (ready) SplashScreen.hideAsync();

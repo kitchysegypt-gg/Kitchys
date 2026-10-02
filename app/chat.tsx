@@ -14,6 +14,7 @@ import {
 
 import { Chip, Icon, Screen, Txt } from '@/components/ui';
 import { useSettings } from '@/lib/settings';
+import { FONT } from '@/lib/fonts';
 import { supabase } from '@/lib/supabase';
 import { useAnimatedValue } from '@/lib/useAnimatedValue';
 
@@ -238,7 +239,7 @@ const styles = StyleSheet.create({
   dot: { width: 8, height: 8, borderRadius: 4 },
   powered: { alignSelf: 'center', paddingVertical: 4, paddingHorizontal: 10, borderRadius: 10, marginTop: 4 },
   composer: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, padding: 10, borderTopWidth: 1 },
-  input: { flex: 1, maxHeight: 120, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 10, fontSize: 15 },
+  input: { flex: 1, maxHeight: 120, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 10, fontSize: 15, fontFamily: FONT.regular },
   send: {
     width: 46,
     height: 46,

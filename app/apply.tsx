@@ -11,6 +11,7 @@ import { showAlert } from '@/lib/alert';
 import { useAuth } from '@/lib/auth';
 import { DishDraft, emptyDish, isDishReady, submitApplication, useChefStatus } from '@/lib/chef';
 import { useSettings } from '@/lib/settings';
+import { FONT } from '@/lib/fonts';
 
 export default function ApplyScreen() {
   const { t, colors, isRTL } = useSettings();
@@ -188,5 +189,5 @@ export default function ApplyScreen() {
 
 const styles = StyleSheet.create({
   intro: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  input: { borderRadius: 14, borderWidth: 1, padding: 12, fontSize: 15 },
+  input: { borderRadius: 14, borderWidth: 1, padding: 12, fontSize: 15, fontFamily: FONT.regular },
 });

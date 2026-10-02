@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button, Card, Icon, IconName, Txt } from '@/components/ui';
 import { useCart } from '@/lib/cart';
+import { FONT } from '@/lib/fonts';
 import { useOrders } from '@/lib/orders';
 import { useSettings } from '@/lib/settings';
 
@@ -47,7 +48,7 @@ export default function TabLayout() {
           headerShown: false,
           tabBarActiveTintColor: colors.primary,
           tabBarInactiveTintColor: colors.textMuted,
-          tabBarLabelStyle: { fontWeight: '600', fontSize: 12 },
+          tabBarLabelStyle: { fontFamily: FONT.semibold, fontSize: 11.5 },
           tabBarStyle: {
             backgroundColor: colors.surface,
             borderTopColor: colors.border,

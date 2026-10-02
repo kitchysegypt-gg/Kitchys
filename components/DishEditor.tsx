@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Switch, TextInput, View } from 'react-native';
 import { ALLERGEN_EMOJI, Allergen, CATEGORIES, Category } from '@/data/menu';
 import { DishDraft } from '@/lib/chef';
 import { useSettings } from '@/lib/settings';
+import { FONT } from '@/lib/fonts';
 import { PhotoPicker } from './PhotoPicker';
 import { Card, Chip, Icon, Txt } from './ui';
 
@@ -177,5 +178,5 @@ export function DishEditor({
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  input: { borderRadius: 14, borderWidth: 1, padding: 12, fontSize: 15 },
+  input: { borderRadius: 14, borderWidth: 1, padding: 12, fontSize: 15, fontFamily: FONT.regular },
 });

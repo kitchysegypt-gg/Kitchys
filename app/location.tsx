@@ -18,6 +18,7 @@ import { Coordinate, DeliveryMap } from '@/components/DeliveryMap';
 import { Button, Icon, Txt } from '@/components/ui';
 import { showAlert } from '@/lib/alert';
 import { useSettings } from '@/lib/settings';
+import { FONT } from '@/lib/fonts';
 
 // Downtown Cairo, used until the customer picks a spot.
 const DEFAULT_COORDINATE: Coordinate = { latitude: 30.0444, longitude: 31.2357 };
@@ -181,5 +182,5 @@ const styles = StyleSheet.create({
   sheet: { borderTopLeftRadius: 24, borderTopRightRadius: 24, borderWidth: 1, marginTop: -24, maxHeight: 460 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   notice: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 10, borderRadius: 14 },
-  input: { borderRadius: 14, borderWidth: 1, padding: 12, fontSize: 15 },
+  input: { borderRadius: 14, borderWidth: 1, padding: 12, fontSize: 15, fontFamily: FONT.regular },
 });

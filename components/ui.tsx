@@ -18,6 +18,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EmojiName } from '@/lib/emoji';
+import { FONT, fontFamilyFor } from '@/lib/fonts';
 import { useSettings } from '@/lib/settings';
 import { useAnimatedValue } from '@/lib/useAnimatedValue';
 import { Emoji3D } from './Emoji3D';
@@ -65,6 +66,7 @@ type TxtProps = TextProps & {
 
 export function Txt({ variant = 'body', muted, color, center, style, ...rest }: TxtProps) {
   const { colors, isRTL } = useSettings();
+  const weight = (StyleSheet.flatten([styles[variant], style]) as TextStyle | undefined)?.fontWeight;
   return (
     <Text
       {...rest}
@@ -76,6 +78,8 @@ export function Txt({ variant = 'body', muted, color, center, style, ...rest }: 
           writingDirection: isRTL ? 'rtl' : 'ltr',
         },
         style,
+        // The font file carries the weight; fontWeight itself is reset so it isn't faked on top.
+        { fontFamily: fontFamilyFor(weight), fontWeight: 'normal' },
       ]}
     />
   );
@@ -203,7 +207,7 @@ export function Chip({
       ]}>
       {icon && <Icon name={icon} size={16} color={textColor} />}
       {emoji && <Emoji3D name={emoji} size={20} />}
-      <Text style={{ fontWeight: '600', color: textColor }}>{label}</Text>
+      <Text style={{ fontFamily: FONT.semibold, fontSize: 14, color: textColor }}>{label}</Text>
     </Pressable>
   );
 }
@@ -293,11 +297,11 @@ export function EmptyState({
 export const scrollContent: ScrollViewProps['contentContainerStyle'] = { padding: 20, paddingBottom: 40 };
 
 const styles = StyleSheet.create({
-  title: { fontSize: 26, fontWeight: '800', letterSpacing: -0.4 } as TextStyle,
-  heading: { fontSize: 19, fontWeight: '700', letterSpacing: -0.2 } as TextStyle,
+  title: { fontSize: 25, fontWeight: '700', letterSpacing: -0.5 } as TextStyle,
+  heading: { fontSize: 18, fontWeight: '700', letterSpacing: -0.3 } as TextStyle,
   body: { fontSize: 15, lineHeight: 22 },
   caption: { fontSize: 13, lineHeight: 18 },
-  label: { fontSize: 13, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5 },
+  label: { fontSize: 12, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.8 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 12 },
   card: {
     borderRadius: 18,
@@ -317,7 +321,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   buttonSmall: { paddingVertical: 9, paddingHorizontal: 14, borderRadius: 12 },
-  buttonText: { fontSize: 16, fontWeight: '700' },
+  buttonText: { fontSize: 16, fontFamily: FONT.bold },
   chip: {
     flexDirection: 'row',
     alignItems: 'center',

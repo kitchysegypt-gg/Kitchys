@@ -29,12 +29,12 @@ const BRAND_DEEP = '#B8330D';
 export const THEMES: Record<ThemeName, Palette> = {
   light: {
     dark: false,
-    background: '#F6F6F8',
+    background: '#F7F6F4',
     surface: '#FFFFFF',
-    surfaceAlt: '#F1F1F4',
-    text: '#1B1B1F',
-    textMuted: '#6E6E76',
-    border: '#EAEAEE',
+    surfaceAlt: '#F2F0ED',
+    text: '#18181B',
+    textMuted: '#6B6B70',
+    border: '#ECEAE6',
     primary: BRAND,
     primaryDeep: BRAND_DEEP,
     onPrimary: '#FFFFFF',

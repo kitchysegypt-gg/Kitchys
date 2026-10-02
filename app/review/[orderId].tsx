@@ -11,6 +11,7 @@ import { useCatalog } from '@/lib/catalog';
 import { useOrders } from '@/lib/orders';
 import { RATING_PARTS, fetchMyReviews, submitReview } from '@/lib/reviews';
 import { useSettings } from '@/lib/settings';
+import { FONT } from '@/lib/fonts';
 
 type Scores = { food: number; delivery: number; packaging: number; value: number; comment: string };
 const EMPTY: Scores = { food: 0, delivery: 0, packaging: 0, value: 0, comment: '' };
@@ -141,5 +142,5 @@ export default function ReviewScreen() {
 const styles = StyleSheet.create({
   chefRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   partRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  input: { borderRadius: 14, borderWidth: 1, padding: 12, fontSize: 15, minHeight: 70 },
+  input: { borderRadius: 14, borderWidth: 1, padding: 12, fontSize: 15, fontFamily: FONT.regular, minHeight: 70 },
 });
