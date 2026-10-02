@@ -15,7 +15,7 @@ import { Icon, PressableScale, Txt } from './ui';
 const PROMO_BANNERS = {
   freeDelivery: require('@/assets/promos/free-delivery.jpg'),
   points: require('@/assets/promos/points.jpg'),
-  cashback: require('@/assets/promos/cashback.jpg'),
+  refer: require('@/assets/promos/refer.jpg'),
 };
 const BANNER_RATIO = 1200 / 676;
 
@@ -58,7 +58,7 @@ export function CategoryBubbles({ value, onChange }: { value: Category | 'all'; 
 
 type Promo = { key: string; image: number; label: string; onPress: () => void };
 
-/** Swipeable promo banners: free delivery (while it lasts), points, cashback for referrals. */
+/** Swipeable promo banners: free delivery (while it lasts), points, refer a friend. */
 export function PromoCarousel() {
   const { t, colors } = useSettings();
   const { freeDeliveriesLeft } = useOrders();
@@ -78,7 +78,7 @@ export function PromoCarousel() {
         ]
       : []),
     { key: 'points', image: PROMO_BANNERS.points, label: t('seeRewards'), onPress: () => router.push('/rewards') },
-    { key: 'cashback', image: PROMO_BANNERS.cashback, label: t('referFriend'), onPress: () => router.push('/refer') },
+    { key: 'refer', image: PROMO_BANNERS.refer, label: t('referFriend'), onPress: () => router.push('/refer') },
   ];
 
   return (

@@ -84,7 +84,7 @@ export default function MoreScreen() {
             detail={t('referTagline')}
             onPress={() => router.push('/refer')}
           />
-          <ListRow icon="chatbubble-ellipses-outline" label={t('chatTitle')} onPress={() => router.push('/chat')} />
+          <ListRow icon="k-chat" label={t('chatTitle')} onPress={() => router.push('/chat')} />
           <ListRow
             icon="location-outline"
             label={t('deliveryAddress')}
@@ -108,7 +108,7 @@ export default function MoreScreen() {
         </ListGroup>
 
         <ListGroup title={t('account')}>
-          <ListRow icon="settings-outline" label={t('settings')} onPress={() => router.push('/settings')} />
+          <ListRow icon="k-settings" label={t('settings')} onPress={() => router.push('/settings')} />
           <ListRow icon="help-circle-outline" label={t('howToUse')} onPress={() => router.push('/guide')} />
         </ListGroup>
 

@@ -23,8 +23,20 @@ import { useSettings } from '@/lib/settings';
 import { useAnimatedValue } from '@/lib/useAnimatedValue';
 import { Emoji3D } from './Emoji3D';
 
-/** Any Ionicons name, plus "delivery": the Kitchy's delivery scooter. */
-export type IconName = React.ComponentProps<typeof Ionicons>['name'] | 'delivery';
+/** Kitchy's own filled icons (tinted like any other icon). */
+const KITCHY_ICONS = {
+  'k-home': require('@/assets/icons/home.png'),
+  'k-chefs': require('@/assets/icons/chefs.png'),
+  'k-cart': require('@/assets/icons/cart.png'),
+  'k-orders': require('@/assets/icons/orders.png'),
+  'k-more': require('@/assets/icons/more.png'),
+  'k-chat': require('@/assets/icons/chat.png'),
+  'k-settings': require('@/assets/icons/settings.png'),
+};
+export type KitchyIconName = keyof typeof KITCHY_ICONS;
+
+/** Any Ionicons name, "delivery" (the Kitchy's delivery scooter), or one of Kitchy's own icons. */
+export type IconName = React.ComponentProps<typeof Ionicons>['name'] | 'delivery' | KitchyIconName;
 
 const DELIVERY_ICON = require('@/assets/images/delivery.png');
 
@@ -54,7 +66,18 @@ export function Icon({
       />
     );
   }
-  return <Ionicons name={name} size={size} color={color ?? colors.text} style={style} />;
+  if (name in KITCHY_ICONS) {
+    return (
+      <Image
+        source={KITCHY_ICONS[name as KitchyIconName]}
+        style={{ width: size, height: size }}
+        tintColor={(color as string | undefined) ?? colors.text}
+        contentFit="contain"
+        accessibilityIgnoresInvertColors
+      />
+    );
+  }
+  return <Ionicons name={name as React.ComponentProps<typeof Ionicons>['name']} size={size} color={color ?? colors.text} style={style} />;
 }
 
 type TxtProps = TextProps & {

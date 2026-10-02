@@ -6,7 +6,6 @@ import { CategoryBubbles, KitchenCard, PromoCarousel } from '@/components/home';
 import { DishCard } from '@/components/menu';
 import { Button, EmptyState, Icon, Screen, Txt } from '@/components/ui';
 import { Category } from '@/data/menu';
-import { useCart } from '@/lib/cart';
 import { DELIVERY_RADIUS_KM, useCatalog } from '@/lib/catalog';
 import { FONT } from '@/lib/fonts';
 import { useSettings } from '@/lib/settings';
@@ -15,7 +14,6 @@ import { useAnimatedValue } from '@/lib/useAnimatedValue';
 export default function HomeScreen() {
   const { t, colors, isRTL, location } = useSettings();
   const { chefs, dishes, getChef } = useCatalog();
-  const { count } = useCart();
   const [category, setCategory] = useState<Category | 'all'>('all');
   const [query, setQuery] = useState('');
 
@@ -54,24 +52,11 @@ export default function HomeScreen() {
             </View>
           </View>
         </Pressable>
-        <Pressable
-          onPress={() => router.push('/chat')}
-          hitSlop={8}
-          accessibilityLabel={t('chatTitle')}
-          style={[styles.headerButton, { backgroundColor: colors.surfaceAlt }]}>
-          <Icon name="chatbubble-ellipses-outline" size={21} />
+        <Pressable onPress={() => router.push('/chat')} hitSlop={8} accessibilityLabel={t('chatTitle')}>
+          <Icon name="k-chat" size={44} color={colors.text} />
         </Pressable>
-        <Pressable
-          onPress={() => router.navigate('/cart')}
-          hitSlop={8}
-          accessibilityLabel={t('tabCart')}
-          style={[styles.headerButton, { backgroundColor: colors.surfaceAlt }]}>
-          <Icon name="bag-handle-outline" size={21} />
-          {count > 0 && (
-            <View style={[styles.badge, { backgroundColor: colors.primary, borderColor: colors.background }]}>
-              <Txt style={{ color: colors.onPrimary, fontSize: 10, fontWeight: '800' }}>{count}</Txt>
-            </View>
-          )}
+        <Pressable onPress={() => router.push('/settings')} hitSlop={8} accessibilityLabel={t('settings')}>
+          <Icon name="k-settings" size={44} color={colors.text} />
         </Pressable>
       </View>
       <View style={{ paddingHorizontal: 16 }}>
@@ -214,19 +199,6 @@ function KitchenStatus() {
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingTop: 10, paddingBottom: 6 },
   addressRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  headerButton: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
-  badge: {
-    position: 'absolute',
-    top: -2,
-    end: -2,
-    minWidth: 18,
-    height: 18,
-    borderRadius: 9,
-    borderWidth: 2,
-    paddingHorizontal: 3,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   status: {
     flexDirection: 'row',
     alignItems: 'center',
