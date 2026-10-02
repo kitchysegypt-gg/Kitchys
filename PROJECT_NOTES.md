@@ -32,6 +32,8 @@ Dinner-only menu from home chefs; dish photos and sizes; cart with scheduling, v
 ## Publishing
 
 - Website: `npx expo export -p web --clear` then `npx eas-cli@latest deploy --prod` (needs `EXPO_TOKEN`).
+- Android APK (installable app): `npx eas-cli@latest build -p android --profile preview` (needs `EXPO_TOKEN`).
+- Over-the-air update to installed apps (JS/design/text changes, no reinstall): `npx eas-cli@latest update --channel preview --message "<what changed>" --environment preview`. Installed apps download it on next open and apply it on the open after that. Native changes (new native library, app.json permissions/plugins, app version bump) need a new APK build instead.
 - Native development build: `npx expo prebuild --clean`, then `npx expo run:android --device` (or iOS on a Mac), then `npx expo start`.
 - Expo Go from a computer: `npx expo start --go --tunnel` and scan the QR code.
 - After changing the menu or loyalty rules: `node --experimental-strip-types scripts/build-chat-menu.mjs` and redeploy the `kitchy-chat` function.
@@ -41,5 +43,4 @@ Dinner-only menu from home chefs; dish photos and sizes; cart with scheduling, v
 - Add `ANTHROPIC_API_KEY` so Kitchy AI answers in the real app.
 - Owner wants to send custom sound files for add-to-cart and order-placed (`assets/sounds/`).
 - Real photos per dish (all dishes currently share one koshari photo; `lib/photos.ts` maps dish id → photo) and per chef.
-- Optional: Android APK via `eas build -p android --profile preview` for installing without Expo Go.
 - Before launch: turn email confirmation back on, clear test accounts/orders, rotate any keys that were pasted into chats, publish to the Play Store.
