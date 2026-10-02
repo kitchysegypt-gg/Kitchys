@@ -549,6 +549,7 @@ async function rpc(name: string, args: Row) {
   if (name === 'my_wallet_balance') return ok(await walletBalance(me()));
   if (name === 'set_kitchen_photo') return setKitchenPhoto(args.p_url ?? null);
   if (name === 'chefs_near') return chefsNear(args.p_lat, args.p_lng);
+  if (name === 'chef_popularity') return ok([]);
   if (name === 'set_kitchen_location') return setKitchenLocation(args.p_lat, args.p_lng);
   if (name === 'my_kitchen_location') return myKitchenLocation();
   if (name === 'save_cart' || name === 'register_push_device' || name === 'unregister_push_device') return ok(null);

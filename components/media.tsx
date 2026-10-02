@@ -3,10 +3,10 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { Category, Chef, Dish } from '@/data/menu';
-import { ChefRating } from '@/lib/catalog';
+import { ChefRating, ChefTag, useCatalog } from '@/lib/catalog';
 import { CHEF_PHOTOS, DISH_PHOTOS } from '@/lib/photos';
 import { useSettings } from '@/lib/settings';
-import { Icon, Txt } from './ui';
+import { Icon, IconName, Txt } from './ui';
 
 const DEFAULT_CHEF_PHOTO = require('@/assets/photos/chef.jpg');
 const DEFAULT_DISH_PHOTO = require('@/assets/photos/dish.jpg');
@@ -137,4 +137,35 @@ const styles = StyleSheet.create({
   avatar: { overflow: 'hidden', backgroundColor: '#E9EBEE' },
   stars: { flexDirection: 'row', gap: 2 },
   badge: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+});
+
+const TAG_STYLE: Record<ChefTag, { icon: IconName; color: string; bg: string; darkBg: string }> = {
+  popular: { icon: 'flame', color: '#E8590C', bg: '#FFF0E6', darkBg: '#3A2416' },
+  verified: { icon: 'shield-checkmark', color: '#1E6FD9', bg: '#E8F1FF', darkBg: '#16263D' },
+  homemade: { icon: 'home', color: '#1E9E4F', bg: '#E6F7EC', darkBg: '#16301F' },
+};
+
+/** Popular / Verified / Homemade badges for a chef. */
+export function ChefTags({ chefId, center }: { chefId: string; center?: boolean }) {
+  const { t, colors } = useSettings();
+  const { chefTags } = useCatalog();
+  return (
+    <View style={[tagStyles.row, center && { justifyContent: 'center' }]}>
+      {chefTags(chefId).map((tag) => {
+        const s = TAG_STYLE[tag];
+        return (
+          <View key={tag} style={[tagStyles.tag, { backgroundColor: colors.dark ? s.darkBg : s.bg }]}>
+            <Icon name={s.icon} size={12} color={s.color} />
+            <Txt style={[tagStyles.text, { color: s.color }]}>{t(`tag_${tag}`)}</Txt>
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
+const tagStyles = StyleSheet.create({
+  row: { flexDirection: 'row', flexWrap: 'wrap', gap: 5 },
+  tag: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingVertical: 3, paddingHorizontal: 7, borderRadius: 8 },
+  text: { fontSize: 11, fontWeight: '700' },
 });

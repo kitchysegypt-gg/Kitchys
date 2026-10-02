@@ -10,7 +10,7 @@ import { useOrders } from '@/lib/orders';
 import { useSettings } from '@/lib/settings';
 import { useSounds } from '@/lib/sound';
 import { DELIVERY_FEE, FREE_DELIVERY_ORDERS } from '@/lib/supabase';
-import { ChefAvatar, DishArt, RatingBadge } from './media';
+import { ChefAvatar, ChefTags, DishArt, RatingBadge } from './media';
 import { Button, Card, Icon, PressableScale, Txt } from './ui';
 
 /**
@@ -118,6 +118,7 @@ export function ChefCard({ chef, dishCount }: { chef: Chef; dishCount: number })
           <Txt variant="caption" muted numberOfLines={1}>
             {l(chef.specialty)} · {l(chef.area)}
           </Txt>
+          <ChefTags chefId={chef.id} />
           <View style={styles.chefMeta}>
             <RatingBadge rating={ratings[chef.id]} color={colors.text} />
             <Txt variant="caption" muted>

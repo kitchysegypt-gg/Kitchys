@@ -7,6 +7,12 @@ import type { Localized } from './i18n';
 import { useSettings } from './settings';
 import { supabase } from './supabase';
 
+/** A chef is "Popular" with at least this many orders in the last 30 days. */
+export const POPULAR_MIN_ORDERS = 5;
+
+/** Badges shown on chefs. Every chef on Kitchy's is a home cook approved by the team. */
+export type ChefTag = 'popular' | 'verified' | 'homemade';
+
 /** Chefs deliver within this distance of their kitchen (the database decides; this is for messages). */
 export const DELIVERY_RADIUS_KM = 15;
 
@@ -116,6 +122,8 @@ type CatalogValue = {
   dishes: Dish[];
   /** False when the chef is too far from the customer's address. */
   isNear: (chefId: string) => boolean;
+  /** Popular (busy in the last 30 days), Verified and Homemade badges for a chef. */
+  chefTags: (chefId: string) => ChefTag[];
   ratings: Record<string, ChefRating>;
   /** True once the home chefs' dishes have been fetched for this account. */
   loaded: boolean;
@@ -134,6 +142,8 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   const [kitchenDishes, setKitchenDishes] = useState<Dish[]>([]);
   const [ratings, setRatings] = useState<Record<string, ChefRating>>({});
   const [loaded, setLoaded] = useState(false);
+  // Orders per chef in the last 30 days.
+  const [popularity, setPopularity] = useState<Record<string, number>>({});
   const { location } = useSettings();
   const lat = location?.latitude;
   const lng = location?.longitude;
@@ -158,11 +168,19 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
       setLoaded(false);
       return;
     }
-    const [chefsRes, dishesRes, ratingsRes] = await Promise.all([
+    const [chefsRes, dishesRes, ratingsRes, popularRes] = await Promise.all([
       supabase.from('kitchen_chefs').select('*').order('created_at', { ascending: true }),
       supabase.from('kitchen_dishes').select('*').order('created_at', { ascending: true }),
       supabase.from('chef_ratings').select('*').order('chef_id', { ascending: true }),
+      supabase.rpc('chef_popularity'),
     ]);
+    if (!popularRes.error && Array.isArray(popularRes.data)) {
+      setPopularity(
+        Object.fromEntries(
+          (popularRes.data as { chef_id: string; recent_orders: number }[]).map((r) => [r.chef_id, r.recent_orders])
+        )
+      );
+    }
     if (!chefsRes.error && chefsRes.data) setKitchenChefs((chefsRes.data as KitchenChefRow[]).map(kitchenChefToChef));
     if (!dishesRes.error && dishesRes.data) {
       // Customers only see dishes a chef has left switched on.
@@ -187,6 +205,11 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
       chefs: allChefs.filter((c) => isNear(c.id)),
       dishes: allDishes.filter((d) => isNear(d.chefId)),
       isNear,
+      chefTags: (chefId) => [
+        ...((popularity[chefId] ?? 0) >= POPULAR_MIN_ORDERS ? (['popular'] as const) : []),
+        'verified',
+        'homemade',
+      ],
       ratings,
       loaded,
       refresh,
@@ -195,7 +218,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
       getDish: (id) => allDishes.find((d) => d.id === id),
       dishesByChef: (chefId) => allDishes.filter((d) => d.chefId === chefId),
     };
-  }, [kitchenChefs, kitchenDishes, ratings, loaded, refresh, nearIds]);
+  }, [kitchenChefs, kitchenDishes, ratings, loaded, refresh, nearIds, popularity]);
 
   return <CatalogContext.Provider value={value}>{children}</CatalogContext.Provider>;
 }

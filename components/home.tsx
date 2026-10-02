@@ -8,7 +8,7 @@ import { useCatalog } from '@/lib/catalog';
 import { useOrders } from '@/lib/orders';
 import { useSettings } from '@/lib/settings';
 import { DELIVERY_FEE } from '@/lib/supabase';
-import { CategoryPhoto, ChefAvatar, DishArt } from './media';
+import { CategoryPhoto, ChefAvatar, ChefTags, DishArt } from './media';
 import { Icon, PressableScale, Txt } from './ui';
 
 // Kitchy's promo banners (1200 x 676).
@@ -148,6 +148,7 @@ export function KitchenCard({ chef }: { chef: Chef }) {
           <Txt numberOfLines={1} style={{ fontSize: 16, fontWeight: '700', paddingEnd: 36 }}>
             {l(chef.name)}
           </Txt>
+          <ChefTags chefId={chef.id} />
           <View style={styles.metaRow}>
             <Icon name="delivery" size={14} color={colors.primary} />
             <Txt variant="caption" muted numberOfLines={1}>
