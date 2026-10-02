@@ -63,6 +63,13 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "owner": "kitchyss-teamg",
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "d5e03ab0-c164-4b3e-a9ae-b56d7377ff57"
+      }
     }
   }
 }
