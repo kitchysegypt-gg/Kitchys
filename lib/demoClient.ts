@@ -44,8 +44,12 @@ async function writeJSON(key: string, value: unknown) {
   try {
     if (value === null) await AsyncStorage.removeItem(key);
     else await AsyncStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // Storage can be unavailable (private windows); the demo still works in memory.
+  } catch (e: any) {
+    // Storage can be unavailable (private windows). A full storage, though, means the
+    // change was lost, so say so instead of failing silently.
+    if (/quota/i.test(`${e?.name} ${e?.message}`)) {
+      throw new Error("The demo's browser storage is full. Try a smaller photo or clear this site's data.");
+    }
   }
 }
 

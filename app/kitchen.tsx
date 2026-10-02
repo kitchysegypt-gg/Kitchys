@@ -5,11 +5,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { DishEditor } from '@/components/DishEditor';
 import { pickImage } from '@/components/PhotoPicker';
-import { ChefAvatar, RatingBadge } from '@/components/media';
+import { ChefAvatar, DishArt, RatingBadge } from '@/components/media';
 import { formatPortion } from '@/data/menu';
 import { Button, Card, EmptyState, Icon, ScreenHeader, Txt } from '@/components/ui';
 import { showAlert } from '@/lib/alert';
-import { kitchenChefToChef, useCatalog } from '@/lib/catalog';
+import { kitchenChefToChef, kitchenDishToDish, useCatalog } from '@/lib/catalog';
 import {
   DishDraft,
   addKitchenDish,
@@ -17,6 +17,7 @@ import {
   emptyDish,
   isDishReady,
   setDishAvailable,
+  setDishPhoto,
   setKitchenPhoto,
   useChefStatus,
 } from '@/lib/chef';
@@ -30,6 +31,20 @@ export default function KitchenScreen() {
   const [draft, setDraft] = useState<DishDraft | null>(null);
   const [busy, setBusy] = useState(false);
   const [photoBusy, setPhotoBusy] = useState(false);
+
+  const changeDishPhoto = async (dishId: string) => {
+    try {
+      const uri = await pickImage([4, 3]);
+      if (!uri) return;
+      setPhotoBusy(true);
+      await setDishPhoto(dishId, uri);
+      await afterChange();
+    } catch (e: any) {
+      showAlert(t('error'), e?.message ?? String(e));
+    } finally {
+      setPhotoBusy(false);
+    }
+  };
 
   const changePhoto = async () => {
     try {
@@ -124,6 +139,17 @@ export default function KitchenScreen() {
             {dishes.length === 0 && !draft && <Txt muted>{t('noKitchenDishes')}</Txt>}
             {dishes.map((d) => (
               <Card key={d.id} style={styles.dishRow}>
+                <Pressable
+                  onPress={() => changeDishPhoto(d.id)}
+                  disabled={photoBusy}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('changePhoto')}
+                  style={{ width: 72 }}>
+                  <DishArt dish={kitchenDishToDish(d)} height={56} radius={12} />
+                  <View style={[styles.dishCamera, { backgroundColor: colors.primary, borderColor: colors.surface }]}>
+                    <Icon name="camera" size={11} color={colors.onPrimary} />
+                  </View>
+                </Pressable>
                 <View style={{ flex: 1 }}>
                   <Txt style={{ fontWeight: '700' }}>{d.name}</Txt>
                   <Txt variant="caption" style={{ fontWeight: '600' }}>
@@ -161,6 +187,17 @@ export default function KitchenScreen() {
 }
 
 const styles = StyleSheet.create({
+  dishCamera: {
+    position: 'absolute',
+    bottom: -4,
+    end: -4,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   cameraBadge: {
     position: 'absolute',
     bottom: -2,
@@ -173,5 +210,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   hero: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  dishRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  dishRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
 });

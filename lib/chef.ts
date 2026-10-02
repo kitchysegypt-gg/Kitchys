@@ -212,3 +212,10 @@ export async function setKitchenPhoto(uri: string) {
   const { error } = await supabase.rpc('set_kitchen_photo', { p_url: url });
   if (error) throw error;
 }
+
+/** Approved chefs: add or replace the photo of one of their dishes. */
+export async function setDishPhoto(dishId: string, uri: string) {
+  const url = await uploadKitchenPhoto(uri);
+  const { error } = await supabase.from('kitchen_dishes').update({ photo_url: url }).eq('id', dishId);
+  if (error) throw error;
+}

@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { showAlert } from '@/lib/alert';
 import { useSettings } from '@/lib/settings';
@@ -16,11 +16,29 @@ export async function pickImage(aspect: [number, number]) {
     // Keeps uploads small; plenty for a phone screen.
     quality: 0.6,
     // The demo stores photos in the browser, so it needs the picture itself rather than a temporary link.
-    base64: isDemo,
+    base64: isDemo && Platform.OS !== 'web',
   });
   const asset = result.canceled ? null : result.assets[0];
   if (!asset) return null;
+  if (Platform.OS === 'web') return shrinkForWeb(asset.uri);
   return isDemo && asset.base64 ? `data:${asset.mimeType ?? 'image/jpeg'};base64,${asset.base64}` : asset.uri;
+}
+
+/**
+ * Browsers hand back the full-size photo (a phone picture can be 5-10 MB), which is
+ * too big to upload quickly or to keep in the demo's browser storage. Redraw it at
+ * most 900 px wide/tall as a JPEG, which is plenty for a phone screen.
+ */
+async function shrinkForWeb(uri: string, maxSide = 900): Promise<string> {
+  const img = new window.Image();
+  img.src = uri;
+  await img.decode();
+  const scale = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(img.naturalWidth * scale);
+  canvas.height = Math.round(img.naturalHeight * scale);
+  canvas.getContext('2d')?.drawImage(img, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL('image/jpeg', 0.75);
 }
 
 /** Optional photo slot: tap to pick from the library, tap the photo again to change it, × to remove it. */
