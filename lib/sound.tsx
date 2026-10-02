@@ -1,9 +1,12 @@
-import { setAudioModeAsync, useAudioPlayer } from 'expo-audio';
+import { createAudioPlayer, setAudioModeAsync, setIsAudioActiveAsync } from 'expo-audio';
 import * as Haptics from 'expo-haptics';
-import { createContext, useCallback, useContext, useEffect, useMemo } from 'react';
+import { createContext, useContext, useEffect, useMemo } from 'react';
 import { Platform } from 'react-native';
 
 import { useSettings } from './settings';
+
+const ADD_TO_CART = require('@/assets/sounds/add-to-cart.wav');
+const ORDER_SUCCESS = require('@/assets/sounds/order-success.wav');
 
 type SoundContextValue = {
   playAddToCart: () => void;
@@ -15,41 +18,53 @@ const SoundContext = createContext<SoundContextValue>({
   playOrderSuccess: () => {},
 });
 
+/**
+ * Plays a short sound with its own player, released once it finishes. A fresh player per
+ * sound is more reliable on Android than rewinding a shared one, and quick taps can overlap.
+ */
+function playOnce(source: number) {
+  try {
+    const player = createAudioPlayer(source);
+    let released = false;
+    const release = () => {
+      if (released) return;
+      released = true;
+      subscription.remove();
+      player.release();
+    };
+    const subscription = player.addListener('playbackStatusUpdate', (status) => {
+      if (status.didJustFinish) release();
+    });
+    player.volume = 1;
+    player.play();
+    // In case "finished" never arrives (e.g. the app goes to the background).
+    setTimeout(release, 5000);
+  } catch {
+    // Sound is a nice-to-have; never block the action on it.
+  }
+}
+
 export function SoundProvider({ children }: { children: React.ReactNode }) {
   const { soundEnabled } = useSettings();
-  const addPlayer = useAudioPlayer(require('@/assets/sounds/add-to-cart.wav'));
-  const successPlayer = useAudioPlayer(require('@/assets/sounds/order-success.wav'));
 
   useEffect(() => {
-    // Play even when the iPhone's silent switch is on — it's a short UI sound.
-    setAudioModeAsync({ playsInSilentMode: true }).catch(() => {});
+    setIsAudioActiveAsync(true).catch(() => {});
+    // Short UI sounds: play alongside other apps' audio, and even with the iPhone's silent switch on.
+    setAudioModeAsync({ playsInSilentMode: true, interruptionMode: 'mixWithOthers' }).catch(() => {});
   }, []);
-
-  const replay = useCallback(
-    (player: typeof addPlayer) => {
-      if (!soundEnabled) return;
-      try {
-        player.seekTo(0);
-        player.play();
-      } catch {
-        // Sound is a nice-to-have; never block the action on it.
-      }
-    },
-    [soundEnabled]
-  );
 
   const value = useMemo(
     () => ({
       playAddToCart: () => {
-        replay(addPlayer);
+        if (soundEnabled) playOnce(ADD_TO_CART);
         if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
       },
       playOrderSuccess: () => {
-        replay(successPlayer);
+        if (soundEnabled) playOnce(ORDER_SUCCESS);
         if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       },
     }),
-    [replay, addPlayer, successPlayer]
+    [soundEnabled]
   );
 
   return <SoundContext.Provider value={value}>{children}</SoundContext.Provider>;

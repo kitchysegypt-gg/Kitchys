@@ -1,6 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { Platform, StyleSheet } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { Marker } from 'react-native-maps';
+
+import { TileMap } from './TileMap';
 
 export type Coordinate = { latitude: number; longitude: number };
 
@@ -11,10 +13,15 @@ type Props = {
 };
 
 /**
- * Map with a draggable delivery pin. Android uses Google Maps. iOS uses Apple Maps in
- * Expo Go; Google Maps on iOS needs a store build with an API key (see README).
+ * Map with a draggable delivery pin. iOS uses Apple Maps. Android uses OpenStreetMap
+ * tiles (TileMap), because Google Maps on Android needs an API key and crashes without one.
  */
-export function DeliveryMap({ coordinate, onChange, pinColor }: Props) {
+export function DeliveryMap(props: Props) {
+  if (Platform.OS === 'android') return <TileMap {...props} />;
+  return <AppleMap {...props} />;
+}
+
+function AppleMap({ coordinate, onChange, pinColor }: Props) {
   const map = useRef<MapView>(null);
 
   // Follow the pin when it moves from outside the map (e.g. "Use my location").
@@ -26,7 +33,6 @@ export function DeliveryMap({ coordinate, onChange, pinColor }: Props) {
     <MapView
       ref={map}
       style={StyleSheet.absoluteFill}
-      provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
       initialRegion={{ ...coordinate, latitudeDelta: 0.012, longitudeDelta: 0.012 }}
       onPress={(e) => onChange(e.nativeEvent.coordinate)}
       showsUserLocation
