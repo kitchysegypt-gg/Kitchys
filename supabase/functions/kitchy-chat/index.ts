@@ -19,13 +19,17 @@ const corsHeaders = {
 
 const SYSTEM = `You are Kitchy, the friendly assistant inside the Kitchy's app. Kitchy's delivers homemade food cooked by mothers and grandmothers ("home chefs") in Egypt. You are powered by Claude, made by Anthropic; say so if asked what you are.
 
-Kitchy's is a dinner delivery service: the menu has dinner dishes and desserts only, no drinks and no breakfast. Customers can order for as soon as possible or schedule delivery for any day and time in the next 14 days (Cart > Delivery time). After an order they can rate each chef on food quality, delivery, packaging and value (Orders > Rate this order). Home cooks can apply to become chefs from the sign-in screen or More > Become a home chef; the Kitchy's team reviews every application.
+Kitchy's is a dinner delivery service: the menu has dinner dishes and desserts only, no drinks and no breakfast. Delivery usually takes 45-60 minutes. Customers can order for as soon as possible or schedule delivery for any day and time in the next 14 days (Cart > Delivery time). After an order they can rate each chef on food quality, delivery, packaging and value (Orders > Rate this order). Some dishes list a portion size in grams or kilograms; mention it when it's given and don't guess it when it isn't.
+
+Refer a friend (More > Refer a friend, or Settings): every customer has a personal code that starts with KIT. A friend types it in the cart on their very first order, and the customer who shared it gets 10% of that order's food total (after discounts) as Kitchy's credit, with no maximum. The friend doesn't get a discount. Each friend can be referred only once, a code only works on the friend's first order, and customers can't use their own code. If that order is cancelled, the cashback is taken back. Credit comes off future orders when the customer turns on "Use my credit" in the cart; cancelled orders refund any credit they used. Credit can't be withdrawn as cash.
+
+Home cooks can apply to become chefs from the sign-in screen or More > Become a home chef, with an optional photo of themselves and of each dish and an optional size for each dish. The Kitchy's team reviews every application. Approved chefs manage their dishes and change their profile photo in More > My kitchen.
 
 Help customers choose dishes, understand ingredients and allergens, and understand delivery, points, ranks and rewards. Use only the menu and rules below; never invent dishes, prices or promotions. If something isn't covered, say you don't know and suggest contacting Kitchy's support.
 
 Allergies: state the listed allergens for a dish plainly. For severe allergies, add that home kitchens can have cross-contact and the customer should mention the allergy in the notes for the chef.
 
-You can't place, change or cancel orders, and you can't change points; explain where in the app to do it (Home or Chefs to browse, Cart to order, schedule and apply vouchers, Orders to track and rate; the More tab has Kitchy's Points for rewards, the delivery address, Become a home chef, and Settings for language, theme and colour).
+You can't place, change or cancel orders, and you can't change points; explain where in the app to do it (Home or Chefs to browse, Cart to order, schedule, apply vouchers, enter a friend's referral code and use credit, Orders to track and rate; the More tab has Refer a friend, Kitchy's Points for rewards, Kitchy AI, the delivery address, Become a home chef or My kitchen, and Settings for language, theme and colour).
 
 Keep replies short and warm: usually 1-4 sentences or a short list. Plain text only, no markdown headings or tables. Reply in the language the customer writes in.
 
@@ -60,15 +64,27 @@ async function customerContext(authHeader: string) {
   const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, {
     global: { headers: { Authorization: authHeader } },
   });
-  const [{ data: user }, { data: orders }, { data: vouchers }, { data: kitchenChefs }, { data: kitchenDishes }] = await Promise.all([
+  const [
+    { data: user },
+    { data: orders },
+    { data: vouchers },
+    { data: kitchenChefs },
+    { data: kitchenDishes },
+    { data: credit },
+    { data: referralCode },
+    { data: referrals },
+  ] = await Promise.all([
     supabase.auth.getUser(),
     supabase.from('orders').select('status, total, points_earned, created_at, items').order('created_at', { ascending: false }),
     supabase.from('reward_vouchers').select('reward_id, cost, status'),
     supabase.from('kitchen_chefs').select('id, name, area, specialty'),
     supabase
       .from('kitchen_dishes')
-      .select('chef_id, name, description, ingredients, allergens, category, price, available')
+      .select('chef_id, name, description, ingredients, allergens, category, price, portion_grams, available')
       .eq('available', true),
+    supabase.rpc('my_wallet_balance'),
+    supabase.from('referral_codes').select('code').limit(1),
+    supabase.from('referrals').select('cashback, status'),
   ]);
   const active = (orders ?? []).filter((o) => o.status !== 'cancelled');
   const earned = active.reduce((sum, o) => sum + Number(o.points_earned ?? 0), 0);
@@ -82,7 +98,7 @@ async function customerContext(authHeader: string) {
       .filter((d) => d.chef_id === c.id)
       .map(
         (d) =>
-          `  - ${d.name} [${d.category}] EGP ${d.price}. ${d.description} Ingredients: ${d.ingredients}. Allergens: ${
+          `  - ${d.name} [${d.category}] EGP ${d.price}${d.portion_grams ? `, ${d.portion_grams >= 1000 ? `${d.portion_grams / 1000} kg` : `${d.portion_grams} g`}` : ''}. ${d.description} Ingredients: ${d.ingredients}. Allergens: ${
             (d.allergens ?? []).join(', ') || 'none of the common allergens'
           }.`
       )
@@ -96,6 +112,12 @@ async function customerContext(authHeader: string) {
     `- Orders placed (not cancelled): ${active.length}`,
     `- Free deliveries left: ${Math.max(0, 3 - active.length)}`,
     `- Points balance: ${Math.max(0, earned - spent)}`,
+    `- Kitchy's credit: EGP ${Math.max(0, Number(credit ?? 0))}`,
+    `- Referral code: ${referralCode?.[0]?.code ?? 'not created yet (it appears when they open Refer a friend)'}`,
+    `- Friends referred: ${(referrals ?? []).filter((r) => r.status === 'earned').length} (cashback earned: EGP ${(referrals ?? [])
+      .filter((r) => r.status === 'earned')
+      .reduce((sum, r) => sum + Number(r.cashback), 0)})`,
+    `- Can still use a friend's referral code: ${(orders ?? []).length === 0 ? 'yes (no orders yet)' : 'no (already ordered)'}`,
     `- Unused vouchers: ${(vouchers ?? []).filter((v) => v.status === 'available').map((v) => v.reward_id).join(', ') || 'none'}`,
     last.length ? `- Recent orders:\n  ${last.join('\n  ')}` : '- No orders yet',
   ]

@@ -67,6 +67,16 @@ export function demoChatReply(question: string, language: Language): string {
     );
   }
 
+  if (/refer|friend|code|cashback|credit|ادعي|صاحب|كود|رصيد|كاش|parrain|\bamie?s?\b|crédit/.test(q)) {
+    return (
+      {
+        en: "Open More > Refer a friend to get your code (it starts with KIT). When a friend enters it in the cart on their first order, you get 10% of that order as Kitchy's credit, with no maximum. Turn on \"Use my credit\" in the cart to take it off your next order.",
+        ar: 'افتح المزيد > ادعي صاحبك وخد الكود بتاعك (بيبدأ بـ KIT). لما صاحبك يكتبه في السلة في أول طلب ليه، هتاخد ١٠٪ من الطلب ده رصيد في كيتشيز من غير حد أقصى. فعّل "استخدم رصيدي" في السلة عشان يتخصم من طلبك الجاي.',
+        fr: "Ouvrez Plus > Parrainer un ami pour obtenir votre code (il commence par KIT). Quand un ami le saisit dans le panier pour sa première commande, vous recevez 10 % de cette commande en crédit Kitchy's, sans plafond. Activez « Utiliser mon crédit » dans le panier pour le déduire de votre prochaine commande.",
+      }[language] + note
+    );
+  }
+
   if (/point|reward|rank|نقاط|نقطة|مكافأ|مستوى|avantage|rang/.test(q)) {
     const ranks = RANKS.map((r) => `${t(`rank_${r.id}`)} ${r.minOrders}+ (×${r.multiplier})`).join(sep);
     const cheapest = REWARDS[0];
