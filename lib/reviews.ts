@@ -18,7 +18,7 @@ export type NewReview = Pick<Review, 'chef_id' | 'order_id' | 'food' | 'delivery
 
 export const RATING_PARTS = [
   { key: 'food', label: 'ratingFood', icon: 'restaurant-outline' },
-  { key: 'delivery', label: 'ratingDelivery', icon: 'bicycle-outline' },
+  { key: 'delivery', label: 'ratingDelivery', icon: 'delivery' },
   { key: 'packaging', label: 'ratingPackaging', icon: 'bag-handle-outline' },
   { key: 'value', label: 'ratingValue', icon: 'wallet-outline' },
 ] as const;

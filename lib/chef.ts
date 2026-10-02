@@ -205,3 +205,10 @@ export async function deleteKitchenDish(dishId: string) {
   const { error } = await supabase.from('kitchen_dishes').delete().eq('id', dishId);
   if (error) throw error;
 }
+
+/** Approved chefs: upload a new profile photo and show it on their chef page. */
+export async function setKitchenPhoto(uri: string) {
+  const url = await uploadKitchenPhoto(uri);
+  const { error } = await supabase.rpc('set_kitchen_photo', { p_url: url });
+  if (error) throw error;
+}

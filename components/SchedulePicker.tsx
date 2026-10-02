@@ -49,7 +49,7 @@ export function SchedulePicker({ value, onChange }: { value: ScheduleValue; onCh
       <View style={styles.row}>
         <Chip
           label={t('asap')}
-          icon="bicycle-outline"
+          icon="delivery"
           active={value.mode === 'asap'}
           onPress={() => onChange({ mode: 'asap' })}
         />

@@ -128,7 +128,7 @@ export default function AuthScreen() {
           </Pressable>
 
           <View style={[styles.freeHint, { backgroundColor: colors.successBg }]}>
-            <Icon name="bicycle-outline" size={26} color={colors.success} />
+            <Icon name="delivery" size={26} color={colors.success} />
             <Txt style={{ flex: 1, fontWeight: '500', color: colors.success }}>{t('onb7Body')}</Txt>
           </View>
 

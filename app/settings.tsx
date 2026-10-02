@@ -1,4 +1,5 @@
 import Constants from 'expo-constants';
+import { router } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 
 import { Icon, IconName, ListGroup, ListRow, Screen, ScreenHeader, Txt } from '@/components/ui';
@@ -36,6 +37,15 @@ export default function SettingsScreen() {
     <Screen>
       <ScreenHeader title={t('settings')} />
       <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 4, gap: 22, paddingBottom: 40 }}>
+        <ListGroup>
+          <ListRow
+            icon="gift-outline"
+            label={t('referFriend')}
+            detail={t('referTagline')}
+            onPress={() => router.push('/refer')}
+          />
+        </ListGroup>
+
         <ListGroup title={t('language')}>
           {LANGUAGES.map((lang) => (
             <ListRow

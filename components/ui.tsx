@@ -1,4 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import {
   ActivityIndicator,
@@ -21,7 +22,10 @@ import { useSettings } from '@/lib/settings';
 import { useAnimatedValue } from '@/lib/useAnimatedValue';
 import { Emoji3D } from './Emoji3D';
 
-export type IconName = React.ComponentProps<typeof Ionicons>['name'];
+/** Any Ionicons name, plus "delivery": the Kitchy's delivery scooter. */
+export type IconName = React.ComponentProps<typeof Ionicons>['name'] | 'delivery';
+
+const DELIVERY_ICON = require('@/assets/images/delivery.png');
 
 /** Outline icon from Ionicons, tinted with the theme's text colour by default. */
 export function Icon({
@@ -36,6 +40,19 @@ export function Icon({
   style?: StyleProp<TextStyle>;
 }) {
   const { colors } = useSettings();
+  if (name === 'delivery') {
+    // The scooter is wider than tall, so give it a little extra room.
+    const box = Math.round(size * 1.25);
+    return (
+      <Image
+        source={DELIVERY_ICON}
+        style={{ width: box, height: box, marginHorizontal: -(box - size) / 2 }}
+        tintColor={(color as string | undefined) ?? colors.text}
+        contentFit="contain"
+        accessibilityIgnoresInvertColors
+      />
+    );
+  }
   return <Ionicons name={name} size={size} color={color ?? colors.text} style={style} />;
 }
 

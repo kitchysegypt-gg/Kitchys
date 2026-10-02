@@ -1,9 +1,10 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { DishEditor } from '@/components/DishEditor';
+import { pickImage } from '@/components/PhotoPicker';
 import { ChefAvatar, RatingBadge } from '@/components/media';
 import { formatPortion } from '@/data/menu';
 import { Button, Card, EmptyState, Icon, ScreenHeader, Txt } from '@/components/ui';
@@ -16,6 +17,7 @@ import {
   emptyDish,
   isDishReady,
   setDishAvailable,
+  setKitchenPhoto,
   useChefStatus,
 } from '@/lib/chef';
 import { useSettings } from '@/lib/settings';
@@ -27,6 +29,22 @@ export default function KitchenScreen() {
   const { ratings, refresh } = useCatalog();
   const [draft, setDraft] = useState<DishDraft | null>(null);
   const [busy, setBusy] = useState(false);
+  const [photoBusy, setPhotoBusy] = useState(false);
+
+  const changePhoto = async () => {
+    try {
+      const uri = await pickImage([1, 1]);
+      if (!uri) return;
+      setPhotoBusy(true);
+      await setKitchenPhoto(uri);
+      await afterChange();
+      showAlert(t('photoUpdated'));
+    } catch (e: any) {
+      showAlert(t('error'), e?.message ?? String(e));
+    } finally {
+      setPhotoBusy(false);
+    }
+  };
 
   const close = () => (router.canGoBack() ? router.back() : router.replace('/'));
   const afterChange = async () => {
@@ -74,13 +92,31 @@ export default function KitchenScreen() {
             contentContainerStyle={{ padding: 16, paddingTop: 4, gap: 12, paddingBottom: 40 }}
             keyboardShouldPersistTaps="handled">
             <Card style={styles.hero}>
-              <ChefAvatar chef={kitchenChefToChef(kitchen)} size={56} />
+              <Pressable
+                onPress={changePhoto}
+                disabled={photoBusy}
+                accessibilityRole="button"
+                accessibilityLabel={t('changePhoto')}>
+                <ChefAvatar chef={kitchenChefToChef(kitchen)} size={72} />
+                <View style={[styles.cameraBadge, { backgroundColor: colors.primary, borderColor: colors.surface }]}>
+                  {photoBusy ? (
+                    <ActivityIndicator size="small" color={colors.onPrimary} />
+                  ) : (
+                    <Icon name="camera" size={14} color={colors.onPrimary} />
+                  )}
+                </View>
+              </Pressable>
               <View style={{ flex: 1, gap: 2 }}>
                 <Txt variant="heading">{kitchen.name}</Txt>
                 <Txt variant="caption" muted>
                   {kitchen.specialty} · {kitchen.area}
                 </Txt>
                 <RatingBadge rating={ratings[kitchen.id]} />
+                <Pressable onPress={changePhoto} disabled={photoBusy} hitSlop={6}>
+                  <Txt variant="caption" style={{ color: colors.primary, fontWeight: '600', marginTop: 2 }}>
+                    {t('changePhoto')}
+                  </Txt>
+                </Pressable>
               </View>
             </Card>
             <Txt muted>{t('kitchenBody')}</Txt>
@@ -125,6 +161,17 @@ export default function KitchenScreen() {
 }
 
 const styles = StyleSheet.create({
+  cameraBadge: {
+    position: 'absolute',
+    bottom: -2,
+    end: -2,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   hero: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   dishRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
 });

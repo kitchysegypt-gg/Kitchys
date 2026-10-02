@@ -66,7 +66,7 @@ export const REWARDS: Reward[] = [
     value: 0,
     cost: 80,
     minRank: 0,
-    icon: 'bicycle',
+    icon: 'delivery',
     label: 'rw_free_delivery',
   },
   { id: 'off_25', kind: 'fixed', value: 25, cost: 100, minRank: 0, icon: 'pricetag', label: 'rw_off_25' },

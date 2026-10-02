@@ -19,7 +19,7 @@ const STEPS: Step[] = [
   { art: 'location-outline', title: 'onb4Title', body: 'onb4Body' },
   { art: 'trophy-outline', title: 'onb5Title', body: 'onb5Body' },
   { art: 'chatbubble-ellipses-outline', title: 'onb6Title', body: 'onb6Body' },
-  { art: 'bicycle-outline', title: 'onb7Title', body: 'onb7Body' },
+  { art: 'delivery', title: 'onb7Title', body: 'onb7Body' },
 ];
 
 /** "How to use the app" — shown on first launch and from Settings. */

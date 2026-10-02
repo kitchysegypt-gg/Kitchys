@@ -196,7 +196,7 @@ function KitchenStatus() {
       <Txt variant="caption" style={{ fontWeight: '600' }}>
         {t('kitchensOpen')}
       </Txt>
-      <Icon name="flame" size={13} color={colors.primary} />
+      <Icon name="delivery" size={16} color={colors.primary} />
       <Txt variant="caption" style={{ fontWeight: '600', color: colors.primary }}>
         {t('deliveryWindow')}
       </Txt>

@@ -20,6 +20,8 @@ Customer app for ordering homemade food from mothers and grandmothers ("home che
 - **Free delivery on the first 3 orders**: a welcome popup when you open the app, a banner that counts down, and a database rule that enforces it
 - **"How to use the app" walkthrough** on first launch (you can open it again from Profile)
 - **Profile / settings**: language (English, العربية, Français), theme (System, Light, Dark, Sunset, Mint), accent colour (orange, red, green, blue, purple, pink), sound on/off, sign out
+- **Refer a friend** (More or Settings): every customer gets a code like `KIT7GJDNF`. A friend enters it at checkout on their first order and the referrer gets 10% of that order (food, after discounts) as Kitchy's credit, which they can switch on in the cart to take off later orders. Cancelling an order in Supabase automatically refunds credit it used and takes back cashback it earned.
+- **Chef profile photos**: approved chefs tap their photo in My kitchen to change it
 - **5 tabs**: Home, Chefs, Cart, Orders, More. More opens Points, Kitchy AI, delivery address, home chef, Settings and the how-to guide
 
 ## Run it on your phone with Expo Go

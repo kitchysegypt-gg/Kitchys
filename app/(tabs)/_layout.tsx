@@ -75,7 +75,7 @@ export default function TabLayout() {
         <View style={styles.backdrop}>
           <Card style={styles.welcome}>
             <View style={[styles.welcomeArt, { backgroundColor: colors.surfaceAlt }]}>
-              <Icon name="bicycle" size={48} color={colors.primary} />
+              <Icon name="delivery" size={48} color={colors.primary} />
             </View>
             <Txt variant="title" center>
               {t('freeDeliveryTitle')}

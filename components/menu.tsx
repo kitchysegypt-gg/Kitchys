@@ -168,7 +168,7 @@ export function FreeDeliveryBanner({ showPoints }: { showPoints?: boolean }) {
                     : { backgroundColor: colors.primary, borderColor: colors.primary },
                 ]}>
                 <Icon
-                  name={spent ? 'checkmark' : 'bicycle'}
+                  name={spent ? 'checkmark' : 'delivery'}
                   size={spent ? 16 : 18}
                   color={spent ? colors.textMuted : colors.onPrimary}
                 />

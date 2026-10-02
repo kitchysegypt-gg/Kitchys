@@ -28,6 +28,10 @@ export type Order = {
   delivery_lng: number | null;
   /** Chosen delivery time, or null for as soon as possible. */
   scheduled_for: string | null;
+  /** Kitchy's credit taken off this order. */
+  credit_used: number;
+  /** A friend's referral code used on this (first) order. */
+  referral_code: string | null;
   status: OrderStatus;
   created_at: string;
 };
@@ -42,7 +46,10 @@ export type Voucher = {
 };
 
 type NewOrder = Pick<Order, 'items' | 'subtotal' | 'address' | 'notes'> &
-  Partial<Pick<Order, 'voucher_id' | 'delivery_lat' | 'delivery_lng' | 'scheduled_for'>>;
+  Partial<Pick<Order, 'voucher_id' | 'delivery_lat' | 'delivery_lng' | 'scheduled_for' | 'referral_code'>> & {
+    /** Take the customer's credit off this order. */
+    use_credit?: boolean;
+  };
 
 type OrdersContextValue = {
   orders: Order[];
@@ -55,6 +62,8 @@ type OrdersContextValue = {
   /** Non-cancelled orders; decides the customer's rank. */
   orderCount: number;
   points: number;
+  /** Kitchy's credit (EGP) from referrals, taken off orders at checkout. */
+  credit: number;
   rank: Rank;
   next: Rank | undefined;
   refresh: () => Promise<void>;
@@ -73,6 +82,7 @@ function normalize(row: any): Order {
     delivery_fee: Number(row.delivery_fee),
     total: Number(row.total),
     points_earned: Number(row.points_earned ?? 0),
+    credit_used: Number(row.credit_used ?? 0),
   };
 }
 
@@ -82,19 +92,23 @@ export function OrdersProvider({ children }: { children: React.ReactNode }) {
   const [vouchers, setVouchers] = useState<Voucher[]>([]);
   const [loading, setLoading] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [credit, setCredit] = useState(0);
 
   const refresh = useCallback(async () => {
     if (!session) {
       setOrders([]);
       setVouchers([]);
+      setCredit(0);
       setLoaded(false);
       return;
     }
     setLoading(true);
-    const [ordersRes, vouchersRes] = await Promise.all([
+    const [ordersRes, vouchersRes, creditRes] = await Promise.all([
       supabase.from('orders').select('*').order('created_at', { ascending: false }),
       supabase.from('reward_vouchers').select('*').order('created_at', { ascending: false }),
+      supabase.rpc('my_wallet_balance', {}),
     ]);
+    if (!creditRes.error) setCredit(Math.max(0, Number(creditRes.data ?? 0)));
     setLoading(false);
     setLoaded(true);
     if (!ordersRes.error && ordersRes.data) setOrders(ordersRes.data.map(normalize));
@@ -112,7 +126,7 @@ export function OrdersProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
       const created = normalize(data);
       setOrders((prev) => [created, ...prev]);
-      if (order.voucher_id) await refresh();
+      if (order.voucher_id || order.use_credit) await refresh();
       return created;
     },
     [refresh]
@@ -141,11 +155,12 @@ export function OrdersProvider({ children }: { children: React.ReactNode }) {
       redeem,
       orderCount: counted.length,
       points: Math.max(0, earned - spent),
+      credit,
       rank: rankFor(counted.length),
       next: nextRank(counted.length),
       freeDeliveriesLeft: Math.max(0, FREE_DELIVERY_ORDERS - counted.length),
     };
-  }, [orders, vouchers, loading, loaded, refresh, placeOrder, redeem]);
+  }, [orders, vouchers, credit, loading, loaded, refresh, placeOrder, redeem]);
 
   return <OrdersContext.Provider value={value}>{children}</OrdersContext.Provider>;
 }

@@ -7,6 +7,22 @@ import { useSettings } from '@/lib/settings';
 import { isDemo } from '@/lib/supabase';
 import { Icon, Txt } from './ui';
 
+/** Opens the photo library; returns the picked image (or null if cancelled). */
+export async function pickImage(aspect: [number, number]) {
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ['images'],
+    allowsEditing: true,
+    aspect,
+    // Keeps uploads small; plenty for a phone screen.
+    quality: 0.6,
+    // The demo stores photos in the browser, so it needs the picture itself rather than a temporary link.
+    base64: isDemo,
+  });
+  const asset = result.canceled ? null : result.assets[0];
+  if (!asset) return null;
+  return isDemo && asset.base64 ? `data:${asset.mimeType ?? 'image/jpeg'};base64,${asset.base64}` : asset.uri;
+}
+
 /** Optional photo slot: tap to pick from the library, tap the photo again to change it, × to remove it. */
 export function PhotoPicker({
   value,
@@ -26,18 +42,8 @@ export function PhotoPicker({
 
   const pick = async () => {
     try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'],
-        allowsEditing: true,
-        aspect,
-        // Keeps uploads small; plenty for a phone screen.
-        quality: 0.6,
-        // The demo stores photos in the browser, so it needs the picture itself rather than a temporary link.
-        base64: isDemo,
-      });
-      const asset = result.canceled ? null : result.assets[0];
-      if (!asset) return;
-      onChange(isDemo && asset.base64 ? `data:${asset.mimeType ?? 'image/jpeg'};base64,${asset.base64}` : asset.uri);
+      const uri = await pickImage(aspect);
+      if (uri) onChange(uri);
     } catch (e: any) {
       showAlert(t('error'), e?.message ?? String(e));
     }

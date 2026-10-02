@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Switch, TextInput, View } from 'react-native';
 
 import { Confetti } from '@/components/Confetti';
 import { DishArt } from '@/components/media';
@@ -21,7 +21,7 @@ export default function CartScreen() {
   const { t, l, colors, formatPrice, isRTL, location } = useSettings();
   const { lines, subtotal, setQuantity, clear } = useCart();
   const { getChef } = useCatalog();
-  const { freeDeliveriesLeft, placeOrder, availableVouchers, orderCount } = useOrders();
+  const { freeDeliveriesLeft, placeOrder, availableVouchers, orderCount, orders, credit } = useOrders();
   const { playOrderSuccess } = useSounds();
   // Prefilled from the saved map location until the customer types their own.
   const [typedAddress, setAddress] = useState<string | null>(null);
@@ -30,6 +30,8 @@ export default function CartScreen() {
   const [schedule, setSchedule] = useState<ScheduleValue>({ mode: 'asap' });
   const [earned, setEarned] = useState(0);
   const [notes, setNotes] = useState('');
+  const [referralCode, setReferralCode] = useState('');
+  const [useCredit, setUseCredit] = useState(false);
   const [busy, setBusy] = useState(false);
   const [burst, setBurst] = useState(0);
   const [success, setSuccess] = useState(false);
@@ -37,7 +39,11 @@ export default function CartScreen() {
   const baseDeliveryFee = freeDeliveriesLeft > 0 ? 0 : DELIVERY_FEE;
   const voucher = availableVouchers.find((v) => v.id === voucherId);
   const { discount, deliveryFee } = applyReward(voucher && getReward(voucher.reward_id), subtotal, baseDeliveryFee);
-  const total = subtotal - discount + deliveryFee;
+  const beforeCredit = subtotal - discount + deliveryFee;
+  const creditUsed = useCredit ? Math.min(credit, beforeCredit) : 0;
+  const total = beforeCredit - creditUsed;
+  // Referral codes only work on a customer's very first order.
+  const firstOrder = orders.length === 0;
   const clearBurst = useCallback(() => setBurst(0), []);
 
   const submit = async () => {
@@ -57,6 +63,8 @@ export default function CartScreen() {
         address: address.trim(),
         notes: notes.trim() || null,
         voucher_id: voucher?.id ?? null,
+        referral_code: firstOrder && referralCode.trim() ? referralCode.trim().toUpperCase() : null,
+        use_credit: creditUsed > 0,
         delivery_lat: location?.latitude ?? null,
         delivery_lng: location?.longitude ?? null,
         scheduled_for: scheduledFor?.toISOString() ?? null,
@@ -64,6 +72,8 @@ export default function CartScreen() {
       clear();
       setNotes('');
       setVoucherId(null);
+      setReferralCode('');
+      setUseCredit(false);
       setSchedule({ mode: 'asap' });
       setEarned(order.points_earned);
       setSuccess(true);
@@ -190,6 +200,43 @@ export default function CartScreen() {
               </Card>
             )}
 
+            {(firstOrder || credit > 0) && (
+              <Card style={{ gap: 10 }}>
+                {firstOrder && (
+                  <>
+                    <View style={styles.row}>
+                      <Icon name="gift-outline" size={18} color={colors.textMuted} />
+                      <Txt variant="label" muted>
+                        {t('referralCode')}
+                      </Txt>
+                    </View>
+                    <TextInput
+                      value={referralCode}
+                      onChangeText={(v) => setReferralCode(v.replace(/[^A-Za-z0-9]/g, '').toUpperCase())}
+                      placeholder={t('referralPlaceholder')}
+                      placeholderTextColor={colors.textMuted}
+                      autoCapitalize="characters"
+                      autoCorrect={false}
+                      maxLength={9}
+                      style={[inputStyle, { letterSpacing: 2 }]}
+                    />
+                  </>
+                )}
+                {credit > 0 && (
+                  <View style={styles.row}>
+                    <Icon name="wallet-outline" size={20} color={colors.success} />
+                    <Txt style={{ flex: 1, fontWeight: '600' }}>{t('useCredit', { amount: formatPrice(credit) })}</Txt>
+                    <Switch
+                      value={useCredit}
+                      onValueChange={setUseCredit}
+                      trackColor={{ true: colors.primary, false: colors.border }}
+                      thumbColor="#fff"
+                    />
+                  </View>
+                )}
+              </Card>
+            )}
+
             <Card style={{ gap: 8 }}>
               <SummaryRow label={t('subtotal')} value={formatPrice(subtotal)} />
               {discount > 0 && (
@@ -201,6 +248,9 @@ export default function CartScreen() {
                 valueColor={deliveryFee === 0 ? colors.success : undefined}
                 strike={deliveryFee === 0 ? formatPrice(DELIVERY_FEE) : undefined}
               />
+              {creditUsed > 0 && (
+                <SummaryRow label={t('creditLine')} value={`− ${formatPrice(creditUsed)}`} valueColor={colors.success} />
+              )}
               <View style={[styles.divider, { backgroundColor: colors.border }]} />
               <SummaryRow label={t('total')} value={formatPrice(total)} big />
               <View style={styles.row}>

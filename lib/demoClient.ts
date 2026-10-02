@@ -144,6 +144,19 @@ async function insertOrder(values: Row): Promise<Result> {
   let deliveryFee = previous < FREE_DELIVERY_ORDERS ? 0 : DELIVERY_FEE;
   let discount = 0;
   const id = uuid();
+
+  // A friend's referral code only counts on their very first order (checked before anything is changed).
+  const referralCode = String(values.referral_code ?? '').trim().toUpperCase() || null;
+  let referrer: string | null = null;
+  if (referralCode) {
+    referrer = (await readTable('referral_codes')).find((c) => c.code === referralCode)?.user_id ?? null;
+    if (!referrer) return fail("That referral code doesn't exist");
+    if (referrer === me()) return fail("You can't use your own referral code");
+    if (mine.length > 0 || (await readTable('referrals')).some((r) => r.friend_id === me())) {
+      return fail('Referral codes only work on your first order');
+    }
+  }
+
   if (values.voucher_id) {
     const voucher = vouchers.find((v) => v.id === values.voucher_id && v.user_id === me() && v.status === 'available');
     if (!voucher) return fail('That voucher is not available');
@@ -156,6 +169,9 @@ async function insertOrder(values: Row): Promise<Result> {
     voucher.order_id = id;
     await writeTable('reward_vouchers', vouchers);
   }
+  let total = subtotal - discount + deliveryFee;
+  const creditUsed = values.use_credit ? Math.max(0, Math.min(await walletBalance(me()), total)) : 0;
+  total -= creditUsed;
   const row: Row = {
     ...values,
     id,
@@ -163,13 +179,61 @@ async function insertOrder(values: Row): Promise<Result> {
     subtotal,
     discount,
     delivery_fee: deliveryFee,
-    total: subtotal - discount + deliveryFee,
+    total,
+    credit_used: creditUsed,
+    referral_code: referralCode,
+    referred_by: referrer,
     points_earned: pointsFor(subtotal - discount, previous),
     status: 'placed',
     created_at: new Date().toISOString(),
   };
   await writeTable('orders', [row, ...all]);
+
+  const wallet = await readTable('wallet_entries');
+  const now = new Date().toISOString();
+  if (creditUsed > 0) {
+    wallet.unshift({ id: uuid(), user_id: me(), amount: -creditUsed, kind: 'spent', order_id: id, created_at: now });
+  }
+  if (referrer) {
+    const cashback = Math.round((subtotal - discount) * 10) / 100;
+    const friendName = (current?.user.user_metadata?.full_name as string | undefined)?.split(' ')[0] ?? '';
+    await writeTable('referrals', [
+      { id: uuid(), referrer_id: referrer, friend_id: me(), order_id: id, cashback, status: 'earned', friend_name: friendName, created_at: now },
+      ...(await readTable('referrals')),
+    ]);
+    if (cashback > 0) {
+      wallet.unshift({ id: uuid(), user_id: referrer, amount: cashback, kind: 'referral', order_id: id, created_at: now });
+    }
+  }
+  await writeTable('wallet_entries', wallet);
   return ok(row);
+}
+
+async function walletBalance(userId: string) {
+  const sum = (await readTable('wallet_entries')).filter((w) => w.user_id === userId).reduce((t, w) => t + w.amount, 0);
+  return Math.round(sum * 100) / 100;
+}
+
+async function myReferralCode(): Promise<Result> {
+  const codes = await readTable('referral_codes');
+  const existing = codes.find((c) => c.user_id === me());
+  if (existing) return ok(existing.code);
+  const letters = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  do {
+    code = 'KIT' + Array.from({ length: 6 }, () => letters[Math.floor(Math.random() * letters.length)]).join('');
+  } while (codes.some((c) => c.code === code));
+  await writeTable('referral_codes', [...codes, { user_id: me(), code, created_at: new Date().toISOString() }]);
+  return ok(code);
+}
+
+async function setKitchenPhoto(url: string | null): Promise<Result> {
+  const chefs = await readTable('kitchen_chefs');
+  const mine = chefs.find((c) => c.user_id === me());
+  if (!mine) return fail('Only approved home chefs have a profile photo');
+  mine.photo_url = url;
+  await writeTable('kitchen_chefs', chefs);
+  return ok(null);
 }
 
 async function insertApplication(values: Row): Promise<Result> {
@@ -236,7 +300,10 @@ async function chefRatings() {
 async function visibleRows(table: string): Promise<Row[]> {
   if (table === 'chef_ratings') return chefRatings();
   const rows = await readTable(table);
-  if (['orders', 'reward_vouchers', 'chef_applications'].includes(table)) return rows.filter((r) => r.user_id === me());
+  if (['orders', 'reward_vouchers', 'chef_applications', 'wallet_entries', 'referral_codes'].includes(table)) {
+    return rows.filter((r) => r.user_id === me());
+  }
+  if (table === 'referrals') return rows.filter((r) => r.referrer_id === me());
   if (table === 'kitchen_dishes') {
     const mine = (await readTable('kitchen_chefs')).filter((c) => c.user_id === me()).map((c) => c.id);
     return rows.filter((r) => r.available || mine.includes(r.chef_id));
@@ -425,6 +492,9 @@ async function approveApplication(id: string): Promise<Result> {
 async function rpc(name: string, args: Row) {
   if (name === 'redeem_reward') return redeemReward(args.p_reward_id);
   if (name === 'approve_chef_application') return approveApplication(args.p_id);
+  if (name === 'my_referral_code') return myReferralCode();
+  if (name === 'my_wallet_balance') return ok(await walletBalance(me()));
+  if (name === 'set_kitchen_photo') return setKitchenPhoto(args.p_url ?? null);
   return fail(`Unknown function ${name}`);
 }
 

@@ -10,7 +10,7 @@ import { useSettings } from '@/lib/settings';
 const STATUS_ICON: Record<OrderStatus, IconName> = {
   placed: 'receipt-outline',
   cooking: 'flame-outline',
-  on_the_way: 'bicycle-outline',
+  on_the_way: 'delivery',
   delivered: 'checkmark-circle-outline',
   cancelled: 'close-circle-outline',
 };
@@ -80,9 +80,17 @@ export default function OrdersScreen() {
                 )}
                 {item.delivery_fee === 0 && (
                   <View style={styles.row}>
-                    <Icon name="bicycle-outline" size={16} color={colors.success} />
+                    <Icon name="delivery" size={16} color={colors.success} />
                     <Txt variant="caption" style={{ color: colors.success, fontWeight: '600' }}>
                       {t('freeDeliveryBadge')}
+                    </Txt>
+                  </View>
+                )}
+                {item.credit_used > 0 && (
+                  <View style={styles.row}>
+                    <Icon name="wallet-outline" size={16} color={colors.success} />
+                    <Txt variant="caption" style={{ color: colors.success, fontWeight: '600' }}>
+                      {t('creditLine')} − {formatPrice(item.credit_used)}
                     </Txt>
                   </View>
                 )}

@@ -78,6 +78,12 @@ export default function MoreScreen() {
         </View>
 
         <ListGroup title={t('explore')}>
+          <ListRow
+            icon="gift-outline"
+            label={t('referFriend')}
+            detail={t('referTagline')}
+            onPress={() => router.push('/refer')}
+          />
           <ListRow icon="chatbubble-ellipses-outline" label={t('chatTitle')} onPress={() => router.push('/chat')} />
           <ListRow
             icon="location-outline"
