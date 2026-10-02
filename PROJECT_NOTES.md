@@ -37,6 +37,7 @@ App saves the phone's push token (`push_devices`) and the cart (`saved_carts`) �
 - Resend API key (chef application emails): stored in Supabase Vault as `resend_api_key`; the edge function reads it through `public.app_secret()`.
 - `ANTHROPIC_API_KEY` for Kitchy AI: **not set yet**. Add it in Supabase → Edge Functions → Secrets.
 - Expo access token for publishing: add `EXPO_TOKEN` in the Claude Code cloud environment settings (never in chat or code).
+- `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_KEY` (public values, same as `.env`) are also saved as EAS environment variables for development, preview and production. Builds and updates run with `--environment` read those, not `.env`; without them the app says "Supabase is not configured".
 - Supabase "Confirm email" is currently **off** for testing. Turn it back on before launch and set the auth Site URL / redirect page.
 
 ## Publishing
