@@ -44,3 +44,23 @@ async function openStreetMapAddress(c: Coordinate, language: Language) {
     return null;
   }
 }
+
+/**
+ * The phone's current position: a coordinate, 'denied' when location access is off,
+ * or null when no fix arrives. Normal accuracy is plenty for an address and much faster
+ * than "high", especially in phone browsers; a slow fix falls back to the last known one.
+ */
+export async function currentPosition(): Promise<Coordinate | 'denied' | null> {
+  try {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') return 'denied';
+    const position = await Promise.race([
+      Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 15000)),
+    ]).catch(() => null);
+    const fix = position ?? (await Location.getLastKnownPositionAsync().catch(() => null));
+    return fix ? { latitude: fix.coords.latitude, longitude: fix.coords.longitude } : null;
+  } catch {
+    return null;
+  }
+}

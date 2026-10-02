@@ -10,7 +10,7 @@ returns numeric
 language sql
 immutable
 set search_path = ''
-as $$ select 10::numeric $$;
+as $$ select 15::numeric $$;
 
 -- Straight-line distance between two points on Earth (haversine).
 create or replace function public.distance_km(lat1 double precision, lng1 double precision,

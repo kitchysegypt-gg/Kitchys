@@ -20,7 +20,7 @@ Prices, delivery fees, discounts, points, referral cashback and credit are all c
 
 ## Features
 
-Dinner-only menu from home chefs; dish photos and sizes; cart with scheduling, vouchers, referral code and credit; orders and chef reviews; points, ranks and rewards; refer a friend (10% of the friend's first order as credit, no cap); Kitchy AI chat (Claude); smart notifications (see below); apply as a chef (photos, dishes) → email to the owner with Approve / Reject links → approved chefs manage dishes and photos in My kitchen; languages (English, Arabic, French), themes and accent colours.
+Dinner-only menu from home chefs; one chef per order, and customers only see chefs within 15 km of their delivery address (chef locations are private: `chef_locations` table, `chefs_near()` RPC, checked again on every order by the `orders_check_chef` trigger; radius in `delivery_radius_km()` and `DELIVERY_RADIUS_KM` in `lib/catalog.tsx`); dish photos and sizes; cart with scheduling, vouchers, referral code and credit; orders and chef reviews; points, ranks and rewards; refer a friend (10% of the friend's first order as credit, no cap); Kitchy AI chat (Claude); smart notifications (see below); apply as a chef (photos, dishes) → email to the owner with Approve / Reject links → approved chefs manage dishes and photos in My kitchen; languages (English, Arabic, French), themes and accent colours.
 
 ## Smart notifications
 
@@ -49,6 +49,9 @@ App saves the phone's push token (`push_devices`) and the cart (`saved_carts`) �
 - After changing the menu or loyalty rules: `node --experimental-strip-types scripts/build-chat-menu.mjs` and redeploy the `kitchy-chat` function.
 
 ## Open items
+
+- Redeploy the `kitchy-chat` function when `ANTHROPIC_API_KEY` is added (its prompt now explains one chef per order and the 15 km radius).
+- Home chefs approved before kitchen locations existed (Hamza, Hamdy, Ahmad) must add their location in My kitchen; until then customers don't see them.
 
 - Add `ANTHROPIC_API_KEY` so Kitchy AI answers in the real app.
 - Set up Firebase for Android push (see Smart notifications), then rebuild the APK.

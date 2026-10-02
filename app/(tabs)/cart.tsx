@@ -8,7 +8,7 @@ import { ScheduleValue, SchedulePicker } from '@/components/SchedulePicker';
 import { FreeDeliveryBanner, QuantityStepper } from '@/components/menu';
 import { Button, Card, Chip, EmptyState, Icon, Screen, Txt } from '@/components/ui';
 import { useCart } from '@/lib/cart';
-import { useCatalog } from '@/lib/catalog';
+import { DELIVERY_RADIUS_KM, useCatalog } from '@/lib/catalog';
 import { applyReward, getReward, pointsFor } from '@/lib/loyalty';
 import { isTooSoon, slotDate } from '@/lib/schedule';
 import { useOrders } from '@/lib/orders';
@@ -21,7 +21,7 @@ import { DELIVERY_FEE } from '@/lib/supabase';
 export default function CartScreen() {
   const { t, l, colors, formatPrice, isRTL, location } = useSettings();
   const { lines, subtotal, setQuantity, clear } = useCart();
-  const { getChef } = useCatalog();
+  const { getChef, isNear } = useCatalog();
   const { freeDeliveriesLeft, placeOrder, availableVouchers, orderCount, orders, credit } = useOrders();
   const { playOrderSuccess } = useSounds();
   // Prefilled from the saved map location until the customer types their own.
@@ -49,6 +49,15 @@ export default function CartScreen() {
 
   const submit = async () => {
     if (!address.trim()) return showAlert(t('address'), t('addressRequired'));
+    if (!location) {
+      showAlert(t('location'), t('setAddressFirst'));
+      return router.push('/location');
+    }
+    const farLine = lines.find((line) => !isNear(line.dish.chefId));
+    if (farLine) {
+      const chef = getChef(farLine.dish.chefId);
+      return showAlert(t('tooFarTitle'), t('tooFarBody', { chef: chef ? l(chef.name) : '', km: DELIVERY_RADIUS_KM }));
+    }
     const scheduledFor = schedule.mode === 'later' ? slotDate(schedule.day, schedule.minutes) : null;
     if (scheduledFor && isTooSoon(scheduledFor)) return showAlert(t('deliveryTime'), t('timeTooSoon'));
     setBusy(true);

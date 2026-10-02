@@ -4,9 +4,9 @@ import { Animated, FlatList, Pressable, ScrollView, StyleSheet, TextInput, View 
 
 import { FoodPhoto } from '@/components/media';
 import { ChefCard, DishCard, FreeDeliveryBanner } from '@/components/menu';
-import { Chip, EmptyState, Icon, PressableScale, Screen, Txt } from '@/components/ui';
+import { Button, Chip, EmptyState, Icon, PressableScale, Screen, Txt } from '@/components/ui';
 import { CATEGORIES, Category } from '@/data/menu';
-import { useCatalog } from '@/lib/catalog';
+import { DELIVERY_RADIUS_KM, useCatalog } from '@/lib/catalog';
 import { FONT } from '@/lib/fonts';
 import { useSettings } from '@/lib/settings';
 import { useAnimatedValue } from '@/lib/useAnimatedValue';
@@ -85,7 +85,11 @@ export default function HomeScreen() {
           ) : null}
         </View>
 
-        {browsing ? (
+        {location && chefs.length === 0 ? (
+          <EmptyState icon="location-outline" title={t('noChefsNear')} body={t('noChefsNearBody', { km: DELIVERY_RADIUS_KM })}>
+            <Button title={t('changeAddress')} icon="map-outline" onPress={() => router.push('/location')} />
+          </EmptyState>
+        ) : browsing ? (
           <>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
               {CATEGORIES.map((c) => (

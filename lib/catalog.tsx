@@ -4,7 +4,11 @@ import { Allergen, CHEFS, Category, Chef, DISHES, Dish } from '@/data/menu';
 import { useAuth } from './auth';
 import type { EmojiName } from './emoji';
 import type { Localized } from './i18n';
+import { useSettings } from './settings';
 import { supabase } from './supabase';
+
+/** Chefs deliver within this distance of their kitchen (the database decides; this is for messages). */
+export const DELIVERY_RADIUS_KM = 15;
 
 /** Average ratings for one chef, from customer reviews. */
 export type ChefRating = {
@@ -103,8 +107,12 @@ export function kitchenDishToDish(row: KitchenDishRow): Dish {
 }
 
 type CatalogValue = {
+  /** Chefs who deliver to the customer's address (everyone until an address is set). */
   chefs: Chef[];
+  /** Dishes from those chefs. */
   dishes: Dish[];
+  /** False when the chef is too far from the customer's address. */
+  isNear: (chefId: string) => boolean;
   ratings: Record<string, ChefRating>;
   /** True once the home chefs' dishes have been fetched for this account. */
   loaded: boolean;
@@ -123,6 +131,24 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   const [kitchenDishes, setKitchenDishes] = useState<Dish[]>([]);
   const [ratings, setRatings] = useState<Record<string, ChefRating>>({});
   const [loaded, setLoaded] = useState(false);
+  const { location } = useSettings();
+  const lat = location?.latitude;
+  const lng = location?.longitude;
+  // Ids of chefs within reach of the delivery address; null until an address is set.
+  const [nearIds, setNearIds] = useState<Set<string> | null>(null);
+
+  const fetchNear = useCallback(async () => {
+    if (!session || lat === undefined || lng === undefined) {
+      setNearIds(null);
+      return;
+    }
+    const { data, error } = await supabase.rpc('chefs_near', { p_lat: lat, p_lng: lng });
+    if (!error) setNearIds(new Set((data ?? []) as string[]));
+  }, [session, lat, lng]);
+
+  useEffect(() => {
+    fetchNear();
+  }, [fetchNear]);
 
   const refresh = useCallback(async () => {
     if (!session) {
@@ -142,27 +168,31 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     if (!ratingsRes.error && ratingsRes.data) {
       setRatings(Object.fromEntries((ratingsRes.data as ChefRating[]).map((r) => [r.chef_id, r])));
     }
+    await fetchNear();
     setLoaded(true);
-  }, [session]);
+  }, [session, fetchNear]);
 
   useEffect(() => {
     refresh();
   }, [refresh]);
 
   const value = useMemo<CatalogValue>(() => {
-    const chefs = [...CHEFS, ...kitchenChefs];
-    const dishes = [...DISHES, ...kitchenDishes.filter((d) => kitchenChefs.some((c) => c.id === d.chefId))];
+    const allChefs = [...CHEFS, ...kitchenChefs];
+    const allDishes = [...DISHES, ...kitchenDishes.filter((d) => kitchenChefs.some((c) => c.id === d.chefId))];
+    const isNear = (chefId: string) => !nearIds || nearIds.has(chefId);
     return {
-      chefs,
-      dishes,
+      chefs: allChefs.filter((c) => isNear(c.id)),
+      dishes: allDishes.filter((d) => isNear(d.chefId)),
+      isNear,
       ratings,
       loaded,
       refresh,
-      getChef: (id) => chefs.find((c) => c.id === id),
-      getDish: (id) => dishes.find((d) => d.id === id),
-      dishesByChef: (chefId) => dishes.filter((d) => d.chefId === chefId),
+      // Orders, reviews and chef pages still find chefs who are out of reach.
+      getChef: (id) => allChefs.find((c) => c.id === id),
+      getDish: (id) => allDishes.find((d) => d.id === id),
+      dishesByChef: (chefId) => allDishes.filter((d) => d.chefId === chefId),
     };
-  }, [kitchenChefs, kitchenDishes, ratings, loaded, refresh]);
+  }, [kitchenChefs, kitchenDishes, ratings, loaded, refresh, nearIds]);
 
   return <CatalogContext.Provider value={value}>{children}</CatalogContext.Provider>;
 }

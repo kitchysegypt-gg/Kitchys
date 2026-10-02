@@ -1,23 +1,27 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import type { Coordinate } from '@/components/DeliveryMap';
 import { DishEditor } from '@/components/DishEditor';
+import { KitchenLocationPicker } from '@/components/KitchenLocationPicker';
 import { pickImage } from '@/components/PhotoPicker';
 import { ChefAvatar, DishArt, RatingBadge } from '@/components/media';
 import { formatPortion } from '@/data/menu';
 import { Button, Card, EmptyState, Icon, ScreenHeader, Txt } from '@/components/ui';
 import { showAlert } from '@/lib/alert';
-import { kitchenChefToChef, kitchenDishToDish, useCatalog } from '@/lib/catalog';
+import { DELIVERY_RADIUS_KM, kitchenChefToChef, kitchenDishToDish, useCatalog } from '@/lib/catalog';
 import {
   DishDraft,
   addKitchenDish,
   deleteKitchenDish,
   emptyDish,
+  fetchKitchenLocation,
   isDishReady,
   setDishAvailable,
   setDishPhoto,
+  setKitchenLocation,
   setKitchenPhoto,
   useChefStatus,
 } from '@/lib/chef';
@@ -31,6 +35,54 @@ export default function KitchenScreen() {
   const [draft, setDraft] = useState<DishDraft | null>(null);
   const [busy, setBusy] = useState(false);
   const [photoBusy, setPhotoBusy] = useState(false);
+  // The saved kitchen location, and the one being picked on the map.
+  const [savedSpot, setSavedSpot] = useState<Coordinate | null | undefined>(undefined);
+  const [spot, setSpot] = useState<Coordinate | null>(null);
+  const [spotBusy, setSpotBusy] = useState(false);
+
+  const loadSpot = useCallback(async () => {
+    try {
+      const found = await fetchKitchenLocation();
+      setSavedSpot(found);
+      setSpot(found);
+    } catch {
+      setSavedSpot(null);
+    }
+  }, []);
+
+  const kitchenId = kitchen?.id;
+  useEffect(() => {
+    if (!kitchenId) return;
+    let cancelled = false;
+    fetchKitchenLocation()
+      .catch(() => null)
+      .then((found) => {
+        if (cancelled) return;
+        setSavedSpot(found);
+        setSpot(found);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [kitchenId]);
+
+  const spotChanged =
+    !!spot && (!savedSpot || spot.latitude !== savedSpot.latitude || spot.longitude !== savedSpot.longitude);
+
+  const saveSpot = async () => {
+    if (!spot) return;
+    setSpotBusy(true);
+    try {
+      await setKitchenLocation(spot);
+      await loadSpot();
+      await refresh();
+      showAlert(t('kitchenLocationSaved'), t('kitchenLocationIsSet', { km: DELIVERY_RADIUS_KM }));
+    } catch (e: any) {
+      showAlert(t('error'), e?.message ?? String(e));
+    } finally {
+      setSpotBusy(false);
+    }
+  };
 
   const changeDishPhoto = async (dishId: string) => {
     try {
@@ -134,6 +186,23 @@ export default function KitchenScreen() {
                 </Pressable>
               </View>
             </Card>
+
+            {savedSpot === null && (
+              <View style={[styles.notice, { backgroundColor: colors.surfaceAlt }]}>
+                <Icon name="warning-outline" size={20} color={colors.danger} />
+                <Txt variant="caption" style={{ flex: 1, fontWeight: '600' }}>
+                  {t('kitchenLocationMissing')}
+                </Txt>
+              </View>
+            )}
+            {savedSpot !== undefined && (
+              <KitchenLocationPicker value={spot} onChange={setSpot}>
+                {spotChanged && (
+                  <Button title={t('saveKitchenLocation')} icon="checkmark" onPress={saveSpot} loading={spotBusy} />
+                )}
+              </KitchenLocationPicker>
+            )}
+
             <Txt muted>{t('kitchenBody')}</Txt>
 
             {dishes.length === 0 && !draft && <Txt muted>{t('noKitchenDishes')}</Txt>}
@@ -187,6 +256,7 @@ export default function KitchenScreen() {
 }
 
 const styles = StyleSheet.create({
+  notice: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, borderRadius: 14 },
   dishCamera: {
     position: 'absolute',
     bottom: -4,

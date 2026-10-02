@@ -1,4 +1,3 @@
-import * as Location from 'expo-location';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import {
@@ -17,7 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Coordinate, DeliveryMap } from '@/components/DeliveryMap';
 import { Button, Icon, Txt } from '@/components/ui';
 import { showAlert } from '@/lib/alert';
-import { addressFor } from '@/lib/geocode';
+import { addressFor, currentPosition } from '@/lib/geocode';
 import { useSettings } from '@/lib/settings';
 import { FONT } from '@/lib/fonts';
 
@@ -50,29 +49,11 @@ export default function LocationScreen() {
     setLocating(true);
     setDenied(false);
     setFailed(false);
-    try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        setDenied(true);
-        return;
-      }
-      // Normal accuracy is plenty for a delivery address and much faster than "high",
-      // especially in phone browsers. Fall back to the last known position if it times out.
-      const position = await Promise.race([
-        Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }),
-        new Promise<null>((resolve) => setTimeout(() => resolve(null), 15000)),
-      ]).catch(() => null);
-      const fix = position ?? (await Location.getLastKnownPositionAsync().catch(() => null));
-      if (!fix) {
-        setFailed(true);
-        return;
-      }
-      moveTo({ latitude: fix.coords.latitude, longitude: fix.coords.longitude });
-    } catch {
-      setFailed(true);
-    } finally {
-      setLocating(false);
-    }
+    const found = await currentPosition();
+    setLocating(false);
+    if (found === 'denied') setDenied(true);
+    else if (!found) setFailed(true);
+    else moveTo(found);
   };
 
   const save = () => {

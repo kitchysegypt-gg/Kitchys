@@ -170,12 +170,20 @@ export async function submitApplication(form: {
   bio: string;
   photo: string | null;
   dishes: DishDraft[];
+  /** Where the chef cooks; customers within the delivery radius can order. */
+  kitchen: { latitude: number; longitude: number };
 }) {
-  const { photo, dishes, ...details } = form;
+  const { photo, dishes, kitchen, ...details } = form;
   const [photoUrl, dishRows] = await Promise.all([uploadKitchenPhoto(photo), Promise.all(dishes.map(dishPayload))]);
   const { data, error } = await supabase
     .from('chef_applications')
-    .insert({ ...details, photo_url: photoUrl, dishes: dishRows })
+    .insert({
+      ...details,
+      photo_url: photoUrl,
+      dishes: dishRows,
+      kitchen_lat: kitchen.latitude,
+      kitchen_lng: kitchen.longitude,
+    })
     .select('id')
     .single();
   if (error) throw error;
@@ -227,5 +235,18 @@ export async function setKitchenPhoto(uri: string) {
 export async function setDishPhoto(dishId: string, uri: string) {
   const url = await uploadKitchenPhoto(uri);
   const { error } = await supabase.from('kitchen_dishes').update({ photo_url: url }).eq('id', dishId);
+  if (error) throw error;
+}
+
+/** Approved chefs: their kitchen location (private; only they can read it). */
+export async function fetchKitchenLocation(): Promise<{ latitude: number; longitude: number } | null> {
+  const { data, error } = await supabase.rpc('my_kitchen_location');
+  if (error) throw error;
+  const row = Array.isArray(data) ? data[0] : null;
+  return row ? { latitude: row.latitude, longitude: row.longitude } : null;
+}
+
+export async function setKitchenLocation(c: { latitude: number; longitude: number }) {
+  const { error } = await supabase.rpc('set_kitchen_location', { p_lat: c.latitude, p_lng: c.longitude });
   if (error) throw error;
 }

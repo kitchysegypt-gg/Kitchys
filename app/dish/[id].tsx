@@ -29,13 +29,13 @@ export default function DishScreen() {
       </Screen>
     );
 
-  const onAdd = () => {
-    addToCart(dish, quantity);
-    setAdded(true);
-    bounce.setValue(0.97);
-    Animated.spring(bounce, { toValue: 1, useNativeDriver: true, speed: 20, bounciness: 8 }).start();
-    setTimeout(() => setAdded(false), 1400);
-  };
+  const onAdd = () =>
+    addToCart(dish, quantity, () => {
+      setAdded(true);
+      bounce.setValue(0.97);
+      Animated.spring(bounce, { toValue: 1, useNativeDriver: true, speed: 20, bounciness: 8 }).start();
+      setTimeout(() => setAdded(false), 1400);
+    });
 
   const facts: { icon: IconName; text: string; color?: string }[] = [
     { icon: 'time-outline', text: `${dish.prepMinutes} ${t('prepTime')}` },

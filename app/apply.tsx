@@ -3,7 +3,9 @@ import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import type { Coordinate } from '@/components/DeliveryMap';
 import { DishEditor } from '@/components/DishEditor';
+import { KitchenLocationPicker } from '@/components/KitchenLocationPicker';
 import { PhotoPicker } from '@/components/PhotoPicker';
 import { ChefPhoto } from '@/components/media';
 import { Button, Card, EmptyState, ScreenHeader, Txt } from '@/components/ui';
@@ -23,6 +25,7 @@ export default function ApplyScreen() {
   const [specialty, setSpecialty] = useState('');
   const [bio, setBio] = useState('');
   const [photo, setPhoto] = useState<string | null>(null);
+  const [kitchenSpot, setKitchenSpot] = useState<Coordinate | null>(null);
   const [dishes, setDishes] = useState<DishDraft[]>([emptyDish()]);
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
@@ -59,6 +62,7 @@ export default function ApplyScreen() {
     ) {
       return showAlert(t('applyTitle'), t('fillApplication'));
     }
+    if (!kitchenSpot) return showAlert(t('kitchenLocation'), t('kitchenLocationNeeded'));
     setBusy(true);
     try {
       await submitApplication({
@@ -69,6 +73,7 @@ export default function ApplyScreen() {
         bio: bio.trim(),
         photo,
         dishes: ready,
+        kitchen: kitchenSpot,
       });
       setSent(true);
     } catch (e: any) {
@@ -160,6 +165,8 @@ export default function ApplyScreen() {
               style={[input, { minHeight: 90 }]}
             />
           </Card>
+
+          <KitchenLocationPicker value={kitchenSpot} onChange={setKitchenSpot} />
 
           <Txt variant="heading" style={{ marginTop: 6 }}>
             {t('yourDishes')}

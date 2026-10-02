@@ -116,6 +116,11 @@ ${app.photo_url ? `<img src="${escapeHtml(app.photo_url)}" alt="" width="120" he
 <tr><td>Email</td><td>${escapeHtml(app.email)}</td></tr>
 <tr><td>Phone</td><td>${escapeHtml(app.phone)}</td></tr>
 <tr><td>Area</td><td>${escapeHtml(app.area)}</td></tr>
+<tr><td>Kitchen</td><td>${
+  typeof app.kitchen_lat === 'number' && typeof app.kitchen_lng === 'number'
+    ? `<a href="https://www.google.com/maps/search/?api=1&query=${app.kitchen_lat},${app.kitchen_lng}">Open on the map</a>`
+    : 'No location given'
+}</td></tr>
 <tr><td>Specialty</td><td>${escapeHtml(app.specialty)}</td></tr>
 </table>
 <p>${escapeHtml(app.bio)}</p>

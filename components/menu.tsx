@@ -3,7 +3,8 @@ import { Animated, Pressable, StyleSheet, View } from 'react-native';
 
 import { useAnimatedValue } from '@/lib/useAnimatedValue';
 import { Allergen, Chef, Dish, formatPortion } from '@/data/menu';
-import { useCatalog } from '@/lib/catalog';
+import { showAlert, showConfirm } from '@/lib/alert';
+import { DELIVERY_RADIUS_KM, useCatalog } from '@/lib/catalog';
 import { useCart } from '@/lib/cart';
 import { useOrders } from '@/lib/orders';
 import { useSettings } from '@/lib/settings';
@@ -12,13 +13,40 @@ import { DELIVERY_FEE, FREE_DELIVERY_ORDERS } from '@/lib/supabase';
 import { ChefAvatar, DishArt, RatingBadge } from './media';
 import { Button, Card, Icon, PressableScale, Txt } from './ui';
 
-/** Adds to the cart and plays the "add to cart" sound + haptic. */
+/**
+ * Adds to the cart and plays the "add to cart" sound + haptic. Orders come from one chef
+ * near the customer, so a far-away chef is refused and a different chef asks to start a
+ * new cart. `onAdded` runs once the dish is actually in the cart.
+ */
 export function useAddToCart() {
-  const { add } = useCart();
+  const { add, clear, lines } = useCart();
+  const { getChef, isNear } = useCatalog();
+  const { t, l } = useSettings();
   const { playAddToCart } = useSounds();
-  return (dish: Dish, quantity = 1) => {
-    add(dish, quantity);
-    playAddToCart();
+  return (dish: Dish, quantity = 1, onAdded?: () => void) => {
+    const chefName = (chefId: string) => {
+      const chef = getChef(chefId);
+      return chef ? l(chef.name) : '';
+    };
+    if (!isNear(dish.chefId)) {
+      showAlert(t('tooFarTitle'), t('tooFarBody', { chef: chefName(dish.chefId), km: DELIVERY_RADIUS_KM }));
+      return;
+    }
+    const addNow = () => {
+      add(dish, quantity);
+      playAddToCart();
+      onAdded?.();
+    };
+    const otherChef = lines.find((line) => line.dish.chefId !== dish.chefId)?.dish.chefId;
+    if (!otherChef) return addNow();
+    showConfirm(t('newCartTitle'), t('newCartBody', { chef: chefName(otherChef) }), {
+      label: t('newCart'),
+      cancelLabel: t('cancel'),
+      onConfirm: () => {
+        clear();
+        addNow();
+      },
+    });
   };
 }
 
@@ -28,11 +56,11 @@ export function QuickAddButton({ dish }: { dish: Dish }) {
   const addToCart = useAddToCart();
   const pop = useAnimatedValue(1);
 
-  const onPress = () => {
-    addToCart(dish);
-    pop.setValue(0.8);
-    Animated.spring(pop, { toValue: 1, useNativeDriver: true, speed: 20, bounciness: 10 }).start();
-  };
+  const onPress = () =>
+    addToCart(dish, 1, () => {
+      pop.setValue(0.8);
+      Animated.spring(pop, { toValue: 1, useNativeDriver: true, speed: 20, bounciness: 10 }).start();
+    });
 
   return (
     <Pressable onPress={onPress} hitSlop={8} accessibilityLabel="Add to cart">

@@ -6,14 +6,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChefAvatar, Stars } from '@/components/media';
 import { DishCard } from '@/components/menu';
 import { Card, EmptyState, Icon, Screen, Txt } from '@/components/ui';
-import { useCatalog } from '@/lib/catalog';
+import { DELIVERY_RADIUS_KM, useCatalog } from '@/lib/catalog';
 import { RATING_PARTS, Review, fetchChefReviews } from '@/lib/reviews';
 import { useSettings } from '@/lib/settings';
 
 export default function ChefScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t, l, colors, language, isRTL } = useSettings();
-  const { getChef, dishesByChef, ratings, refresh } = useCatalog();
+  const { getChef, dishesByChef, ratings, refresh, isNear } = useCatalog();
   const [reviews, setReviews] = useState<Review[]>([]);
   const chef = getChef(id);
 
@@ -72,6 +72,14 @@ export default function ChefScreen() {
         </View>
 
         <View style={{ padding: 20, gap: 14 }}>
+          {!isNear(chef.id) && (
+            <View style={[styles.farNotice, { backgroundColor: colors.surfaceAlt }]}>
+              <Icon name="location-outline" size={20} color={colors.danger} />
+              <Txt variant="caption" style={{ flex: 1 }}>
+                {t('outOfRange', { km: DELIVERY_RADIUS_KM })}
+              </Txt>
+            </View>
+          )}
           {!!l(chef.bio) && (
             <Txt muted style={{ fontSize: 16, lineHeight: 24 }}>
               {l(chef.bio)}
@@ -145,6 +153,7 @@ export default function ChefScreen() {
 }
 
 const styles = StyleSheet.create({
+  farNotice: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 14 },
   hero: {
     alignItems: 'center',
     gap: 6,

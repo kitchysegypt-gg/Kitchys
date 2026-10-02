@@ -240,6 +240,51 @@ async function setKitchenPhoto(url: string | null): Promise<Result> {
   return ok(null);
 }
 
+// Where the menu chefs cook (the real database keeps these private in chef_locations).
+const MENU_CHEF_LOCATIONS: Row[] = [
+  { chef_id: 'fatma', latitude: 30.088, longitude: 31.245 },
+  { chef_id: 'samira', latitude: 31.205, longitude: 29.882 },
+  { chef_id: 'mona', latitude: 30.056, longitude: 31.33 },
+  { chef_id: 'hoda', latitude: 30.091, longitude: 31.322 },
+  { chef_id: 'nour', latitude: 29.96, longitude: 31.257 },
+];
+const DEMO_RADIUS_KM = 15;
+
+function distanceKm(lat1: number, lng1: number, lat2: number, lng2: number) {
+  const rad = (d: number) => (d * Math.PI) / 180;
+  const a =
+    Math.sin(rad(lat2 - lat1) / 2) ** 2 +
+    Math.cos(rad(lat1)) * Math.cos(rad(lat2)) * Math.sin(rad(lng2 - lng1) / 2) ** 2;
+  return 6371 * 2 * Math.asin(Math.sqrt(a));
+}
+
+async function saveChefLocation(chefId: string, latitude: number, longitude: number) {
+  const rows = (await readTable('chef_locations')).filter((r) => r.chef_id !== chefId);
+  await writeTable('chef_locations', [...rows, { chef_id: chefId, latitude, longitude }]);
+}
+
+async function chefsNear(lat: number, lng: number): Promise<Result> {
+  const all = [...MENU_CHEF_LOCATIONS, ...(await readTable('chef_locations'))];
+  return ok(all.filter((r) => distanceKm(lat, lng, r.latitude, r.longitude) <= DEMO_RADIUS_KM).map((r) => r.chef_id));
+}
+
+async function myKitchen() {
+  return (await readTable('kitchen_chefs')).find((c) => c.user_id === me());
+}
+
+async function setKitchenLocation(lat: number, lng: number): Promise<Result> {
+  const mine = await myKitchen();
+  if (!mine) return fail('Only approved home chefs have a kitchen');
+  await saveChefLocation(mine.id, lat, lng);
+  return ok(null);
+}
+
+async function myKitchenLocation(): Promise<Result> {
+  const mine = await myKitchen();
+  const row = mine && (await readTable('chef_locations')).find((r) => r.chef_id === mine.id);
+  return ok(row ? [{ latitude: row.latitude, longitude: row.longitude }] : []);
+}
+
 async function insertApplication(values: Row): Promise<Result> {
   const all = await readTable('chef_applications');
   if (all.some((a) => a.user_id === me() && ['pending', 'approved'].includes(a.status))) {
@@ -468,6 +513,9 @@ async function approveApplication(id: string): Promise<Result> {
     };
     await writeTable('kitchen_chefs', [...chefs, chef]);
   }
+  if (typeof app.kitchen_lat === 'number' && typeof app.kitchen_lng === 'number') {
+    await saveChefLocation(chef.id, app.kitchen_lat, app.kitchen_lng);
+  }
   const dishes = await readTable('kitchen_dishes');
   const added = (app.dishes as Row[]).map((d) => ({
     id: uuid(),
@@ -499,6 +547,10 @@ async function rpc(name: string, args: Row) {
   if (name === 'my_referral_code') return myReferralCode();
   if (name === 'my_wallet_balance') return ok(await walletBalance(me()));
   if (name === 'set_kitchen_photo') return setKitchenPhoto(args.p_url ?? null);
+  if (name === 'chefs_near') return chefsNear(args.p_lat, args.p_lng);
+  if (name === 'set_kitchen_location') return setKitchenLocation(args.p_lat, args.p_lng);
+  if (name === 'my_kitchen_location') return myKitchenLocation();
+  if (name === 'save_cart' || name === 'register_push_device' || name === 'unregister_push_device') return ok(null);
   return fail(`Unknown function ${name}`);
 }
 
