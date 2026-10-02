@@ -31,8 +31,8 @@ type StoredSettings = {
   styleVersion: number;
 };
 
-/** Version 2: the green look; everyone starts on it once, and can still pick another accent. */
-const STYLE_VERSION = 2;
+/** Version 3: back to Kitchy's orange; everyone moves to it once, and can still pick another accent. */
+const STYLE_VERSION = 3;
 
 const DEFAULTS: StoredSettings = {
   language: 'en',
@@ -41,7 +41,7 @@ const DEFAULTS: StoredSettings = {
   notificationsEnabled: true,
   onboarded: false,
   location: null,
-  accent: 'green',
+  accent: 'orange',
   wantsChefApply: false,
   styleVersion: STYLE_VERSION,
 };
@@ -66,7 +66,7 @@ type SettingsContextValue = StoredSettings & {
 };
 
 function withAccent(palette: Palette, accent: AccentName): Palette {
-  if (accent === 'green' || !ACCENTS[accent]) return palette;
+  if (accent === 'orange' || !ACCENTS[accent]) return palette;
   const a = ACCENTS[accent];
   return { ...palette, primary: a.primary, primaryDeep: a.deep, heroGradient: [a.primary, a.deep] };
 }
@@ -85,7 +85,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         const stored = JSON.parse(raw) as Partial<StoredSettings>;
         const saved: StoredSettings = { ...DEFAULTS, ...stored };
         if ((stored.styleVersion ?? 1) < STYLE_VERSION) {
-          saved.accent = 'green';
+          saved.accent = 'orange';
           saved.styleVersion = STYLE_VERSION;
         }
         setSettings(saved);

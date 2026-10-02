@@ -19,7 +19,15 @@ const PROMO_BANNERS = {
 };
 const BANNER_RATIO = 1200 / 676;
 
-/** Round photo bubbles for the menu categories; tap again to show everything. */
+// Kitchy's 3D category icons; categories without one show their photo.
+const CATEGORY_ICONS: Partial<Record<Category, number>> = {
+  main: require('@/assets/categories/main.png'),
+  baked: require('@/assets/categories/baked.png'),
+  seafood: require('@/assets/categories/seafood.png'),
+  desserts: require('@/assets/categories/desserts.png'),
+};
+
+/** Round category bubbles (3D icon or photo); tap again to show everything. */
 export function CategoryBubbles({ value, onChange }: { value: Category | 'all'; onChange: (c: Category | 'all') => void }) {
   const { t, colors } = useSettings();
   return (
@@ -36,11 +44,15 @@ export function CategoryBubbles({ value, onChange }: { value: Category | 'all'; 
             <View
               style={[
                 styles.bubbleRing,
-                { borderColor: active ? colors.primary : 'transparent', backgroundColor: colors.successBg },
+                { borderColor: active ? colors.primary : 'transparent', backgroundColor: `${colors.primary}14` },
               ]}>
-              <View style={styles.bubble}>
-                <CategoryPhoto category={c.id as Category} />
-              </View>
+              {CATEGORY_ICONS[c.id as Category] ? (
+                <Image source={CATEGORY_ICONS[c.id as Category]} style={styles.bubbleIcon} contentFit="contain" />
+              ) : (
+                <View style={styles.bubble}>
+                  <CategoryPhoto category={c.id as Category} />
+                </View>
+              )}
             </View>
             <Txt
               variant="caption"
@@ -178,6 +190,7 @@ const styles = StyleSheet.create({
   bubbleItem: { width: 78, alignItems: 'center', gap: 6 },
   bubbleRing: { width: 66, height: 66, borderRadius: 33, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   bubble: { width: 56, height: 56, borderRadius: 28, overflow: 'hidden' },
+  bubbleIcon: { width: 50, height: 50 },
   promo: { borderRadius: 20, overflow: 'hidden', borderWidth: 1 },
   dots: { flexDirection: 'row', justifyContent: 'center', gap: 5, marginTop: 10 },
   dot: { height: 6, borderRadius: 3 },
