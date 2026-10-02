@@ -17,6 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Coordinate, DeliveryMap } from '@/components/DeliveryMap';
 import { Button, Icon, Txt } from '@/components/ui';
 import { showAlert } from '@/lib/alert';
+import { addressFor } from '@/lib/geocode';
 import { useSettings } from '@/lib/settings';
 import { FONT } from '@/lib/fonts';
 
@@ -24,7 +25,7 @@ import { FONT } from '@/lib/fonts';
 const DEFAULT_COORDINATE: Coordinate = { latitude: 30.0444, longitude: 31.2357 };
 
 export default function LocationScreen() {
-  const { t, colors, isRTL, location, setLocation } = useSettings();
+  const { t, colors, isRTL, location, setLocation, language } = useSettings();
   const [coordinate, setCoordinate] = useState<Coordinate>(
     location ? { latitude: location.latitude, longitude: location.longitude } : DEFAULT_COORDINATE
   );
@@ -33,15 +34,11 @@ export default function LocationScreen() {
   const [locating, setLocating] = useState(false);
   const [denied, setDenied] = useState(false);
 
+  const [failed, setFailed] = useState(false);
+
   const lookUpAddress = async (c: Coordinate) => {
-    try {
-      const [place] = await Location.reverseGeocodeAsync(c);
-      if (!place) return;
-      const street = [place.streetNumber, place.street].filter(Boolean).join(' ') || place.name;
-      setAddress([street, place.district ?? place.subregion, place.city].filter(Boolean).join(', '));
-    } catch {
-      // Reverse geocoding isn't available everywhere (e.g. web); the customer can type it.
-    }
+    const found = await addressFor(c, language);
+    if (found) setAddress(found);
   };
 
   const moveTo = (c: Coordinate) => {
@@ -51,17 +48,28 @@ export default function LocationScreen() {
 
   const useMyLocation = async () => {
     setLocating(true);
+    setDenied(false);
+    setFailed(false);
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         setDenied(true);
         return;
       }
-      setDenied(false);
-      const position = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
-      moveTo({ latitude: position.coords.latitude, longitude: position.coords.longitude });
+      // Normal accuracy is plenty for a delivery address and much faster than "high",
+      // especially in phone browsers. Fall back to the last known position if it times out.
+      const position = await Promise.race([
+        Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 15000)),
+      ]).catch(() => null);
+      const fix = position ?? (await Location.getLastKnownPositionAsync().catch(() => null));
+      if (!fix) {
+        setFailed(true);
+        return;
+      }
+      moveTo({ latitude: fix.coords.latitude, longitude: fix.coords.longitude });
     } catch {
-      setDenied(true);
+      setFailed(true);
     } finally {
       setLocating(false);
     }
@@ -110,11 +118,19 @@ export default function LocationScreen() {
             <View style={{ flex: 1 }}>
               <Txt variant="heading">{t('location')}</Txt>
               <Txt variant="caption" muted>
-                {t('dragPin')}
+                {Platform.OS === 'web' ? t('webLocationHint') : t('dragPin')}
               </Txt>
             </View>
           </View>
 
+          {failed && (
+            <View style={[styles.notice, { backgroundColor: colors.surfaceAlt }]}>
+              <Icon name="warning-outline" size={20} color={colors.danger} />
+              <Txt variant="caption" style={{ flex: 1 }}>
+                {t('locationFailed')}
+              </Txt>
+            </View>
+          )}
           {denied && (
             <View style={[styles.notice, { backgroundColor: colors.surfaceAlt }]}>
               <Icon name="warning-outline" size={20} color={colors.danger} />

@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Switch, TextInput, View } from 'react-native';
 
 import { ALLERGEN_EMOJI, Allergen, CATEGORIES, Category } from '@/data/menu';
-import { DishDraft } from '@/lib/chef';
+import { DishDraft, MIN_DESCRIPTION_WORDS, MIN_INGREDIENT_WORDS, wordCount } from '@/lib/chef';
 import { useSettings } from '@/lib/settings';
 import { FONT } from '@/lib/fonts';
 import { PhotoPicker } from './PhotoPicker';
@@ -64,6 +64,7 @@ export function DishEditor({
         multiline
         style={[input, { minHeight: 70 }]}
       />
+      <WordCounter count={wordCount(value.description)} min={MIN_DESCRIPTION_WORDS} />
       <TextInput
         value={value.ingredients}
         onChangeText={(ingredients) => set({ ingredients })}
@@ -73,6 +74,7 @@ export function DishEditor({
         multiline
         style={input}
       />
+      <WordCounter count={wordCount(value.ingredients)} min={MIN_INGREDIENT_WORDS} />
       <View style={styles.row}>
         <View style={{ flex: 1.2, gap: 4 }}>
           <Txt variant="caption" muted>
@@ -172,6 +174,24 @@ export function DishEditor({
         />
       </View>
     </Card>
+  );
+}
+
+/** "6/10 words": red until the minimum is reached, then green with a tick. */
+function WordCounter({ count, min }: { count: number; min: number }) {
+  const { t, colors } = useSettings();
+  const done = count >= min;
+  return (
+    <View style={[styles.row, { marginTop: -4 }]}>
+      <Icon
+        name={done ? 'checkmark-circle' : 'ellipse-outline'}
+        size={14}
+        color={done ? colors.success : colors.textMuted}
+      />
+      <Txt variant="caption" style={{ color: done ? colors.success : colors.textMuted }}>
+        {t('wordsCount', { n: count, min })}
+      </Txt>
+    </View>
   );
 }
 

@@ -70,7 +70,17 @@ export async function uploadKitchenPhoto(uri: string | null): Promise<string | n
   return supabase.storage.from('kitchen-photos').getPublicUrl(path).data.publicUrl;
 }
 
-export const isDishReady = (d: DishDraft) => d.name.trim().length >= 2 && Number(d.price) > 0;
+/** Dishes need a real description and ingredient list (also enforced by the database). */
+export const MIN_DESCRIPTION_WORDS = 10;
+export const MIN_INGREDIENT_WORDS = 3;
+
+export const wordCount = (text: string) => text.trim().split(/\s+/).filter(Boolean).length;
+
+export const isDishReady = (d: DishDraft) =>
+  d.name.trim().length >= 2 &&
+  Number(d.price) > 0 &&
+  wordCount(d.description) >= MIN_DESCRIPTION_WORDS &&
+  wordCount(d.ingredients) >= MIN_INGREDIENT_WORDS;
 
 /** Shape stored in the application (read by approve_chef_application) and kitchen_dishes. */
 export async function dishPayload(d: DishDraft) {

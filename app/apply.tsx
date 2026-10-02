@@ -45,6 +45,10 @@ export default function ApplyScreen() {
   const close = () => (router.canGoBack() ? router.back() : router.replace('/'));
 
   const submit = async () => {
+    // A dish that was started but not finished is pointed out rather than silently left out.
+    if (dishes.some((d) => d.name.trim() && !isDishReady(d))) {
+      return showAlert(t('applyTitle'), t('fillDish'));
+    }
     const ready = dishes.filter(isDishReady);
     if (
       name.trim().length < 2 ||
