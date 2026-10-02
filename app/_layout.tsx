@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { AlertHost } from '@/components/AlertHost';
 import { AuthProvider, useAuth } from '@/lib/auth';
 import { CartProvider } from '@/lib/cart';
 import { CatalogProvider } from '@/lib/catalog';
@@ -28,6 +29,7 @@ export default function RootLayout() {
               <CartProvider>
                 <SoundProvider>
                   <RootNavigator />
+                  <AlertHost />
                 </SoundProvider>
               </CartProvider>
             </OrdersProvider>
