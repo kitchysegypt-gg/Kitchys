@@ -32,6 +32,12 @@ App saves the phone's push token (`push_devices`) and the cart (`saved_carts`) �
 - Test without sending: POST to the function with header `x-cron-secret` (Vault secret `notifications_cron_secret`) and body `{"dryRun": true}`.
 - **Android push needs Firebase** (one-time): create a Firebase project with package `com.kitchys.app`, put `google-services.json` in the project root and set `android.googleServicesFile` in `app.json`, upload the FCM V1 service account key in expo.dev → project → Credentials, then build a new APK. Until then the app schedules the same two reminders on the phone itself.
 
+## Home banners (no app update needed)
+
+1. Supabase → Storage → `promo-banners` → upload the picture (16:9, e.g. 1600 x 900, JPG/PNG under 5 MB) → copy its public URL.
+2. Supabase → Table editor → `promo_banners` → Insert row: `image` = that URL, `title` = short name, `link` = none / chefs / rewards / refer / orders / cart / chat, `sort` = position (lower first; current ones are 10, 20, 30), `show_when` = always (or free_delivery to show only to customers with free deliveries left).
+3. It appears in the app the next time the home screen opens. Untick `active` to hide a banner.
+
 ## Secrets and settings (values are NOT stored in the repo)
 
 - Resend API key (chef application emails): stored in Supabase Vault as `resend_api_key`; the edge function reads it through `public.app_secret()`.

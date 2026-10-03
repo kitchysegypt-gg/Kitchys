@@ -1,13 +1,13 @@
 import { Image } from 'expo-image';
-import { router } from 'expo-router';
-import { useState } from 'react';
+import { Href, router } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 
 import { CATEGORIES, Category, Chef } from '@/data/menu';
 import { useCatalog } from '@/lib/catalog';
 import { useOrders } from '@/lib/orders';
 import { useSettings } from '@/lib/settings';
-import { DELIVERY_FEE } from '@/lib/supabase';
+import { DELIVERY_FEE, supabase } from '@/lib/supabase';
 import { CategoryPhoto, ChefAvatar, ChefTags, DishArt } from './media';
 import { Icon, PressableScale, Txt } from './ui';
 
@@ -68,63 +68,135 @@ export function CategoryBubbles({ value, onChange }: { value: Category | 'all'; 
   );
 }
 
-type Promo = { key: string; image: number; label: string; onPress: () => void };
+type BannerRow = { id: string; title: string; image: string; link: string; show_when: string };
 
-/** Swipeable promo banners: free delivery (while it lasts), points, refer a friend. */
+const BUILTIN_BANNERS: Record<string, number> = {
+  'free-delivery': PROMO_BANNERS.freeDelivery,
+  points: PROMO_BANNERS.points,
+  refer: PROMO_BANNERS.refer,
+};
+
+/** Used until the banner list loads, and if it can't be loaded. */
+const DEFAULT_BANNERS: BannerRow[] = [
+  { id: 'free-delivery', title: 'Free delivery', image: 'builtin:free-delivery', link: 'chefs', show_when: 'free_delivery' },
+  { id: 'points', title: 'Win points', image: 'builtin:points', link: 'rewards', show_when: 'always' },
+  { id: 'refer', title: 'Refer a friend', image: 'builtin:refer', link: 'refer', show_when: 'always' },
+];
+
+const BANNER_LINKS: Record<string, Href | null> = {
+  none: null,
+  chefs: '/chefs',
+  rewards: '/rewards',
+  refer: '/refer',
+  orders: '/orders',
+  cart: '/cart',
+  chat: '/chat',
+};
+
+/** How long each banner stays before sliding to the next one. */
+const AUTO_SLIDE_MS = 4500;
+
+/**
+ * Swipeable promo banners. The list comes from the promo_banners table, so banners can be
+ * added, reordered or hidden from the Supabase dashboard without an app update.
+ */
 export function PromoCarousel() {
-  const { t, colors } = useSettings();
+  const { colors } = useSettings();
   const { freeDeliveriesLeft } = useOrders();
   const { width: screen } = useWindowDimensions();
   const width = Math.min(screen, 560) - 32;
+  const step = width + 12;
+  const [rows, setRows] = useState<BannerRow[]>(DEFAULT_BANNERS);
   const [index, setIndex] = useState(0);
+  const scroller = useRef<ScrollView>(null);
+  const touching = useRef(false);
 
-  const promos: Promo[] = [
-    ...(freeDeliveriesLeft > 0
-      ? [
-          {
-            key: 'delivery',
-            image: PROMO_BANNERS.freeDelivery,
-            label: t('promoFreeTitle'),
-            onPress: () => router.navigate('/chefs'),
-          },
-        ]
-      : []),
-    { key: 'points', image: PROMO_BANNERS.points, label: t('seeRewards'), onPress: () => router.push('/rewards') },
-    { key: 'refer', image: PROMO_BANNERS.refer, label: t('referFriend'), onPress: () => router.push('/refer') },
-  ];
+  useEffect(() => {
+    let cancelled = false;
+    supabase
+      .from('promo_banners')
+      .select('id, title, image, link, show_when')
+      .eq('active', true)
+      .order('sort', { ascending: true })
+      .then(({ data, error }) => {
+        if (!cancelled && !error && Array.isArray(data) && data.length) setRows(data as BannerRow[]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const banners = rows
+    .filter((b) => b.show_when !== 'free_delivery' || freeDeliveriesLeft > 0)
+    .flatMap((b) => {
+      const source = b.image.startsWith('builtin:') ? BUILTIN_BANNERS[b.image.slice(8)] : { uri: b.image };
+      return source ? [{ ...b, source }] : [];
+    });
+  const count = banners.length;
+
+  // Slide to the next banner every few seconds, unless the customer is swiping.
+  useEffect(() => {
+    if (count < 2) return;
+    const timer = setInterval(() => {
+      if (touching.current) return;
+      setIndex((i) => {
+        const next = (i + 1) % count;
+        scroller.current?.scrollTo({ x: next * step, animated: true });
+        return next;
+      });
+    }, AUTO_SLIDE_MS);
+    return () => clearInterval(timer);
+  }, [count, step]);
+
+  if (!count) return null;
 
   return (
     <View>
       <ScrollView
+        ref={scroller}
         horizontal
-        snapToInterval={width + 12}
+        snapToInterval={step}
         decelerationRate="fast"
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}
-        onScroll={(e) => setIndex(Math.round(e.nativeEvent.contentOffset.x / (width + 12)))}
-        scrollEventThrottle={64}>
-        {promos.map((p) => (
-          <Pressable
-            key={p.key}
-            onPress={p.onPress}
-            accessibilityRole="button"
-            accessibilityLabel={p.label}
-            style={[styles.promo, { width, height: width / BANNER_RATIO, borderColor: colors.border }]}>
-            <Image source={p.image} style={StyleSheet.absoluteFill} contentFit="cover" transition={150} />
-          </Pressable>
-        ))}
+        onScrollBeginDrag={() => {
+          touching.current = true;
+        }}
+        onMomentumScrollEnd={(e) => {
+          touching.current = false;
+          setIndex(Math.min(count - 1, Math.max(0, Math.round(e.nativeEvent.contentOffset.x / step))));
+        }}
+        onScrollEndDrag={(e) => {
+          setIndex(Math.min(count - 1, Math.max(0, Math.round(e.nativeEvent.contentOffset.x / step))));
+        }}>
+        {banners.map((b) => {
+          const target = BANNER_LINKS[b.link] ?? null;
+          return (
+            <Pressable
+              key={b.id}
+              onPress={target ? () => router.navigate(target) : undefined}
+              disabled={!target}
+              accessibilityRole={target ? 'button' : 'image'}
+              accessibilityLabel={b.title}
+              style={[styles.promo, { width, height: width / BANNER_RATIO, borderColor: colors.border }]}>
+              <Image source={b.source} style={StyleSheet.absoluteFill} contentFit="cover" transition={150} />
+            </Pressable>
+          );
+        })}
       </ScrollView>
-      <View style={styles.dots}>
-        {promos.map((p, i) => (
-          <View
-            key={p.key}
-            style={[
-              styles.dot,
-              { backgroundColor: i === index ? colors.primary : colors.border, width: i === index ? 18 : 6 },
-            ]}
-          />
-        ))}
-      </View>
+      {count > 1 && (
+        <View style={styles.dots}>
+          {banners.map((b, i) => (
+            <View
+              key={b.id}
+              style={[
+                styles.dot,
+                { backgroundColor: i === index ? colors.primary : colors.border, width: i === index ? 18 : 6 },
+              ]}
+            />
+          ))}
+        </View>
+      )}
     </View>
   );
 }

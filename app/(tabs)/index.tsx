@@ -86,6 +86,12 @@ export default function HomeScreen() {
           </EmptyState>
         ) : (
           <>
+            {!browsing && (
+              <View style={{ marginTop: 16 }}>
+                <PromoCarousel />
+              </View>
+            )}
+
             <CategoryBubbles value={category} onChange={setCategory} />
 
             {browsing ? (
@@ -104,9 +110,6 @@ export default function HomeScreen() {
               </View>
             ) : (
               <>
-                <View style={{ marginTop: 18 }}>
-                  <PromoCarousel />
-                </View>
 
                 {sectionHeader(t('kitchensNearYou'), () => router.navigate('/chefs'))}
                 <ScrollView
