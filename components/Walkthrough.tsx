@@ -1,3 +1,4 @@
+import { Image } from 'expo-image';
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, FlatList, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -6,20 +7,29 @@ import { TranslationKey } from '@/lib/i18n';
 import { useSettings } from '@/lib/settings';
 import { useAnimatedValue } from '@/lib/useAnimatedValue';
 import { Logo } from './Logo';
-import { ChefPhoto } from './media';
-import { Button, Icon, IconName, Txt } from './ui';
+import { Button, Txt } from './ui';
 
-type Step = { art?: IconName | 'chef'; title: TranslationKey; body: TranslationKey };
+// Kitchy's illustrations for each step (round, 440 x 440).
+const ART = {
+  chef: require('@/assets/guide/chef.png'),
+  search: require('@/assets/guide/search.png'),
+  location: require('@/assets/guide/location.png'),
+  trophy: require('@/assets/guide/trophy.png'),
+  chat: require('@/assets/guide/chat.png'),
+  track: require('@/assets/guide/track.png'),
+};
 
-// The first step shows the logo; the chef step shows the chef photo.
+type Step = { art?: keyof typeof ART; title: TranslationKey; body: TranslationKey };
+
+// The first step shows the logo.
 const STEPS: Step[] = [
   { title: 'onb1Title', body: 'onb1Body' },
   { art: 'chef', title: 'onb2Title', body: 'onb2Body' },
-  { art: 'search-outline', title: 'onb3Title', body: 'onb3Body' },
-  { art: 'location-outline', title: 'onb4Title', body: 'onb4Body' },
-  { art: 'trophy-outline', title: 'onb5Title', body: 'onb5Body' },
-  { art: 'chatbubble-ellipses-outline', title: 'onb6Title', body: 'onb6Body' },
-  { art: 'delivery', title: 'onb7Title', body: 'onb7Body' },
+  { art: 'search', title: 'onb3Title', body: 'onb3Body' },
+  { art: 'location', title: 'onb4Title', body: 'onb4Body' },
+  { art: 'trophy', title: 'onb5Title', body: 'onb5Body' },
+  { art: 'chat', title: 'onb6Title', body: 'onb6Body' },
+  { art: 'track', title: 'onb7Title', body: 'onb7Body' },
 ];
 
 /** "How to use the app" — shown on first launch and from Settings. */
@@ -89,7 +99,7 @@ export function Walkthrough({ onDone }: { onDone: () => void }) {
   );
 }
 
-/** A soft circle with the step's icon (or the chef photo) that fades in when its slide becomes active. */
+/** The step's round illustration, fading in when its slide becomes active. */
 function Plate({ step, active }: { step: Step; active: boolean }) {
   const { colors } = useSettings();
   const pop = useAnimatedValue(0);
@@ -115,11 +125,7 @@ function Plate({ step, active }: { step: Step; active: boolean }) {
           transform: [{ scale: pop.interpolate({ inputRange: [0, 1], outputRange: [0.92, 1] }) }],
         },
       ]}>
-      {step.art === 'chef' ? (
-        <ChefPhoto size={220} />
-      ) : (
-        <Icon name={step.art as IconName} size={96} color={colors.primary} />
-      )}
+      {step.art && <Image source={ART[step.art]} style={StyleSheet.absoluteFill} contentFit="cover" />}
     </Animated.View>
   );
 }

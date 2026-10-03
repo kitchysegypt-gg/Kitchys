@@ -139,9 +139,11 @@ const styles = StyleSheet.create({
   badge: { flexDirection: 'row', alignItems: 'center', gap: 4 },
 });
 
-const TAG_STYLE: Record<ChefTag, { icon: IconName; color: string; bg: string; darkBg: string }> = {
+const VERIFIED_BADGE = require('@/assets/icons/verified.png');
+
+const TAG_STYLE: Record<ChefTag, { icon: IconName; color: string; bg: string; darkBg: string; badge?: number }> = {
   popular: { icon: 'flame', color: '#E8590C', bg: '#FFF0E6', darkBg: '#3A2416' },
-  verified: { icon: 'shield-checkmark', color: '#1E6FD9', bg: '#E8F1FF', darkBg: '#16263D' },
+  verified: { icon: 'shield-checkmark', color: '#1E6FD9', bg: '#E8F1FF', darkBg: '#16263D', badge: VERIFIED_BADGE },
   homemade: { icon: 'home', color: '#1E9E4F', bg: '#E6F7EC', darkBg: '#16301F' },
 };
 
@@ -155,7 +157,11 @@ export function ChefTags({ chefId, center }: { chefId: string; center?: boolean 
         const s = TAG_STYLE[tag];
         return (
           <View key={tag} style={[tagStyles.tag, { backgroundColor: colors.dark ? s.darkBg : s.bg }]}>
-            <Icon name={s.icon} size={12} color={s.color} />
+            {s.badge ? (
+              <Image source={s.badge} style={{ width: 13, height: 13 }} contentFit="contain" />
+            ) : (
+              <Icon name={s.icon} size={12} color={s.color} />
+            )}
             <Txt style={[tagStyles.text, { color: s.color }]}>{t(`tag_${tag}`)}</Txt>
           </View>
         );
