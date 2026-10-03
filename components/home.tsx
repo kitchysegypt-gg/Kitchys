@@ -16,6 +16,7 @@ const PROMO_BANNERS = {
   freeDelivery: require('@/assets/promos/free-delivery.jpg'),
   points: require('@/assets/promos/points.jpg'),
   refer: require('@/assets/promos/refer.jpg'),
+  becomeChef: require('@/assets/promos/become-chef.jpg'),
 };
 const BANNER_RATIO = 1200 / 676;
 
@@ -74,6 +75,12 @@ const BUILTIN_BANNERS: Record<string, number> = {
   'free-delivery': PROMO_BANNERS.freeDelivery,
   points: PROMO_BANNERS.points,
   refer: PROMO_BANNERS.refer,
+  'become-chef': PROMO_BANNERS.becomeChef,
+};
+
+/** Where a built-in banner goes when its row's link is 'none'. */
+const BUILTIN_TARGETS: Record<string, Href> = {
+  'become-chef': '/apply',
 };
 
 /** Used until the banner list loads, and if it can't be loaded. */
@@ -81,6 +88,7 @@ const DEFAULT_BANNERS: BannerRow[] = [
   { id: 'free-delivery', title: 'Free delivery', image: 'builtin:free-delivery', link: 'chefs', show_when: 'free_delivery' },
   { id: 'points', title: 'Win points', image: 'builtin:points', link: 'rewards', show_when: 'always' },
   { id: 'refer', title: 'Refer a friend', image: 'builtin:refer', link: 'refer', show_when: 'always' },
+  { id: 'become-chef', title: 'Become a chef', image: 'builtin:become-chef', link: 'none', show_when: 'always' },
 ];
 
 const BANNER_LINKS: Record<string, Href | null> = {
@@ -170,7 +178,8 @@ export function PromoCarousel() {
           setIndex(Math.min(count - 1, Math.max(0, Math.round(e.nativeEvent.contentOffset.x / step))));
         }}>
         {banners.map((b) => {
-          const target = BANNER_LINKS[b.link] ?? null;
+          const builtin = b.image.startsWith('builtin:') ? b.image.slice(8) : '';
+          const target = BANNER_LINKS[b.link] ?? BUILTIN_TARGETS[builtin] ?? null;
           return (
             <Pressable
               key={b.id}
