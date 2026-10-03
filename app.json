@@ -32,7 +32,7 @@
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-kitchys.png",
-          "imageWidth": 200,
+          "imageWidth": 240,
           "resizeMode": "contain",
           "backgroundColor": "#F8F1E6"
         }
