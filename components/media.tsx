@@ -68,7 +68,9 @@ const CATEGORY_PHOTOS: Record<Category, number> = {
 
 /** Full-bleed photo for a menu category tile. */
 export function CategoryPhoto({ category }: { category: Category }) {
-  return <Image source={CATEGORY_PHOTOS[category]} style={StyleSheet.absoluteFill} contentFit="cover" transition={150} />;
+  return (
+    <Image source={CATEGORY_PHOTOS[category]} style={StyleSheet.absoluteFill} contentFit="cover" transition={150} />
+  );
 }
 
 /** The Kitchy's chef photo in a circle, for places that talk about chefs in general. */
@@ -147,31 +149,73 @@ const TAG_STYLE: Record<ChefTag, { icon: IconName; color: string; bg: string; da
   homemade: { icon: 'home', color: '#1E9E4F', bg: '#E6F7EC', darkBg: '#16301F' },
 };
 
-/** Popular / Verified / Homemade badges for a chef. */
+/** The chef's name with the blue Verified badge right after it. */
+export function ChefName({
+  chef,
+  size = 16,
+  center,
+}: {
+  chef: Chef;
+  /** Font size of the name; the badge scales with it. */
+  size?: number;
+  center?: boolean;
+}) {
+  const { t, l } = useSettings();
+  const { chefTags } = useCatalog();
+  const verified = chefTags(chef.id).includes('verified');
+  return (
+    <View style={[tagStyles.nameRow, center && { justifyContent: 'center' }]}>
+      <Txt numberOfLines={1} style={{ fontSize: size, fontWeight: '700', flexShrink: 1 }}>
+        {l(chef.name)}
+      </Txt>
+      {verified && (
+        <View style={tagStyles.verified} accessibilityLabel={t('tag_verified')}>
+          <Image source={VERIFIED_BADGE} style={{ width: size * 0.95, height: size * 0.95 }} contentFit="contain" />
+          <Txt style={{ fontSize: Math.max(11, size * 0.7), fontWeight: '700', color: TAG_STYLE.verified.color }}>
+            {t('tag_verified')}
+          </Txt>
+        </View>
+      )}
+    </View>
+  );
+}
+
+/** Popular and Homemade badges for a chef (Verified sits next to the name, see ChefName). */
 export function ChefTags({ chefId, center }: { chefId: string; center?: boolean }) {
   const { t, colors } = useSettings();
   const { chefTags } = useCatalog();
   return (
     <View style={[tagStyles.row, center && { justifyContent: 'center' }]}>
-      {chefTags(chefId).map((tag) => {
-        const s = TAG_STYLE[tag];
-        return (
-          <View key={tag} style={[tagStyles.tag, { backgroundColor: colors.dark ? s.darkBg : s.bg }]}>
-            {s.badge ? (
-              <Image source={s.badge} style={{ width: 13, height: 13 }} contentFit="contain" />
-            ) : (
-              <Icon name={s.icon} size={12} color={s.color} />
-            )}
-            <Txt style={[tagStyles.text, { color: s.color }]}>{t(`tag_${tag}`)}</Txt>
-          </View>
-        );
-      })}
+      {chefTags(chefId)
+        .filter((tag) => tag !== 'verified')
+        .map((tag) => {
+          const s = TAG_STYLE[tag];
+          return (
+            <View key={tag} style={[tagStyles.tag, { backgroundColor: colors.dark ? s.darkBg : s.bg }]}>
+              {s.badge ? (
+                <Image source={s.badge} style={{ width: 13, height: 13 }} contentFit="contain" />
+              ) : (
+                <Icon name={s.icon} size={12} color={s.color} />
+              )}
+              <Txt style={[tagStyles.text, { color: s.color }]}>{t(`tag_${tag}`)}</Txt>
+            </View>
+          );
+        })}
     </View>
   );
 }
 
 const tagStyles = StyleSheet.create({
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 5 },
-  tag: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingVertical: 3, paddingHorizontal: 7, borderRadius: 8 },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  verified: { flexDirection: 'row', alignItems: 'center', gap: 3, flexShrink: 0 },
+  tag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    paddingVertical: 3,
+    paddingHorizontal: 7,
+    borderRadius: 8,
+  },
   text: { fontSize: 11, fontWeight: '700' },
 });

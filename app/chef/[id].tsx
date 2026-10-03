@@ -3,7 +3,7 @@ import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { ChefAvatar, ChefTags, Stars } from '@/components/media';
+import { ChefAvatar, ChefName, ChefTags, Stars } from '@/components/media';
 import { DishCard } from '@/components/menu';
 import { Card, EmptyState, Icon, Screen, Txt } from '@/components/ui';
 import { DELIVERY_RADIUS_KM, useCatalog } from '@/lib/catalog';
@@ -47,9 +47,9 @@ export default function ChefScreen() {
             </Pressable>
           </SafeAreaView>
           <ChefAvatar chef={chef} size={120} />
-          <Txt variant="title" center style={{ marginTop: 8 }}>
-            {l(chef.name)}
-          </Txt>
+          <View style={{ marginTop: 8, alignSelf: 'stretch', paddingHorizontal: 20 }}>
+            <ChefName chef={chef} size={24} center />
+          </View>
           <Txt muted center>
             {l(chef.specialty)} · {l(chef.area)}
           </Txt>
