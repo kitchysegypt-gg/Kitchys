@@ -30,7 +30,7 @@ App saves the phone's push token (`push_devices`) and the cart (`saved_carts`) �
 - "We miss you": no order for 7+ days, at most once a week; opens Home.
 - Max one notification per person per 20 hours, only 12:00-22:00 Cairo time. Customers can turn them off in Settings.
 - Test without sending: POST to the function with header `x-cron-secret` (Vault secret `notifications_cron_secret`) and body `{"dryRun": true}`.
-- **Android push needs Firebase** (one-time): create a Firebase project with package `com.kitchys.app`, put `google-services.json` in the project root and set `android.googleServicesFile` in `app.json`, upload the FCM V1 service account key in expo.dev → project → Credentials, then build a new APK. Until then the app schedules the same two reminders on the phone itself.
+- **Android push uses Firebase** project `kitchys-dbcc6` (package `com.kitchys.app`): `google-services.json` is in the project root (`android.googleServicesFile` in `app.json`) and the FCM V1 service account key is stored in expo.dev → project → Credentials (never in git). Phones on an APK built before this fall back to reminders scheduled on the phone itself.
 
 ## Home banners (no app update needed)
 
@@ -61,7 +61,6 @@ App saves the phone's push token (`push_devices`) and the cart (`saved_carts`) �
 - Home chefs approved before kitchen locations existed (Hamza, Hamdy, Ahmad) must add their location in My kitchen; until then customers don't see them.
 
 - Add `ANTHROPIC_API_KEY` so Kitchy AI answers in the real app.
-- Set up Firebase for Android push (see Smart notifications), then rebuild the APK.
 - Owner wants to send custom sound files for add-to-cart and order-placed (`assets/sounds/`).
 - Real photos per dish (all dishes currently share one koshari photo; `lib/photos.ts` maps dish id → photo) and per chef.
 - Before launch: turn email confirmation back on, clear test accounts/orders, rotate any keys that were pasted into chats, publish to the Play Store.
