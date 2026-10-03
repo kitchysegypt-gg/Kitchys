@@ -94,7 +94,7 @@ const BANNER_LINKS: Record<string, Href | null> = {
 };
 
 /** How long each banner stays before sliding to the next one. */
-const AUTO_SLIDE_MS = 4500;
+const AUTO_SLIDE_MS = 7000;
 
 /**
  * Swipeable promo banners. The list comes from the promo_banners table, so banners can be

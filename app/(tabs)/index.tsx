@@ -9,6 +9,7 @@ import { Category } from '@/data/menu';
 import { DELIVERY_RADIUS_KM, useCatalog } from '@/lib/catalog';
 import { FONT } from '@/lib/fonts';
 import { useSettings } from '@/lib/settings';
+import { formatTime, isKitchenOpen, nextOpening } from '@/lib/schedule';
 import { useAnimatedValue } from '@/lib/useAnimatedValue';
 
 export default function HomeScreen() {
@@ -166,35 +167,55 @@ export default function HomeScreen() {
 
 /** "Kitchens open · 45 - 60 min" with a softly pulsing live dot. */
 function KitchenStatus() {
-  const { t, colors } = useSettings();
+  const { t, colors, language } = useSettings();
   const pulse = useAnimatedValue(0);
+  // Re-check every minute so the pill flips at 10 AM and 9 PM.
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(timer);
+  }, []);
   useEffect(() => {
     const loop = Animated.loop(Animated.timing(pulse, { toValue: 1, duration: 1600, useNativeDriver: true }));
     loop.start();
     return () => loop.stop();
   }, [pulse]);
+  const open = isKitchenOpen(now);
+  const dot = open ? colors.success : colors.danger;
+  const opening = nextOpening(now);
+  const opensText = t(opening.day === 0 ? 'opensAt' : 'opensTomorrow', { time: formatTime(opening.minutes, language) });
   return (
     <View style={[styles.status, { borderColor: colors.border, backgroundColor: colors.surface }]}>
       <View style={styles.pulseWrap}>
-        <Animated.View
-          style={[
-            styles.pulseRing,
-            {
-              backgroundColor: colors.success,
-              opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.5, 0] }),
-              transform: [{ scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.6, 2] }) }],
-            },
-          ]}
-        />
-        <View style={[styles.pulseDot, { backgroundColor: colors.success }]} />
+        {open && (
+          <Animated.View
+            style={[
+              styles.pulseRing,
+              {
+                backgroundColor: dot,
+                opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.5, 0] }),
+                transform: [{ scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.6, 2] }) }],
+              },
+            ]}
+          />
+        )}
+        <View style={[styles.pulseDot, { backgroundColor: dot }]} />
       </View>
       <Txt variant="caption" style={{ fontWeight: '600' }}>
-        {t('kitchensOpen')}
+        {open ? t('kitchensOpen') : t('kitchensClosed')}
       </Txt>
-      <Icon name="delivery" size={16} color={colors.primary} />
-      <Txt variant="caption" style={{ fontWeight: '600', color: colors.primary }}>
-        {t('deliveryWindow')}
-      </Txt>
+      {open ? (
+        <>
+          <Icon name="delivery" size={16} color={colors.primary} />
+          <Txt variant="caption" style={{ fontWeight: '600', color: colors.primary }}>
+            {t('deliveryWindow')}
+          </Txt>
+        </>
+      ) : (
+        <Txt variant="caption" style={{ fontWeight: '600', color: colors.primary }}>
+          · {opensText}
+        </Txt>
+      )}
     </View>
   );
 }

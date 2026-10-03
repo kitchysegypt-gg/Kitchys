@@ -7,6 +7,33 @@ export const STEP_MINUTES = 15;
 export const MIN_LEAD_MINUTES = 30;
 /** Dinner time is the suggested default. */
 export const DEFAULT_MINUTES = 19 * 60;
+/** Kitchens take and deliver orders from 10:00 to 21:00 (the database checks this in Cairo time). */
+export const OPEN_MINUTES = 10 * 60;
+export const CLOSE_MINUTES = 21 * 60;
+
+const minutesOf = (d: Date) => d.getHours() * 60 + d.getMinutes();
+
+/** True while kitchens are open, so "as soon as possible" orders are possible. */
+export function isKitchenOpen(now = new Date()) {
+  const m = minutesOf(now);
+  return m >= OPEN_MINUTES && m < CLOSE_MINUTES;
+}
+
+/** True when a delivery time falls inside opening hours (21:00 itself is the last slot). */
+export function isWithinHours(date: Date) {
+  const m = minutesOf(date);
+  return m >= OPEN_MINUTES && m <= CLOSE_MINUTES;
+}
+
+/** Keeps a picked time of day inside opening hours. */
+export function clampToHours(minutes: number) {
+  return Math.min(CLOSE_MINUTES, Math.max(OPEN_MINUTES, minutes));
+}
+
+/** When kitchens next open: today (before 10:00) or tomorrow (after 21:00). */
+export function nextOpening(now = new Date()): { day: 0 | 1; minutes: number } {
+  return minutesOf(now) < OPEN_MINUTES ? { day: 0, minutes: OPEN_MINUTES } : { day: 1, minutes: OPEN_MINUTES };
+}
 
 const locale = (language: Language) => (language === 'ar' ? 'ar-EG' : language);
 

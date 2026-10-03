@@ -25,8 +25,8 @@ const WEEKLY_REMINDER_ID = 'kitchys-weekly-reminder';
 const CART_REMINDER_AFTER_MS = 3 * 60 * 60 * 1000;
 const WEEKLY_REMINDER_AFTER_MS = 7 * 24 * 60 * 60 * 1000;
 /** Reminders on the phone only arrive between these hours. */
-const FIRST_HOUR = 12;
-const LAST_HOUR = 21;
+const FIRST_HOUR = 10;
+const LAST_HOUR = 20;
 /** Screens a notification may open. */
 const ALLOWED_URLS = ['/', '/cart', '/orders'];
 

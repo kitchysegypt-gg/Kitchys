@@ -10,7 +10,15 @@ import { Button, Card, Chip, EmptyState, Icon, Screen, Txt } from '@/components/
 import { useCart } from '@/lib/cart';
 import { DELIVERY_RADIUS_KM, useCatalog } from '@/lib/catalog';
 import { applyReward, getReward, pointsFor } from '@/lib/loyalty';
-import { isTooSoon, slotDate } from '@/lib/schedule';
+import {
+  CLOSE_MINUTES,
+  OPEN_MINUTES,
+  formatTime,
+  isKitchenOpen,
+  isTooSoon,
+  isWithinHours,
+  slotDate,
+} from '@/lib/schedule';
 import { useOrders } from '@/lib/orders';
 import { showAlert } from '@/lib/alert';
 import { useSettings } from '@/lib/settings';
@@ -19,7 +27,7 @@ import { useSounds } from '@/lib/sound';
 import { DELIVERY_FEE } from '@/lib/supabase';
 
 export default function CartScreen() {
-  const { t, l, colors, formatPrice, isRTL, location } = useSettings();
+  const { t, l, colors, formatPrice, isRTL, location, language } = useSettings();
   const { lines, subtotal, setQuantity, clear } = useCart();
   const { getChef, isNear } = useCatalog();
   const { freeDeliveriesLeft, placeOrder, availableVouchers, orderCount, orders, credit } = useOrders();
@@ -59,6 +67,9 @@ export default function CartScreen() {
       return showAlert(t('tooFarTitle'), t('tooFarBody', { chef: chef ? l(chef.name) : '', km: DELIVERY_RADIUS_KM }));
     }
     const scheduledFor = schedule.mode === 'later' ? slotDate(schedule.day, schedule.minutes) : null;
+    const hours = { from: formatTime(OPEN_MINUTES, language), to: formatTime(CLOSE_MINUTES, language) };
+    if (!scheduledFor && !isKitchenOpen()) return showAlert(t('deliveryTime'), t('closedSchedule', hours));
+    if (scheduledFor && !isWithinHours(scheduledFor)) return showAlert(t('deliveryTime'), t('kitchenHours', hours));
     if (scheduledFor && isTooSoon(scheduledFor)) return showAlert(t('deliveryTime'), t('timeTooSoon'));
     setBusy(true);
     try {

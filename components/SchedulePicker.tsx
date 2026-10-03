@@ -1,10 +1,16 @@
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
+import { useEffect } from 'react';
+
 import {
+  CLOSE_MINUTES,
   DEFAULT_MINUTES,
+  OPEN_MINUTES,
   SCHEDULE_DAYS,
   STEP_MINUTES,
+  clampToHours,
   earliestMinutesToday,
+  isKitchenOpen,
   formatDay,
   formatTime,
   isTooSoon,
@@ -17,23 +23,34 @@ export type ScheduleValue = { mode: 'asap' } | { mode: 'later'; day: number; min
 
 const QUICK_TIMES = [18 * 60, 19 * 60, 20 * 60, 21 * 60];
 
-/** "As soon as possible" or any day in the next 2 weeks at any time, in 15-minute steps. */
+/**
+ * "As soon as possible" (only while kitchens are open, 10 AM - 9 PM) or any day in the next
+ * 2 weeks at a time within opening hours, in 15-minute steps.
+ */
 export function SchedulePicker({ value, onChange }: { value: ScheduleValue; onChange: (v: ScheduleValue) => void }) {
   const { t, colors, language } = useSettings();
+  const open = isKitchenOpen();
 
   const pickLater = () => {
     const today = earliestMinutesToday();
-    // Default to 7 PM today, or tomorrow at 7 PM if that's already too soon.
+    // Default to 7 PM today (or the earliest time after that), else tomorrow at 7 PM.
+    const minutes = Math.max(DEFAULT_MINUTES, today);
     onChange(
-      today <= DEFAULT_MINUTES
-        ? { mode: 'later', day: 0, minutes: DEFAULT_MINUTES }
+      minutes <= CLOSE_MINUTES
+        ? { mode: 'later', day: 0, minutes }
         : { mode: 'later', day: 1, minutes: DEFAULT_MINUTES }
     );
   };
 
+  // Kitchens are closed: "as soon as possible" isn't possible, so start on a scheduled time.
+  useEffect(() => {
+    if (!open && value.mode === 'asap') pickLater();
+    // Only when the picker opens or the kitchens close.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
   const setMinutes = (day: number, minutes: number) => {
-    const wrapped = ((minutes % 1440) + 1440) % 1440;
-    onChange({ mode: 'later', day, minutes: wrapped });
+    onChange({ mode: 'later', day, minutes: clampToHours(minutes) });
   };
 
   const tooSoon = value.mode === 'later' && isTooSoon(slotDate(value.day, value.minutes));
@@ -47,14 +64,21 @@ export function SchedulePicker({ value, onChange }: { value: ScheduleValue; onCh
         </Txt>
       </View>
       <View style={styles.row}>
-        <Chip
-          label={t('asap')}
-          icon="delivery"
-          active={value.mode === 'asap'}
-          onPress={() => onChange({ mode: 'asap' })}
-        />
+        {open && (
+          <Chip
+            label={t('asap')}
+            icon="delivery"
+            active={value.mode === 'asap'}
+            onPress={() => onChange({ mode: 'asap' })}
+          />
+        )}
         <Chip label={t('schedule')} icon="calendar-outline" active={value.mode === 'later'} onPress={pickLater} />
       </View>
+      <Txt variant="caption" muted>
+        {open
+          ? t('kitchenHours', { from: formatTime(OPEN_MINUTES, language), to: formatTime(CLOSE_MINUTES, language) })
+          : t('closedSchedule', { from: formatTime(OPEN_MINUTES, language), to: formatTime(CLOSE_MINUTES, language) })}
+      </Txt>
 
       {value.mode === 'later' && (
         <>
