@@ -1,5 +1,5 @@
-export type ThemeName = 'light' | 'dark' | 'sunset' | 'mint';
-export type ThemePreference = ThemeName | 'system';
+export type ThemeName = 'light' | 'mint';
+export type ThemePreference = ThemeName;
 
 export type Palette = {
   dark: boolean;
@@ -45,42 +45,6 @@ export const THEMES: Record<ThemeName, Palette> = {
     shadow: '#0F1A14',
     heroGradient: ['#F4511E', '#9E2A0C'],
   },
-  dark: {
-    dark: true,
-    background: '#101012',
-    surface: '#1B1B1E',
-    surfaceAlt: '#26262A',
-    text: '#F4F4F6',
-    textMuted: '#A0A0A8',
-    border: '#2C2C31',
-    primary: '#FF6A3D',
-    primaryDeep: '#B8330D',
-    onPrimary: '#FFFFFF',
-    accent: '#FFC247',
-    success: '#4CC47F',
-    successBg: '#16301F',
-    danger: '#FF6B61',
-    shadow: '#000000',
-    heroGradient: ['#FF6A3D', '#7A2208'],
-  },
-  sunset: {
-    dark: false,
-    background: '#FBF5EF',
-    surface: '#FFFFFF',
-    surfaceAlt: '#F7ECE2',
-    text: '#2B1A12',
-    textMuted: '#80645A',
-    border: '#F0E2D6',
-    primary: '#E8431A',
-    primaryDeep: '#9E2A0C',
-    onPrimary: '#FFFFFF',
-    accent: '#D6336C',
-    success: '#1E9E4F',
-    successBg: '#E3F6EA',
-    danger: '#C62828',
-    shadow: '#2B1A12',
-    heroGradient: ['#E8431A', '#8E1F4A'],
-  },
   mint: {
     dark: false,
     background: '#F3F8F6',
@@ -101,14 +65,10 @@ export const THEMES: Record<ThemeName, Palette> = {
   },
 };
 
-export type AccentName = 'orange' | 'green' | 'red' | 'blue' | 'purple' | 'pink';
+export type AccentName = 'orange' | 'green';
 
 /** Main colour choices. Orange keeps each theme's own brand look. */
 export const ACCENTS: Record<AccentName, { primary: string; deep: string; light: string }> = {
   orange: { primary: '#F4511E', deep: '#B8330D', light: '#FF7A45' },
   green: { primary: '#2FB45F', deep: '#1E8646', light: '#4CC47F' },
-  red: { primary: '#E53935', deep: '#A31F1C', light: '#FF6F60' },
-  blue: { primary: '#1E88E5', deep: '#11589A', light: '#5AAEF2' },
-  purple: { primary: '#8E44AD', deep: '#5E2B75', light: '#B26FD0' },
-  pink: { primary: '#D6336C', deep: '#96204A', light: '#F06595' },
 };

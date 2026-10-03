@@ -1,6 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { useColorScheme } from 'react-native';
 
 import { Language, Localized, TranslationKey, translate } from './i18n';
 import { ACCENTS, AccentName, Palette, THEMES, ThemeName, ThemePreference } from './theme';
@@ -36,7 +35,7 @@ const STYLE_VERSION = 3;
 
 const DEFAULTS: StoredSettings = {
   language: 'en',
-  theme: 'system',
+  theme: 'light',
   soundEnabled: true,
   notificationsEnabled: true,
   onboarded: false,
@@ -74,7 +73,6 @@ function withAccent(palette: Palette, accent: AccentName): Palette {
 const SettingsContext = createContext<SettingsContextValue | null>(null);
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
-  const systemScheme = useColorScheme();
   const [settings, setSettings] = useState<StoredSettings>(DEFAULTS);
   const [loaded, setLoaded] = useState(false);
 
@@ -88,6 +86,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
           saved.accent = 'orange';
           saved.styleVersion = STYLE_VERSION;
         }
+        // Removed themes and accents fall back to the defaults.
+        if (!THEMES[saved.theme as ThemeName]) saved.theme = 'light';
+        if (!ACCENTS[saved.accent]) saved.accent = 'orange';
         setSettings(saved);
       })
       .catch(() => {})
@@ -103,8 +104,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = useMemo<SettingsContextValue>(() => {
-    const themeName: ThemeName =
-      settings.theme === 'system' ? (systemScheme === 'dark' ? 'dark' : 'light') : settings.theme;
+    // Only Light and Mint remain; older choices (system, dark, sunset) fall back to Light.
+    const themeName: ThemeName = THEMES[settings.theme] ? settings.theme : 'light';
     const { language } = settings;
     return {
       ...settings,
@@ -127,7 +128,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
           ? `${amount.toLocaleString('ar-EG')} ${translate(language, 'egp')}`
           : `${translate(language, 'egp')} ${amount.toLocaleString('en-US')}`,
     };
-  }, [settings, loaded, systemScheme, update]);
+  }, [settings, loaded, update]);
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
 }

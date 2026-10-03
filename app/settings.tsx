@@ -10,15 +10,8 @@ import { useSettings } from '@/lib/settings';
 import { ACCENTS, AccentName, THEMES, ThemePreference } from '@/lib/theme';
 import { supabase } from '@/lib/supabase';
 
-const THEME_OPTIONS: {
-  id: ThemePreference;
-  icon: IconName;
-  label: 'themeSystem' | 'themeLight' | 'themeDark' | 'themeSunset' | 'themeMint';
-}[] = [
-  { id: 'system', icon: 'phone-portrait-outline', label: 'themeSystem' },
+const THEME_OPTIONS: { id: ThemePreference; icon: IconName; label: 'themeLight' | 'themeMint' }[] = [
   { id: 'light', icon: 'sunny-outline', label: 'themeLight' },
-  { id: 'dark', icon: 'moon-outline', label: 'themeDark' },
-  { id: 'sunset', icon: 'flower-outline', label: 'themeSunset' },
   { id: 'mint', icon: 'leaf-outline', label: 'themeMint' },
 ];
 
@@ -74,7 +67,7 @@ export default function SettingsScreen() {
 
         <ListGroup title={t('theme')}>
           {THEME_OPTIONS.map((opt) => {
-            const preview = THEMES[opt.id === 'system' ? 'light' : opt.id];
+            const preview = THEMES[opt.id];
             return (
               <ListRow
                 key={opt.id}
@@ -152,7 +145,7 @@ export default function SettingsScreen() {
         </ListGroup>
 
         <Txt variant="caption" muted center>
-          {"Kitchy's"} · {t('version')} {Constants.expoConfig?.version}
+          {"Kitchy's"} · {t('version')} {(Constants.expoConfig?.version ?? '').replace(/\.0$/, '')}
         </Txt>
       </ScrollView>
     </Screen>
@@ -163,7 +156,7 @@ const styles = StyleSheet.create({
   themeRight: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   preview: { width: 34, height: 22, borderRadius: 6, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   previewDot: { width: 12, height: 12, borderRadius: 6 },
-  accentRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 14, paddingHorizontal: 12 },
+  accentRow: { flexDirection: 'row', gap: 24, paddingVertical: 14, paddingHorizontal: 18 },
   accentItem: { alignItems: 'center', gap: 6, width: 50 },
   swatch: { width: 38, height: 38, borderRadius: 19, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
 });
