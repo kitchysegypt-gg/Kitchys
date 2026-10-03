@@ -34,7 +34,7 @@ export const THEMES: Record<ThemeName, Palette> = {
     surfaceAlt: '#F4F6F5',
     text: '#1B1D1F',
     textMuted: '#7A7F86',
-    border: '#ECEFED',
+    border: '#E1E5E2',
     primary: BRAND,
     primaryDeep: BRAND_DEEP,
     onPrimary: '#FFFFFF',

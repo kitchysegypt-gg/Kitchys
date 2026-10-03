@@ -250,7 +250,7 @@ export function ListGroup({ title, children }: { title?: string; children: React
           {title}
         </Txt>
       )}
-      <View style={[styles.group, { backgroundColor: colors.surface }]}>{children}</View>
+      <View style={[styles.group, { backgroundColor: colors.surface, borderColor: colors.border }]}>{children}</View>
     </View>
   );
 }
@@ -360,7 +360,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
   },
-  group: { borderRadius: 18, overflow: 'hidden', paddingVertical: 4 },
+  group: { borderRadius: 18, overflow: 'hidden', paddingVertical: 4, borderWidth: 1 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingVertical: 15, paddingHorizontal: 18 },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
   emptyIcon: { width: 88, height: 88, borderRadius: 44, alignItems: 'center', justifyContent: 'center' },

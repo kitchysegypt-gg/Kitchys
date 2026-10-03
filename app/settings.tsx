@@ -157,6 +157,6 @@ const styles = StyleSheet.create({
   preview: { width: 34, height: 22, borderRadius: 6, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   previewDot: { width: 12, height: 12, borderRadius: 6 },
   accentRow: { flexDirection: 'row', gap: 24, paddingVertical: 14, paddingHorizontal: 18 },
-  accentItem: { alignItems: 'center', gap: 6, width: 50 },
+  accentItem: { alignItems: 'center', gap: 6, minWidth: 64 },
   swatch: { width: 38, height: 38, borderRadius: 19, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
 });
