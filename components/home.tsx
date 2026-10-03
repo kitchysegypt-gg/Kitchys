@@ -20,12 +20,13 @@ const PROMO_BANNERS = {
 };
 const BANNER_RATIO = 1200 / 676;
 
-// Kitchy's 3D category icons; categories without one show their photo.
+// Kitchy's 3D category icons; a category without one shows its photo.
 const CATEGORY_ICONS: Partial<Record<Category, number>> = {
   main: require('@/assets/categories/main.png'),
   baked: require('@/assets/categories/baked.png'),
   seafood: require('@/assets/categories/seafood.png'),
   desserts: require('@/assets/categories/desserts.png'),
+  healthy: require('@/assets/categories/healthy.png'),
 };
 
 /** Round category bubbles (3D icon or photo); tap again to show everything. */
