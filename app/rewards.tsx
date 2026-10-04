@@ -2,21 +2,17 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 import { Modal, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 
-import { Confetti } from '@/components/Confetti';
 import { Button, Card, Icon, Screen, ScreenHeader, Txt } from '@/components/ui';
 import { showAlert } from '@/lib/alert';
 import { EGP_PER_POINT, RANKS, REWARDS, Reward, getReward } from '@/lib/loyalty';
 import { useOrders } from '@/lib/orders';
 import { useSettings } from '@/lib/settings';
-import { useSounds } from '@/lib/sound';
 
 export default function RewardsScreen() {
   const { t, colors } = useSettings();
   const { points, rank, next, orderCount, availableVouchers, redeem, refresh, loading } = useOrders();
-  const { playOrderSuccess } = useSounds();
   const [confirming, setConfirming] = useState<Reward | null>(null);
   const [busy, setBusy] = useState(false);
-  const [burst, setBurst] = useState(0);
 
   const progress = next ? (orderCount - rank.minOrders) / (next.minOrders - rank.minOrders) : 1;
 
@@ -26,8 +22,6 @@ export default function RewardsScreen() {
     try {
       await redeem(confirming.id);
       setConfirming(null);
-      setBurst(Date.now());
-      playOrderSuccess();
       showAlert(t('voucherAdded'));
     } catch (e: any) {
       showAlert(t('error'), e?.message ?? String(e));
@@ -203,7 +197,6 @@ export default function RewardsScreen() {
           )}
         </View>
       </Modal>
-      <Confetti burstKey={burst} onDone={() => setBurst(0)} />
     </Screen>
   );
 }

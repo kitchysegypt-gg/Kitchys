@@ -8,7 +8,7 @@ import { useSettings } from './settings';
 const ORDER_SUCCESS = require('@/assets/sounds/order-success.wav');
 
 type SoundContextValue = {
-  /** The chef's "new order" ping (and the rewards screen). */
+  /** The chef's "new order" ping. */
   playOrderSuccess: () => void;
 };
 
