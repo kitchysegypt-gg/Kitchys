@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -154,6 +155,12 @@ export default function KitchenSettingsScreen() {
           </KitchenLocationPicker>
         )}
 
+        <Button
+          title={t('helpKitchenLink')}
+          icon="help-circle-outline"
+          variant="secondary"
+          onPress={() => router.push({ pathname: '/help', params: { for: 'chef' } })}
+        />
         <Button title={t('backToCustomerApp')} icon="arrow-back" variant="secondary" onPress={leaveKitchen} />
       </ScrollView>
     </View>

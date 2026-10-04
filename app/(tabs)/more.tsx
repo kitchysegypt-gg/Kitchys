@@ -109,7 +109,7 @@ export default function MoreScreen() {
 
         <ListGroup title={t('account')}>
           <ListRow icon="k-settings" label={t('settings')} onPress={() => router.push('/settings')} />
-          <ListRow icon="help-circle-outline" label={t('howToUse')} onPress={() => router.push('/guide')} />
+          <ListRow icon="help-circle-outline" label={t('howToUse')} onPress={() => router.push('/help')} />
         </ListGroup>
 
         <Txt muted center>
