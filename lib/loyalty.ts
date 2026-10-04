@@ -7,7 +7,7 @@ import type { TranslationKey } from './i18n';
  */
 
 /** Points are earned per this many EGP spent (after discounts, before delivery). */
-export const EGP_PER_POINT = 10;
+export const EGP_PER_POINT = 20;
 
 export type RankId = 'starter' | 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond';
 
@@ -23,11 +23,11 @@ export type Rank = {
 
 export const RANKS: Rank[] = [
   { id: 'starter', level: 0, minOrders: 0, multiplier: 1, icon: 'leaf', color: '#8BC34A' },
-  { id: 'bronze', level: 1, minOrders: 3, multiplier: 1.1, icon: 'medal', color: '#CD7F32' },
-  { id: 'silver', level: 2, minOrders: 10, multiplier: 1.25, icon: 'medal', color: '#9EA7B3' },
-  { id: 'gold', level: 3, minOrders: 25, multiplier: 1.5, icon: 'medal', color: '#F5B301' },
-  { id: 'platinum', level: 4, minOrders: 50, multiplier: 1.75, icon: 'ribbon', color: '#7E8CE0' },
-  { id: 'diamond', level: 5, minOrders: 100, multiplier: 2, icon: 'diamond', color: '#26C6DA' },
+  { id: 'bronze', level: 1, minOrders: 3, multiplier: 1.05, icon: 'medal', color: '#CD7F32' },
+  { id: 'silver', level: 2, minOrders: 10, multiplier: 1.1, icon: 'medal', color: '#9EA7B3' },
+  { id: 'gold', level: 3, minOrders: 25, multiplier: 1.2, icon: 'medal', color: '#F5B301' },
+  { id: 'platinum', level: 4, minOrders: 50, multiplier: 1.3, icon: 'ribbon', color: '#7E8CE0' },
+  { id: 'diamond', level: 5, minOrders: 100, multiplier: 1.5, icon: 'diamond', color: '#26C6DA' },
 ];
 
 export function rankFor(orderCount: number): Rank {

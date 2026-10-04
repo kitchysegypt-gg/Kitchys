@@ -64,12 +64,6 @@ type SettingsContextValue = StoredSettings & {
   formatPrice: (amount: number) => string;
 };
 
-function withAccent(palette: Palette, accent: AccentName): Palette {
-  if (accent === 'orange' || !ACCENTS[accent]) return palette;
-  const a = ACCENTS[accent];
-  return { ...palette, primary: a.primary, primaryDeep: a.deep, heroGradient: [a.primary, a.deep] };
-}
-
 const SettingsContext = createContext<SettingsContextValue | null>(null);
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
@@ -104,14 +98,14 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = useMemo<SettingsContextValue>(() => {
-    // Only Light and Mint remain; older choices (system, dark, sunset) fall back to Light.
-    const themeName: ThemeName = THEMES[settings.theme] ? settings.theme : 'light';
+    // Kitchy's always looks the same: the Light theme in Kitchy's orange.
+    const themeName: ThemeName = 'light';
     const { language } = settings;
     return {
       ...settings,
       loaded,
       themeName,
-      colors: withAccent(THEMES[themeName], settings.accent),
+      colors: THEMES.light,
       isRTL: language === 'ar',
       setLanguage: (l) => update({ language: l }),
       setTheme: (theme) => update({ theme }),

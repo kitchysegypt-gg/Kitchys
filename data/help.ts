@@ -231,9 +231,9 @@ export const CUSTOMER_HELP: HelpTopic[] = [
     title: { en: 'Points, ranks and rewards', ar: 'النقط والمستويات والمكافآت', fr: 'Points, rangs et récompenses' },
     steps: [
       {
-        en: 'Every EGP 10 you spend gives you 1 point. Open {tabMore} → {kitchysPoints} to see your points.',
-        ar: 'كل ١٠ جنيه بتصرفهم بياخدوك نقطة. افتح {tabMore} ← {kitchysPoints} عشان تشوف نقطك.',
-        fr: 'Chaque tranche de 10 EGP dépensée vous donne 1 point. Ouvrez {tabMore} → {kitchysPoints} pour les voir.',
+        en: 'Every EGP 20 you spend gives you 1 point. Open {tabMore} → {kitchysPoints} to see your points.',
+        ar: 'كل ٢٠ جنيه بتصرفهم بياخدوك نقطة. افتح {tabMore} ← {kitchysPoints} عشان تشوف نقطك.',
+        fr: 'Chaque tranche de 20 EGP dépensée vous donne 1 point. Ouvrez {tabMore} → {kitchysPoints} pour les voir.',
       },
       {
         en: 'The more you order, the higher your rank: Starter, Bronze, Silver, Gold, Platinum, Diamond. Higher ranks earn more points per order.',
