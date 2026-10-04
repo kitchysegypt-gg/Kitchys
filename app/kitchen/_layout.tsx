@@ -36,7 +36,7 @@ function KitchenTabs() {
         </View>
       );
     };
-  const waiting = openOrders.filter((o) => o.status === 'placed').length;
+  const waiting = openOrders.filter((o) => o.status === 'placed' && !o.accepted_at).length;
 
   return (
     <Tabs

@@ -5,17 +5,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Card, Chip, EmptyState, Icon, IconBadge, IconName, ScreenHeader, Txt, filledIcon } from '@/components/ui';
 import { showAlert, showConfirm } from '@/lib/alert';
 import type { TranslationKey } from '@/lib/i18n';
-import { KitchenOrder, canDecline, leaveKitchen, nextStatus, useKitchen } from '@/lib/kitchen';
+import { ChefAction, KitchenOrder, canDecline, leaveKitchen, nextStep, useKitchen } from '@/lib/kitchen';
 import type { OrderStatus } from '@/lib/orders';
 import { formatSlot } from '@/lib/schedule';
 import { useSettings } from '@/lib/settings';
-
-/** The button that moves an order to its next step. */
-const NEXT_ACTION: Partial<Record<OrderStatus, { label: TranslationKey; icon: IconName }>> = {
-  placed: { label: 'acceptAndCook', icon: 'flame-outline' },
-  cooking: { label: 'sendOut', icon: 'delivery' },
-  on_the_way: { label: 'markDelivered', icon: 'checkmark-done-outline' },
-};
 
 const STATUS_ICON: Record<OrderStatus, IconName> = {
   placed: 'notifications-outline',
@@ -75,11 +68,11 @@ function OrderCard({ order }: { order: KitchenOrder }) {
   const { t, colors, formatPrice, language } = useSettings();
   const { setOrderStatus } = useKitchen();
   const [busy, setBusy] = useState(false);
-  const next = nextStatus(order.status);
-  const action = NEXT_ACTION[order.status];
-  const isNew = order.status === 'placed';
+  const step = nextStep(order);
+  const isNew = order.status === 'placed' && !order.accepted_at;
+  const accepted = order.status === 'placed' && !!order.accepted_at;
 
-  const move = async (status: OrderStatus) => {
+  const move = async (status: ChefAction) => {
     setBusy(true);
     try {
       await setOrderStatus(order.id, status);
@@ -103,9 +96,9 @@ function OrderCard({ order }: { order: KitchenOrder }) {
     <Card style={[{ gap: 10 }, isNew && { borderColor: colors.primary, borderWidth: 2 }]}>
       <View style={styles.head}>
         <View style={[styles.statusPill, { backgroundColor: isNew ? colors.primary : colors.surfaceAlt }]}>
-          <Icon name={filledIcon(STATUS_ICON[order.status])} size={14} color={isNew ? colors.onPrimary : colors.text} />
+          <Icon name={accepted ? 'checkmark-circle' : filledIcon(STATUS_ICON[order.status])} size={14} color={isNew ? colors.onPrimary : colors.text} />
           <Txt style={{ fontSize: 12, fontWeight: '700', color: isNew ? colors.onPrimary : colors.text }}>
-            {isNew ? t('newOrder') : t(`status_${order.status}` as TranslationKey)}
+            {isNew ? t('newOrder') : accepted ? t('status_accepted') : t(`status_${order.status}` as TranslationKey)}
           </Txt>
         </View>
         <Txt variant="caption" muted>
@@ -156,16 +149,32 @@ function OrderCard({ order }: { order: KitchenOrder }) {
         </Txt>
       </View>
 
-      {next && action && (
+      {step?.lockedUntil && (
+        <View style={[styles.note, { backgroundColor: `${colors.success}14` }]}>
+          <IconBadge name="checkmark-circle-outline" tone="green" size={26} />
+          <Txt variant="caption" style={{ flex: 1, fontWeight: '600' }}>
+            {t('cookOnDay', {
+              day: step.lockedUntil.toLocaleDateString(language === 'ar' ? 'ar-EG' : language, {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'short',
+              }),
+            })}
+          </Txt>
+        </View>
+      )}
+
+      {step && (
         <View style={styles.actions}>
           {canDecline(order.status) && (
             <Button title={t('declineOrder')} variant="ghost" small onPress={decline} disabled={busy} />
           )}
           <Button
-            title={t(action.label)}
-            icon={action.icon}
-            onPress={() => move(next)}
+            title={t(step.label)}
+            icon={step.icon}
+            onPress={() => move(step.action)}
             loading={busy}
+            disabled={!!step.lockedUntil}
             style={{ flex: 1 }}
           />
         </View>

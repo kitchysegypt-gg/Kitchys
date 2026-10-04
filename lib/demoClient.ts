@@ -580,8 +580,18 @@ async function chefSetOrderStatus(orderId: string, status: string) {
   const all = await readTable('orders');
   const order = all.find((o) => o.id === orderId && o.chef_id === chef.id);
   if (!order) return fail('Order not found');
+  if (status === 'accepted') {
+    if (order.status !== 'placed') return fail('Only new orders can be accepted');
+    order.accepted_at ??= new Date().toISOString();
+    await writeTable('orders', all);
+    return ok(null);
+  }
   if (!(NEXT_STATUS[order.status] ?? []).includes(status)) return fail(`This order can't go from ${order.status} to ${status}`);
+  if (status === 'cooking' && order.scheduled_for && new Date(order.scheduled_for).toDateString() !== new Date().toDateString() && new Date(order.scheduled_for) > new Date()) {
+    return fail('You can start cooking on the delivery day.');
+  }
   order.status = status;
+  if (status === 'cooking') order.accepted_at ??= new Date().toISOString();
   await writeTable('orders', all);
   return ok(null);
 }

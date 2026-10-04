@@ -18,7 +18,12 @@ export type KitchenOrder = {
   status: OrderStatus;
   created_at: string;
   scheduled_for: string | null;
+  /** Set when the chef accepted a new order (scheduled orders are cooked later, on the day). */
+  accepted_at: string | null;
 };
+
+/** What a chef can do to an order: move it to a status, or accept it for later. */
+export type ChefAction = OrderStatus | 'accepted';
 
 export type KitchenStats = {
   days: number;
@@ -67,7 +72,7 @@ type KitchenValue = ChefStatus & {
   paused: boolean;
   refreshOrders: () => Promise<void>;
   refreshReviews: () => Promise<void>;
-  setOrderStatus: (orderId: string, status: OrderStatus) => Promise<void>;
+  setOrderStatus: (orderId: string, action: ChefAction) => Promise<void>;
   replyToReview: (reviewId: string, reply: string) => Promise<void>;
   setPaused: (paused: boolean) => Promise<void>;
   setDailyLimit: (dishId: string, limit: number | null) => Promise<void>;
@@ -94,7 +99,7 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
     if (!chefId) return;
     const { data, error } = await supabase
       .from('orders')
-      .select('id, items, subtotal, address, notes, status, created_at, scheduled_for')
+      .select('id, items, subtotal, address, notes, status, created_at, scheduled_for, accepted_at')
       .eq('chef_id', chefId)
       .order('created_at', { ascending: false })
       .limit(100);
@@ -149,10 +154,19 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
   }, [chefId, session, refreshOrders]);
 
   const setOrderStatus = useCallback(
-    async (orderId: string, next: OrderStatus) => {
+    async (orderId: string, next: ChefAction) => {
       const { error } = await supabase.rpc('chef_set_order_status', { p_order: orderId, p_status: next });
       if (error) throw error;
-      setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, status: next } : o)));
+      const now = new Date().toISOString();
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.id !== orderId
+            ? o
+            : next === 'accepted'
+              ? { ...o, accepted_at: o.accepted_at ?? now }
+              : { ...o, status: next, accepted_at: next === 'cooking' ? (o.accepted_at ?? now) : o.accepted_at }
+        )
+      );
     },
     []
   );
@@ -216,11 +230,32 @@ export function useKitchen() {
   return value;
 }
 
-/** The next step a chef can take on an order, and the "decline" option where it's allowed. */
-export function nextStatus(status: OrderStatus): OrderStatus | null {
-  if (status === 'placed') return 'cooking';
-  if (status === 'cooking') return 'on_the_way';
-  if (status === 'on_the_way') return 'delivered';
+/** The next step a chef can take on an order. */
+export type NextStep = {
+  action: ChefAction;
+  label: 'acceptAndCook' | 'acceptOrder' | 'startCooking' | 'sendOut' | 'markDelivered';
+  icon: 'flame-outline' | 'checkmark-circle-outline' | 'delivery' | 'checkmark-done-outline';
+  /** Cooking a scheduled order only unlocks on its delivery day. */
+  lockedUntil?: Date;
+};
+
+const dayStart = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+export function nextStep(order: KitchenOrder, now = new Date()): NextStep | null {
+  if (order.status === 'placed') {
+    // "As soon as possible": accepting means cooking straight away.
+    if (!order.scheduled_for) return { action: 'cooking', label: 'acceptAndCook', icon: 'flame-outline' };
+    if (!order.accepted_at) return { action: 'accepted', label: 'acceptOrder', icon: 'checkmark-circle-outline' };
+    const day = dayStart(new Date(order.scheduled_for));
+    return {
+      action: 'cooking',
+      label: 'startCooking',
+      icon: 'flame-outline',
+      lockedUntil: day > dayStart(now) ? day : undefined,
+    };
+  }
+  if (order.status === 'cooking') return { action: 'on_the_way', label: 'sendOut', icon: 'delivery' };
+  if (order.status === 'on_the_way') return { action: 'delivered', label: 'markDelivered', icon: 'checkmark-done-outline' };
   return null;
 }
 

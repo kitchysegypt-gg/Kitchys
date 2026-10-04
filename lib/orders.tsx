@@ -28,6 +28,8 @@ export type Order = {
   delivery_lng: number | null;
   /** Chosen delivery time, or null for as soon as possible. */
   scheduled_for: string | null;
+  /** Set when the chef accepted the order (before cooking it on the day). */
+  accepted_at?: string | null;
   /** Kitchy's credit taken off this order. */
   credit_used: number;
   /** A friend's referral code used on this (first) order. */
@@ -130,8 +132,10 @@ export function OrdersProvider({ children }: { children: React.ReactNode }) {
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'orders', filter: `user_id=eq.${userId}` },
         (payload) => {
-          const row = payload.new as { id: string; status: OrderStatus };
-          setOrders((prev) => prev.map((o) => (o.id === row.id ? { ...o, status: row.status } : o)));
+          const row = payload.new as { id: string; status: OrderStatus; accepted_at: string | null };
+          setOrders((prev) =>
+            prev.map((o) => (o.id === row.id ? { ...o, status: row.status, accepted_at: row.accepted_at } : o))
+          );
         }
       )
       .subscribe();

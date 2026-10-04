@@ -536,9 +536,9 @@ export const CHEF_HELP: HelpTopic[] = [
     title: { en: 'Move the order along', ar: 'حرّكي الطلب خطوة خطوة', fr: 'Faire avancer la commande' },
     steps: [
       {
-        en: 'Tap {acceptAndCook}. The customer is told you\'re cooking.',
-        ar: 'دوسي {acceptAndCook}. الزبون هيعرف إنك بتطبخي.',
-        fr: 'Touchez {acceptAndCook}. Le client est prévenu que vous cuisinez.',
+        en: '"As soon as possible" order: tap {acceptAndCook}. Order for a later day: tap {acceptOrder} now, then tap {startCooking} on the delivery day (the button unlocks that day). The customer is told at each step.',
+        ar: 'طلب "في أسرع وقت": دوسي {acceptAndCook}. طلب ليوم تاني: دوسي {acceptOrder} دلوقتي، وبعدين {startCooking} يوم التوصيل (الزرار بيشتغل اليوم ده). الزبون بيعرف مع كل خطوة.',
+        fr: 'Commande « dès que possible » : touchez {acceptAndCook}. Commande pour un autre jour : touchez {acceptOrder} maintenant, puis {startCooking} le jour de la livraison (le bouton s\'active ce jour-là). Le client est prévenu à chaque étape.',
       },
       {
         en: 'When the food leaves your kitchen, tap {sendOut}.',

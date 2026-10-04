@@ -50,7 +50,9 @@ export default function OrdersScreen() {
                   />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Txt style={{ fontWeight: '700' }}>{t(`status_${item.status}`)}</Txt>
+                  <Txt style={{ fontWeight: '700' }}>
+                    {item.status === 'placed' && item.accepted_at ? t('status_accepted') : t(`status_${item.status}`)}
+                  </Txt>
                   <Txt variant="caption" muted>
                     {date} · {count} {t('items')}
                   </Txt>
