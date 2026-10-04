@@ -116,7 +116,7 @@ export default function HomeScreen() {
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{ paddingHorizontal: 16, gap: 12, paddingBottom: 4 }}>
+                  contentContainerStyle={{ paddingHorizontal: 16, gap: 12, paddingVertical: 8 }}>
                   {chefs.map((c) => (
                     <KitchenCard key={c.id} chef={c} />
                   ))}
@@ -129,7 +129,7 @@ export default function HomeScreen() {
                   keyExtractor={(d) => d.id}
                   renderItem={({ item }) => <DishCard dish={item} />}
                   showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{ paddingHorizontal: 16, gap: 12, paddingBottom: 4 }}
+                  contentContainerStyle={{ paddingHorizontal: 16, gap: 12, paddingVertical: 8 }}
                 />
 
                 {sectionHeader(t('allDishes'))}

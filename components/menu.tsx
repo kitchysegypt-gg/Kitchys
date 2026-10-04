@@ -77,28 +77,31 @@ export function DishCard({ dish, wide }: { dish: Dish; wide?: boolean }) {
   const chef = getChef(dish.chefId);
   return (
     <PressableScale onPress={() => router.push(`/dish/${dish.id}`)} style={wide ? undefined : { width: 170 }}>
-      <Card style={{ padding: 0, overflow: 'hidden' }}>
-        <View>
-          <DishArt dish={dish} height={wide ? 120 : 130} />
-          {(dish.spicy || dish.vegetarian) && (
-            <View style={styles.badges}>
-              {dish.spicy && <Icon name="flame" size={14} color="#E53935" />}
-              {dish.vegetarian && <Icon name="leaf" size={14} color="#2E9E5B" />}
+      <Card style={{ padding: 0 }}>
+        {/* Clip the photo to the rounded corners here, so the card's shadow isn't clipped. */}
+        <View style={styles.dishClip}>
+          <View>
+            <DishArt dish={dish} height={wide ? 120 : 130} />
+            {(dish.spicy || dish.vegetarian) && (
+              <View style={styles.badges}>
+                {dish.spicy && <Icon name="flame" size={14} color="#E53935" />}
+                {dish.vegetarian && <Icon name="leaf" size={14} color="#2E9E5B" />}
+              </View>
+            )}
+          </View>
+          <View style={{ padding: 12, gap: 2 }}>
+            <Txt numberOfLines={1} style={{ fontSize: 15, fontWeight: '700' }}>
+              {l(dish.name)}
+            </Txt>
+            <Txt muted variant="caption" numberOfLines={1}>
+              {[chef ? l(chef.name) : l(dish.short), dish.portionGrams ? formatPortion(dish.portionGrams) : null]
+                .filter(Boolean)
+                .join(' · ')}
+            </Txt>
+            <View style={styles.priceRow}>
+              <Txt style={{ fontWeight: '800', color: colors.primary, fontSize: 15 }}>{formatPrice(dish.price)}</Txt>
+              <QuickAddButton dish={dish} />
             </View>
-          )}
-        </View>
-        <View style={{ padding: 12, gap: 2 }}>
-          <Txt numberOfLines={1} style={{ fontSize: 15, fontWeight: '700' }}>
-            {l(dish.name)}
-          </Txt>
-          <Txt muted variant="caption" numberOfLines={1}>
-            {[chef ? l(chef.name) : l(dish.short), dish.portionGrams ? formatPortion(dish.portionGrams) : null]
-              .filter(Boolean)
-              .join(' · ')}
-          </Txt>
-          <View style={styles.priceRow}>
-            <Txt style={{ fontWeight: '800', color: colors.primary, fontSize: 15 }}>{formatPrice(dish.price)}</Txt>
-            <QuickAddButton dish={dish} />
           </View>
         </View>
       </Card>
@@ -122,7 +125,7 @@ export function ChefCard({ chef, dishCount }: { chef: Chef; dishCount: number })
           <View style={styles.chefMeta}>
             <RatingBadge rating={ratings[chef.id]} color={colors.text} />
             <Txt variant="caption" muted>
-              ·  {dishCount} {t('dishes')}
+              · {dishCount} {t('dishes')}
             </Txt>
           </View>
         </View>
@@ -181,7 +184,9 @@ export function FreeDeliveryBanner({ showPoints }: { showPoints?: boolean }) {
         <View style={{ flex: 1, gap: 2 }}>
           <Txt style={{ fontSize: 17, fontWeight: '700' }}>{free ? t('freeDeliveryTitle') : t('delivery')}</Txt>
           <Txt variant="caption" muted>
-            {free ? t('freeDeliveryBanner', { n: freeDeliveriesLeft }) : t('freeDeliveryUsed', { fee: formatPrice(DELIVERY_FEE) })}
+            {free
+              ? t('freeDeliveryBanner', { n: freeDeliveriesLeft })
+              : t('freeDeliveryUsed', { fee: formatPrice(DELIVERY_FEE) })}
           </Txt>
         </View>
         <View style={styles.stamps}>
@@ -264,6 +269,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   allergenWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   allergen: { paddingVertical: 5, paddingHorizontal: 12, borderRadius: 14, borderWidth: 1 },
+  dishClip: { borderRadius: 17, overflow: 'hidden' },
   stampCard: { borderRadius: 20, borderWidth: 1, overflow: 'hidden' },
   stampTop: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16 },
   stamps: { flexDirection: 'row', gap: 6 },

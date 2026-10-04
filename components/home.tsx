@@ -8,6 +8,7 @@ import { useCatalog } from '@/lib/catalog';
 import { useOrders } from '@/lib/orders';
 import { useSettings } from '@/lib/settings';
 import { DELIVERY_FEE, supabase } from '@/lib/supabase';
+import { softShadow } from '@/lib/theme';
 import { CategoryPhoto, ChefAvatar, ChefName, ChefTags, DishArt } from './media';
 import { Icon, PressableScale, Txt } from './ui';
 
@@ -167,7 +168,7 @@ export function PromoCarousel() {
         snapToInterval={step}
         decelerationRate="fast"
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 6, gap: 12 }}
         onScrollBeginDrag={() => {
           touching.current = true;
         }}
@@ -182,15 +183,16 @@ export function PromoCarousel() {
           const builtin = b.image.startsWith('builtin:') ? b.image.slice(8) : '';
           const target = BANNER_LINKS[b.link] ?? BUILTIN_TARGETS[builtin] ?? null;
           return (
-            <Pressable
-              key={b.id}
-              onPress={target ? () => router.navigate(target) : undefined}
-              disabled={!target}
-              accessibilityRole={target ? 'button' : 'image'}
-              accessibilityLabel={b.title}
-              style={[styles.promo, { width, height: width / BANNER_RATIO, borderColor: colors.border }]}>
-              <Image source={b.source} style={StyleSheet.absoluteFill} contentFit="cover" transition={150} />
-            </Pressable>
+            <View key={b.id} style={[styles.promoShadow, softShadow(colors.shadow)]}>
+              <Pressable
+                onPress={target ? () => router.navigate(target) : undefined}
+                disabled={!target}
+                accessibilityRole={target ? 'button' : 'image'}
+                accessibilityLabel={b.title}
+                style={[styles.promo, { width, height: width / BANNER_RATIO, borderColor: colors.border }]}>
+                <Image source={b.source} style={StyleSheet.absoluteFill} contentFit="cover" transition={150} />
+              </Pressable>
+            </View>
           );
         })}
       </ScrollView>
@@ -220,7 +222,7 @@ export function KitchenCard({ chef }: { chef: Chef }) {
   const cover = dishes.find((d) => d.photo) ?? dishes[0];
   const rating = ratings[chef.id];
   return (
-    <PressableScale onPress={() => router.push(`/chef/${chef.id}`)} style={{ width: 252 }}>
+    <PressableScale onPress={() => router.push(`/chef/${chef.id}`)} style={[styles.kitchenShadow, softShadow(colors.shadow)]}>
       <View style={[styles.kitchen, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <View>
           {cover ? (
@@ -273,9 +275,11 @@ const styles = StyleSheet.create({
   bubbleRing: { width: 66, height: 66, borderRadius: 33, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   bubble: { width: 56, height: 56, borderRadius: 28, overflow: 'hidden' },
   bubbleIcon: { width: 50, height: 50 },
+  promoShadow: { borderRadius: 20 },
   promo: { borderRadius: 20, overflow: 'hidden', borderWidth: 1 },
   dots: { flexDirection: 'row', justifyContent: 'center', gap: 5, marginTop: 10 },
   dot: { height: 6, borderRadius: 3 },
+  kitchenShadow: { width: 252, borderRadius: 18 },
   kitchen: { borderRadius: 18, overflow: 'hidden', borderWidth: 1 },
   ratingPill: {
     position: 'absolute',

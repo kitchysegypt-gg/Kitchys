@@ -18,6 +18,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EmojiName } from '@/lib/emoji';
+import { softShadow } from '@/lib/theme';
 import { FONT, fontFamilyFor } from '@/lib/fonts';
 import { useSettings } from '@/lib/settings';
 import { useAnimatedValue } from '@/lib/useAnimatedValue';
@@ -141,7 +142,8 @@ export function Card({ children, style, color }: ViewProps & { color?: string })
     <View
       style={[
         styles.card,
-        { backgroundColor: color ?? colors.surface, shadowColor: colors.shadow, borderColor: colors.border },
+        { backgroundColor: color ?? colors.surface, borderColor: colors.border },
+        softShadow(colors.shadow),
         style,
       ]}>
       {children}
@@ -250,7 +252,10 @@ export function ListGroup({ title, children }: { title?: string; children: React
           {title}
         </Txt>
       )}
-      <View style={[styles.group, { backgroundColor: colors.surface, borderColor: colors.border }]}>{children}</View>
+      {/* The shadow sits on an outer view so the rounded, clipped inner view doesn't cut it off. */}
+      <View style={[styles.groupShadow, softShadow(colors.shadow)]}>
+        <View style={[styles.group, { backgroundColor: colors.surface, borderColor: colors.border }]}>{children}</View>
+      </View>
     </View>
   );
 }
@@ -335,10 +340,6 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: 14,
     borderWidth: 1,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.04,
-    shadowRadius: 12,
-    elevation: 0,
   },
   button: {
     borderRadius: 14,
@@ -360,6 +361,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
   },
+  groupShadow: { borderRadius: 18 },
   group: { borderRadius: 18, overflow: 'hidden', paddingVertical: 4, borderWidth: 1 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingVertical: 15, paddingHorizontal: 18 },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },

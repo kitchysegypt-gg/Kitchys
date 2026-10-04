@@ -113,7 +113,7 @@ export default function MoreScreen() {
         </ListGroup>
 
         <Txt muted center>
-          {t('version')} {Constants.expoConfig?.version}
+          {t('version')} {Constants.expoConfig?.version?.replace(/\.0$/, '')}
         </Txt>
       </ScrollView>
     </Screen>

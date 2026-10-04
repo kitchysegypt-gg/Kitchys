@@ -34,7 +34,7 @@ export const THEMES: Record<ThemeName, Palette> = {
     surfaceAlt: '#F4F6F5',
     text: '#1B1D1F',
     textMuted: '#7A7F86',
-    border: '#E1E5E2',
+    border: '#D3D9D5',
     primary: BRAND,
     primaryDeep: BRAND_DEEP,
     onPrimary: '#FFFFFF',
@@ -52,7 +52,7 @@ export const THEMES: Record<ThemeName, Palette> = {
     surfaceAlt: '#E8F2EE',
     text: '#12261E',
     textMuted: '#5D7068',
-    border: '#DDEBE5',
+    border: '#C8DCD3',
     primary: '#F4511E',
     primaryDeep: '#B8330D',
     onPrimary: '#FFFFFF',
@@ -72,3 +72,12 @@ export const ACCENTS: Record<AccentName, { primary: string; deep: string; light:
   orange: { primary: '#F4511E', deep: '#B8330D', light: '#FF7A45' },
   green: { primary: '#2FB45F', deep: '#1E8646', light: '#4CC47F' },
 };
+
+/** A soft drop shadow under cards and panels, so their edges stand out from the background. */
+export function softShadow(color: string) {
+  const hex = color.replace('#', '');
+  const [r, g, b] = [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  return {
+    boxShadow: `0px 1px 2px rgba(${r}, ${g}, ${b}, 0.06), 0px 4px 12px rgba(${r}, ${g}, ${b}, 0.08)`,
+  };
+}
