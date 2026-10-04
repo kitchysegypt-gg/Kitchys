@@ -1,8 +1,7 @@
 import { router } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Switch, TextInput, View } from 'react-native';
 
-import { Confetti } from '@/components/Confetti';
 import { DishArt } from '@/components/media';
 import { ScheduleValue, SchedulePicker } from '@/components/SchedulePicker';
 import { FreeDeliveryBanner, QuantityStepper } from '@/components/menu';
@@ -24,7 +23,6 @@ import { useOrders } from '@/lib/orders';
 import { showAlert } from '@/lib/alert';
 import { useSettings } from '@/lib/settings';
 import { FONT } from '@/lib/fonts';
-import { useSounds } from '@/lib/sound';
 import { DELIVERY_FEE } from '@/lib/supabase';
 
 export default function CartScreen() {
@@ -32,7 +30,6 @@ export default function CartScreen() {
   const { lines, subtotal, setQuantity, clear } = useCart();
   const { getChef, isNear, lastDelivery } = useCatalog();
   const { freeDeliveriesLeft, placeOrder, availableVouchers, orderCount, orders, credit } = useOrders();
-  const { playOrderSuccess } = useSounds();
   // Prefilled from the saved map location until the customer types their own.
   const [typedAddress, setAddress] = useState<string | null>(null);
   const address = typedAddress ?? (location ? [location.address, location.details].filter(Boolean).join(', ') : '');
@@ -46,7 +43,6 @@ export default function CartScreen() {
   const [referralCode, setReferralCode] = useState('');
   const [useCredit, setUseCredit] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [burst, setBurst] = useState(0);
   const [success, setSuccess] = useState(false);
 
   const baseDeliveryFee = freeDeliveriesLeft > 0 ? 0 : DELIVERY_FEE;
@@ -57,7 +53,6 @@ export default function CartScreen() {
   const total = beforeCredit - creditUsed;
   // Referral codes only work on a customer's very first order.
   const firstOrder = orders.length === 0;
-  const clearBurst = useCallback(() => setBurst(0), []);
 
   const submit = async () => {
     if (!address.trim()) return showAlert(t('address'), t('addressRequired'));
@@ -109,8 +104,6 @@ export default function CartScreen() {
       setSchedule({ mode: 'asap' });
       setEarned(order.points_earned);
       setSuccess(true);
-      setBurst(Date.now());
-      playOrderSuccess();
     } catch (e: any) {
       showAlert(t('error'), e?.message ?? String(e));
     } finally {
@@ -337,8 +330,6 @@ export default function CartScreen() {
             />
           </Card>
         </View>
-        {/* Confetti sits above the success card, inside the modal so it's on top. */}
-        <Confetti burstKey={burst} onDone={clearBurst} />
       </Modal>
     </Screen>
   );

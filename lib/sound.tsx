@@ -5,16 +5,14 @@ import { Platform } from 'react-native';
 
 import { useSettings } from './settings';
 
-const ADD_TO_CART = require('@/assets/sounds/add-to-cart.wav');
 const ORDER_SUCCESS = require('@/assets/sounds/order-success.wav');
 
 type SoundContextValue = {
-  playAddToCart: () => void;
+  /** The chef's "new order" ping (and the rewards screen). */
   playOrderSuccess: () => void;
 };
 
 const SoundContext = createContext<SoundContextValue>({
-  playAddToCart: () => {},
   playOrderSuccess: () => {},
 });
 
@@ -55,10 +53,6 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
 
   const value = useMemo(
     () => ({
-      playAddToCart: () => {
-        if (soundEnabled) playOnce(ADD_TO_CART);
-        if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-      },
       playOrderSuccess: () => {
         if (soundEnabled) playOnce(ORDER_SUCCESS);
         if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});

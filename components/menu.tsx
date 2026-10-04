@@ -8,7 +8,6 @@ import { DELIVERY_RADIUS_KM, useCatalog } from '@/lib/catalog';
 import { useCart } from '@/lib/cart';
 import { useOrders } from '@/lib/orders';
 import { useSettings } from '@/lib/settings';
-import { useSounds } from '@/lib/sound';
 import { DELIVERY_FEE, FREE_DELIVERY_ORDERS } from '@/lib/supabase';
 import { ChefAvatar, ChefName, ChefTags, DishArt, RatingBadge } from './media';
 import { Button, Card, Icon, PressableScale, Txt } from './ui';
@@ -22,7 +21,6 @@ export function useAddToCart() {
   const { add, clear, lines } = useCart();
   const { getChef, isNear, isPaused } = useCatalog();
   const { t, l } = useSettings();
-  const { playAddToCart } = useSounds();
   return (dish: Dish, quantity = 1, onAdded?: () => void) => {
     const chefName = (chefId: string) => {
       const chef = getChef(chefId);
@@ -45,7 +43,6 @@ export function useAddToCart() {
     }
     const addNow = () => {
       add(dish, quantity);
-      playAddToCart();
       onAdded?.();
     };
     const otherChef = lines.find((line) => line.dish.chefId !== dish.chefId)?.dish.chefId;
