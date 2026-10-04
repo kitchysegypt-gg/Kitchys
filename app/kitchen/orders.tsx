@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Button, Card, Chip, EmptyState, Icon, IconName, ScreenHeader, Txt } from '@/components/ui';
+import { Button, Card, Chip, EmptyState, Icon, IconBadge, IconName, ScreenHeader, Txt, filledIcon } from '@/components/ui';
 import { showAlert, showConfirm } from '@/lib/alert';
 import type { TranslationKey } from '@/lib/i18n';
 import { KitchenOrder, canDecline, leaveKitchen, nextStatus, useKitchen } from '@/lib/kitchen';
@@ -103,7 +103,7 @@ function OrderCard({ order }: { order: KitchenOrder }) {
     <Card style={[{ gap: 10 }, isNew && { borderColor: colors.primary, borderWidth: 2 }]}>
       <View style={styles.head}>
         <View style={[styles.statusPill, { backgroundColor: isNew ? colors.primary : colors.surfaceAlt }]}>
-          <Icon name={STATUS_ICON[order.status]} size={14} color={isNew ? colors.onPrimary : colors.text} />
+          <Icon name={filledIcon(STATUS_ICON[order.status])} size={14} color={isNew ? colors.onPrimary : colors.text} />
           <Txt style={{ fontSize: 12, fontWeight: '700', color: isNew ? colors.onPrimary : colors.text }}>
             {isNew ? t('newOrder') : t(`status_${order.status}` as TranslationKey)}
           </Txt>
@@ -114,7 +114,7 @@ function OrderCard({ order }: { order: KitchenOrder }) {
       </View>
 
       <View style={styles.when}>
-        <Icon name="time-outline" size={16} color={colors.primary} />
+        <IconBadge name="time-outline" tone={order.scheduled_for ? 'blue' : 'orange'} size={30} />
         <Txt style={{ fontWeight: '700', flex: 1 }}>
           {order.scheduled_for
             ? t('deliverAt', { time: formatSlot(new Date(order.scheduled_for), language) })
@@ -142,7 +142,7 @@ function OrderCard({ order }: { order: KitchenOrder }) {
 
       {order.notes ? (
         <View style={[styles.note, { backgroundColor: colors.surfaceAlt }]}>
-          <Icon name="chatbubble-ellipses-outline" size={16} color={colors.textMuted} />
+          <IconBadge name="chatbubble-ellipses-outline" tone="purple" size={26} />
           <Txt variant="caption" style={{ flex: 1 }}>
             {order.notes}
           </Txt>
@@ -150,7 +150,7 @@ function OrderCard({ order }: { order: KitchenOrder }) {
       ) : null}
 
       <View style={styles.when}>
-        <Icon name="location-outline" size={16} color={colors.textMuted} />
+        <IconBadge name="location-outline" tone="teal" size={26} />
         <Txt variant="caption" muted style={{ flex: 1 }}>
           {order.address}
         </Txt>
@@ -178,8 +178,8 @@ const styles = StyleSheet.create({
   tabs: { flexDirection: 'row', gap: 8, paddingHorizontal: 16, paddingBottom: 4 },
   head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   statusPill: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 4, paddingHorizontal: 10, borderRadius: 10 },
-  when: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  when: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   itemRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  note: { flexDirection: 'row', gap: 8, padding: 10, borderRadius: 12 },
+  note: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, borderRadius: 12 },
   actions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
 });

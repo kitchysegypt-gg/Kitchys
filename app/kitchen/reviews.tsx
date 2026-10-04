@@ -3,17 +3,18 @@ import { RefreshControl, ScrollView, StyleSheet, TextInput, View } from 'react-n
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Stars } from '@/components/media';
-import { Button, Card, EmptyState, ScreenHeader, Txt } from '@/components/ui';
+import { Button, Card, EmptyState, IconBadge, IconName, ScreenHeader, Txt } from '@/components/ui';
 import { showAlert } from '@/lib/alert';
 import type { TranslationKey } from '@/lib/i18n';
+import type { IconTone } from '@/lib/theme';
 import { KitchenReview, leaveKitchen, useKitchen } from '@/lib/kitchen';
 import { useSettings } from '@/lib/settings';
 
-const PARTS: { key: 'food' | 'delivery' | 'packaging' | 'value'; label: TranslationKey }[] = [
-  { key: 'food', label: 'ratingFood' },
-  { key: 'delivery', label: 'ratingDelivery' },
-  { key: 'packaging', label: 'ratingPackaging' },
-  { key: 'value', label: 'ratingValue' },
+const PARTS: { key: 'food' | 'delivery' | 'packaging' | 'value'; label: TranslationKey; icon: IconName; tone: IconTone }[] = [
+  { key: 'food', label: 'ratingFood', icon: 'restaurant-outline', tone: 'orange' },
+  { key: 'delivery', label: 'ratingDelivery', icon: 'delivery', tone: 'teal' },
+  { key: 'packaging', label: 'ratingPackaging', icon: 'bag-handle-outline', tone: 'amber' },
+  { key: 'value', label: 'ratingValue', icon: 'wallet-outline', tone: 'green' },
 ];
 
 const overallOf = (r: Pick<KitchenReview, 'food' | 'delivery' | 'packaging' | 'value'>) =>
@@ -59,7 +60,8 @@ export default function KitchenReviewsScreen() {
               </View>
               {PARTS.map((p) => (
                 <View key={p.key} style={styles.partRow}>
-                  <Txt variant="caption" style={{ width: 92 }}>
+                  <IconBadge name={p.icon} tone={p.tone} size={30} />
+                  <Txt variant="caption" style={{ width: 84 }}>
                     {t(p.label)}
                   </Txt>
                   <View style={[styles.track, { backgroundColor: colors.surfaceAlt }]}>

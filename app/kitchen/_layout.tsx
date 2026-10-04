@@ -1,8 +1,8 @@
 import { Tabs } from 'expo-router';
-import { ActivityIndicator, ColorValue, View } from 'react-native';
+import { ActivityIndicator, ColorValue, StyleSheet, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { EmptyState, Icon, IconName, ScreenHeader } from '@/components/ui';
+import { EmptyState, Icon, IconName, ScreenHeader, filledIcon } from '@/components/ui';
 import { FONT } from '@/lib/fonts';
 import { KitchenProvider, leaveKitchen, useKitchen } from '@/lib/kitchen';
 import { useSettings } from '@/lib/settings';
@@ -28,8 +28,13 @@ function KitchenTabs() {
   }
 
   const icon = (name: IconName) =>
-    function TabIcon({ color }: { focused: boolean; color: ColorValue }) {
-      return <Icon name={name} size={24} color={color as string} />;
+    function TabIcon({ focused, color }: { focused: boolean; color: ColorValue }) {
+      // The selected tab shows a filled icon on a soft tile.
+      return (
+        <View style={[styles.tabIcon, focused && { backgroundColor: `${colors.primary}1A` }]}>
+          <Icon name={focused ? filledIcon(name) : name} size={22} color={color as string} />
+        </View>
+      );
     };
   const waiting = openOrders.filter((o) => o.status === 'placed').length;
 
@@ -73,3 +78,7 @@ export default function KitchenLayout() {
     </KitchenProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  tabIcon: { width: 44, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
+});

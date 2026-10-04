@@ -5,10 +5,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Bar, BarChart } from '@/components/BarChart';
 import { Stars } from '@/components/media';
-import { Card, Chip, Icon, IconName, ScreenHeader, Txt } from '@/components/ui';
+import { Card, Chip, Icon, IconBadge, IconName, ScreenHeader, Txt } from '@/components/ui';
 import type { Language } from '@/lib/i18n';
 import { KitchenStats, leaveKitchen, useKitchen } from '@/lib/kitchen';
 import { formatTime } from '@/lib/schedule';
+import type { IconTone } from '@/lib/theme';
 import { useSettings } from '@/lib/settings';
 
 const PERIODS = [7, 30, 90] as const;
@@ -101,13 +102,11 @@ export default function KitchenDashboard() {
         ) : (
           <>
             <Card style={{ gap: 10 }}>
-              <Txt variant="label" muted>
-                {t('today')}
-              </Txt>
+              <SectionTitle icon="sunny-outline" tone="amber" title={t('today')} />
               <View style={styles.todayRow}>
-                <TodayFigure value={String(stats.today.orders)} label={t('ordersWord')} />
-                <TodayFigure value={formatPrice(Number(stats.today.sales))} label={t('salesWord')} />
-                <TodayFigure value={String(stats.today.open)} label={t('inProgress')} />
+                <TodayFigure icon="receipt-outline" tone="blue" value={String(stats.today.orders)} label={t('ordersWord')} />
+                <TodayFigure icon="cash-outline" tone="green" value={formatPrice(Number(stats.today.sales))} label={t('salesWord')} />
+                <TodayFigure icon="flame-outline" tone="orange" value={String(stats.today.open)} label={t('inProgress')} />
               </View>
             </Card>
 
@@ -120,19 +119,22 @@ export default function KitchenDashboard() {
             <View style={styles.tiles}>
               <Tile
                 icon="receipt-outline"
+                tone="blue"
                 label={t('ordersWord')}
                 value={String(stats.orders)}
                 delta={change(stats.orders, stats.prev_orders)}
               />
               <Tile
                 icon="cash-outline"
+                tone="green"
                 label={t('salesWord')}
                 value={formatPrice(Number(stats.sales))}
                 delta={change(Number(stats.sales), Number(stats.prev_sales))}
               />
-              <Tile icon="basket-outline" label={t('averageOrder')} value={formatPrice(Number(stats.average_order))} />
+              <Tile icon="basket-outline" tone="amber" label={t('averageOrder')} value={formatPrice(Number(stats.average_order))} />
               <Tile
                 icon="people-outline"
+                tone="purple"
                 label={t('customersWord')}
                 value={String(stats.customers)}
                 note={stats.repeat_customers ? t('repeatCustomers', { n: stats.repeat_customers }) : undefined}
@@ -140,12 +142,12 @@ export default function KitchenDashboard() {
             </View>
 
             <Card style={{ gap: 10 }}>
-              <Txt style={{ fontWeight: '800' }}>{t('salesOverTime')}</Txt>
+              <SectionTitle icon="trending-up-outline" tone="green" title={t('salesOverTime')} />
               <SalesChart stats={stats} />
             </Card>
 
             <Card style={{ gap: 10 }}>
-              <Txt style={{ fontWeight: '800' }}>{t('busiestDays')}</Txt>
+              <SectionTitle icon="calendar-outline" tone="blue" title={t('busiestDays')} />
               <WeekdayChart stats={stats} />
               {stats.by_hour.length > 0 && (
                 <Txt variant="caption" muted>
@@ -160,7 +162,7 @@ export default function KitchenDashboard() {
             </Card>
 
             <Card style={{ gap: 10 }}>
-              <Txt style={{ fontWeight: '800' }}>{t('topDishes')}</Txt>
+              <SectionTitle icon="trophy-outline" tone="amber" title={t('topDishes')} />
               {stats.top_dishes.length === 0 ? (
                 <Txt variant="caption" muted>
                   {t('noOrdersInPeriod')}
@@ -195,7 +197,9 @@ export default function KitchenDashboard() {
             <Pressable onPress={() => router.navigate('/kitchen/reviews' as Href)} accessibilityRole="button">
               <Card style={{ gap: 8 }}>
                 <View style={styles.dishRow}>
-                  <Txt style={{ fontWeight: '800', flex: 1 }}>{t('kitchenReviews')}</Txt>
+                  <View style={{ flex: 1 }}>
+                    <SectionTitle icon="star-outline" tone="pink" title={t('kitchenReviews')} />
+                  </View>
                   <Icon name="chevron-forward" size={18} color={colors.textMuted} />
                 </View>
                 {stats.rating.count ? (
@@ -235,9 +239,20 @@ export default function KitchenDashboard() {
   );
 }
 
-function TodayFigure({ value, label }: { value: string; label: string }) {
+/** A card heading with its coloured icon tile. */
+function SectionTitle({ icon, tone, title }: { icon: IconName; tone: IconTone; title: string }) {
   return (
-    <View style={{ flex: 1, gap: 2 }}>
+    <View style={styles.sectionTitle}>
+      <IconBadge name={icon} tone={tone} size={32} />
+      <Txt style={{ fontWeight: '800', fontSize: 16 }}>{title}</Txt>
+    </View>
+  );
+}
+
+function TodayFigure({ icon, tone, value, label }: { icon: IconName; tone: IconTone; value: string; label: string }) {
+  return (
+    <View style={{ flex: 1, gap: 4 }}>
+      <IconBadge name={icon} tone={tone} size={30} />
       <Txt style={{ fontSize: 22, fontWeight: '800' }} numberOfLines={1} adjustsFontSizeToFit>
         {value}
       </Txt>
@@ -250,12 +265,14 @@ function TodayFigure({ value, label }: { value: string; label: string }) {
 
 function Tile({
   icon,
+  tone,
   label,
   value,
   delta,
   note,
 }: {
   icon: IconName;
+  tone: IconTone;
   label: string;
   value: string;
   delta?: number | null;
@@ -264,7 +281,7 @@ function Tile({
   const { t, colors } = useSettings();
   return (
     <Card style={styles.tile}>
-      <Icon name={icon} size={20} color={colors.primary} />
+      <IconBadge name={icon} tone={tone} size={38} />
       <Txt style={{ fontSize: 22, fontWeight: '800' }} numberOfLines={1} adjustsFontSizeToFit>
         {value}
       </Txt>
@@ -341,6 +358,7 @@ function WeekdayChart({ stats }: { stats: KitchenStats }) {
 
 const styles = StyleSheet.create({
   hello: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  sectionTitle: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   statePill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 12 },
   dot: { width: 8, height: 8, borderRadius: 4 },
   alert: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14, borderRadius: 16 },

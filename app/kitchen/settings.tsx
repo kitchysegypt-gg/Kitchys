@@ -8,7 +8,7 @@ import { KitchenLocationPicker } from '@/components/KitchenLocationPicker';
 import { LastDeliveryCard } from '@/components/LastDeliveryCard';
 import { pickImage } from '@/components/PhotoPicker';
 import { ChefAvatar, RatingBadge } from '@/components/media';
-import { Button, Card, Icon, ScreenHeader, Txt } from '@/components/ui';
+import { Button, Card, Icon, IconBadge, ScreenHeader, Txt } from '@/components/ui';
 import { showAlert } from '@/lib/alert';
 import { DELIVERY_RADIUS_KM, kitchenChefToChef, useCatalog } from '@/lib/catalog';
 import { fetchKitchenLocation, setKitchenLocation, setKitchenPhoto } from '@/lib/chef';
@@ -121,7 +121,7 @@ export default function KitchenSettingsScreen() {
         </Card>
 
         <Card style={styles.row}>
-          <View style={[styles.dot, { backgroundColor: paused ? colors.danger : colors.success }]} />
+          <IconBadge name={paused ? 'pause-circle-outline' : 'power-outline'} tone={paused ? 'pink' : 'green'} size={40} solid />
           <View style={{ flex: 1 }}>
             <Txt style={{ fontWeight: '700' }}>{paused ? t('kitchenPaused') : t('kitchenTakingOrders')}</Txt>
             <Txt variant="caption" muted>

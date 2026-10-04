@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 
 import { Coordinate, DeliveryMap } from '@/components/DeliveryMap';
-import { Button, Card, Icon, Txt } from '@/components/ui';
+import { Button, Card, Icon, IconBadge, Txt } from '@/components/ui';
 import { DELIVERY_RADIUS_KM } from '@/lib/catalog';
 import { addressFor, currentPosition } from '@/lib/geocode';
 import { useSettings } from '@/lib/settings';
@@ -45,7 +45,7 @@ export function KitchenLocationPicker({ value, onChange, children }: Props) {
   return (
     <Card style={{ gap: 10 }}>
       <View style={styles.row}>
-        <Icon name="home-outline" size={22} color={colors.primary} />
+        <IconBadge name="home-outline" tone="orange" size={32} />
         <Txt variant="heading" style={{ flex: 1, fontSize: 17 }}>
           {t('kitchenLocation')}
         </Txt>

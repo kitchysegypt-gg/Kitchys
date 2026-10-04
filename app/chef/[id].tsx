@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ChefAvatar, ChefName, ChefTags, Stars } from '@/components/media';
 import { DishCard } from '@/components/menu';
-import { Card, EmptyState, Icon, Screen, Txt } from '@/components/ui';
+import { Card, EmptyState, Icon, IconBadge, Screen, Txt } from '@/components/ui';
 import { DELIVERY_RADIUS_KM, useCatalog } from '@/lib/catalog';
 import { RATING_PARTS, Review, fetchChefReviews } from '@/lib/reviews';
 import { useSettings } from '@/lib/settings';
@@ -109,7 +109,7 @@ export default function ChefScreen() {
                 const value = rating[part.key];
                 return (
                   <View key={part.key} style={styles.ratingRow}>
-                    <Icon name={part.icon} size={18} color={colors.textMuted} />
+                    <IconBadge name={part.icon} tone={PART_TONES[part.key]} size={30} />
                     <Txt style={{ flex: 1, fontWeight: '500' }}>{t(part.label)}</Txt>
                     <View style={[styles.bar, { backgroundColor: colors.surfaceAlt }]}>
                       <View
@@ -162,6 +162,8 @@ export default function ChefScreen() {
     </View>
   );
 }
+
+const PART_TONES = { food: 'orange', delivery: 'teal', packaging: 'amber', value: 'green' } as const;
 
 const styles = StyleSheet.create({
   reply: { gap: 4, padding: 10, borderRadius: 12, borderStartWidth: 3 },

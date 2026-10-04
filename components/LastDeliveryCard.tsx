@@ -6,7 +6,7 @@ import { useCatalog } from '@/lib/catalog';
 import { setLastDelivery } from '@/lib/chef';
 import { EARLIEST_LAST_DELIVERY, LATEST_LAST_DELIVERY, STEP_MINUTES, formatTime } from '@/lib/schedule';
 import { useSettings } from '@/lib/settings';
-import { Button, Card, Icon, Txt } from './ui';
+import { Button, Card, Icon, IconBadge, Txt } from './ui';
 
 /** My kitchen: the chef picks the last time they deliver (1 PM - 11 PM). */
 export function LastDeliveryCard({ chefId }: { chefId: string }) {
@@ -38,7 +38,7 @@ export function LastDeliveryCard({ chefId }: { chefId: string }) {
   return (
     <Card style={{ gap: 12 }}>
       <View style={styles.row}>
-        <Icon name="time-outline" size={18} color={colors.textMuted} />
+        <IconBadge name="time-outline" tone="blue" size={32} />
         <Txt variant="label">{t('lastDeliveryTitle')}</Txt>
       </View>
       <Txt variant="caption" muted>
@@ -77,7 +77,7 @@ export function LastDeliveryCard({ chefId }: { chefId: string }) {
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   timeRow: {
     flexDirection: 'row',
     alignItems: 'center',

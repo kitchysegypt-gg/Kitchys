@@ -78,6 +78,18 @@ export function softShadow(color: string) {
   const hex = color.replace('#', '');
   const [r, g, b] = [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16));
   return {
-    boxShadow: `0px 1px 2px rgba(${r}, ${g}, ${b}, 0.06), 0px 4px 12px rgba(${r}, ${g}, ${b}, 0.08)`,
+    boxShadow: `0px 1px 3px rgba(${r}, ${g}, ${b}, 0.08), 0px 6px 18px rgba(${r}, ${g}, ${b}, 0.12)`,
   };
 }
+
+/** Colours for icon tiles, so each kind of information is easy to spot. */
+export const ICON_TONES = {
+  orange: '#F4511E',
+  green: '#16A34A',
+  blue: '#2563EB',
+  purple: '#7C3AED',
+  amber: '#D97706',
+  pink: '#DB2777',
+  teal: '#0D9488',
+} as const;
+export type IconTone = keyof typeof ICON_TONES;

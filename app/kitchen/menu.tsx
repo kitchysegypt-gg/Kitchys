@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { DishEditor } from '@/components/DishEditor';
 import { PhotoStrip } from '@/components/PhotoPicker';
 import { DishArt } from '@/components/media';
-import { Button, Card, Icon, ScreenHeader, Txt } from '@/components/ui';
+import { Button, Card, Icon, IconBadge, ScreenHeader, Txt } from '@/components/ui';
 import { formatPortion } from '@/data/menu';
 import { showAlert, showConfirm } from '@/lib/alert';
 import { kitchenDishToDish, useCatalog } from '@/lib/catalog';
@@ -137,11 +137,14 @@ export default function KitchenMenuScreen() {
                     hitSlop={8}
                     accessibilityRole="button"
                     accessibilityLabel={t('delete')}>
-                    <Icon name="trash-outline" size={22} color={colors.danger} />
+                    <View style={[styles.trash, { backgroundColor: `${colors.danger}14` }]}>
+                      <Icon name="trash" size={18} color={colors.danger} />
+                    </View>
                   </Pressable>
                 </View>
 
                 <View style={[styles.limitRow, { borderColor: colors.border }]}>
+                  <IconBadge name="speedometer-outline" tone="amber" size={32} />
                   <View style={{ flex: 1 }}>
                     <Txt variant="caption" style={{ fontWeight: '700' }}>
                       {t('dailyLimit')}
@@ -155,7 +158,7 @@ export default function KitchenMenuScreen() {
                     hitSlop={8}
                     accessibilityRole="button"
                     accessibilityLabel={t('fewer')}>
-                    <Icon name="remove-circle-outline" size={28} color={colors.primary} />
+                    <Icon name="remove-circle" size={30} color={colors.primary} />
                   </Pressable>
                   <Txt style={{ minWidth: 36, textAlign: 'center', fontWeight: '800' }}>
                     {d.daily_limit ?? '∞'}
@@ -165,7 +168,7 @@ export default function KitchenMenuScreen() {
                     hitSlop={8}
                     accessibilityRole="button"
                     accessibilityLabel={t('more')}>
-                    <Icon name="add-circle-outline" size={28} color={colors.primary} />
+                    <Icon name="add-circle" size={30} color={colors.primary} />
                   </Pressable>
                 </View>
               </Card>
@@ -209,5 +212,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  trash: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
   limitRow: { flexDirection: 'row', alignItems: 'center', gap: 10, borderTopWidth: 1, paddingTop: 10 },
 });

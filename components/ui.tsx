@@ -1,5 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import {
   ActivityIndicator,
@@ -18,7 +19,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EmojiName } from '@/lib/emoji';
-import { softShadow } from '@/lib/theme';
+import { ICON_TONES, IconTone, softShadow } from '@/lib/theme';
 import { FONT, fontFamilyFor } from '@/lib/fonts';
 import { useSettings } from '@/lib/settings';
 import { useAnimatedValue } from '@/lib/useAnimatedValue';
@@ -79,6 +80,47 @@ export function Icon({
     );
   }
   return <Ionicons name={name as React.ComponentProps<typeof Ionicons>['name']} size={size} color={color ?? colors.text} style={style} />;
+}
+
+/** Ionicons' filled version of an outline icon ("star-outline" → "star"). */
+export const filledIcon = (name: IconName): IconName =>
+  (typeof name === 'string' && name.endsWith('-outline') ? name.slice(0, -8) : name) as IconName;
+
+/**
+ * A filled icon on a soft, slightly glossy tile in one colour, for headings and figures.
+ * `solid` fills the tile with the colour and draws the icon in white.
+ */
+export function IconBadge({
+  name,
+  tone = 'orange',
+  size = 40,
+  solid = false,
+}: {
+  name: IconName;
+  tone?: IconTone;
+  size?: number;
+  solid?: boolean;
+}) {
+  const color = ICON_TONES[tone];
+  const radius = Math.round(size * 0.32);
+  return (
+    <LinearGradient
+      colors={solid ? [color, `${color}CC`] : [`${color}2E`, `${color}12`]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={{
+        width: size,
+        height: size,
+        borderRadius: radius,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: solid ? `${color}` : `${color}33`,
+        boxShadow: solid ? `0px 4px 10px ${color}55` : undefined,
+      }}>
+      <Icon name={filledIcon(name)} size={Math.round(size * 0.52)} color={solid ? '#FFFFFF' : color} />
+    </LinearGradient>
+  );
 }
 
 type TxtProps = TextProps & {
