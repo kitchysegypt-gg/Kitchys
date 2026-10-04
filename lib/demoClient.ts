@@ -123,7 +123,11 @@ async function priceOf(dishId: string) {
   const dish = getDish(dishId);
   if (dish) return { price: dish.price, chefId: dish.chefId };
   const kitchenDish = (await readTable('kitchen_dishes')).find((d) => d.id === dishId && d.available);
-  return kitchenDish ? { price: Number(kitchenDish.price), chefId: kitchenDish.chef_id as string } : null;
+  if (kitchenDish) return { price: Number(kitchenDish.price), chefId: kitchenDish.chef_id as string };
+  const deal = (await readTable('dish_deals')).find(
+    (d) => d.id === dishId && !d.cancelled && new Date(d.expires_at) > new Date() && d.sold < d.quantity
+  );
+  return deal ? { price: Number(deal.price), chefId: deal.chef_id as string } : null;
 }
 
 async function insertOrder(values: Row): Promise<Result> {
@@ -372,6 +376,7 @@ async function visibleRows(table: string): Promise<Row[]> {
 class DemoQuery implements PromiseLike<Result> {
   private op: 'select' | 'insert' | 'update' | 'delete' = 'select';
   private filters: [string, unknown][] = [];
+  private ranges: ((row: Row) => boolean)[] = [];
   private sort?: { column: string; ascending: boolean };
   private max?: number;
   private one: 'single' | 'maybe' | null = null;
@@ -400,6 +405,10 @@ class DemoQuery implements PromiseLike<Result> {
     this.filters.push([column, value]);
     return this;
   }
+  gt(column: string, value: string | number) {
+    this.ranges.push((row) => row[column] > value);
+    return this;
+  }
   order(column: string, options?: { ascending?: boolean }) {
     this.sort = { column, ascending: options?.ascending ?? true };
     return this;
@@ -424,7 +433,7 @@ class DemoQuery implements PromiseLike<Result> {
     return this.run().then(onfulfilled, onrejected);
   }
 
-  private matches = (row: Row) => this.filters.every(([c, v]) => row[c] === v);
+  private matches = (row: Row) => this.filters.every(([c, v]) => row[c] === v) && this.ranges.every((test) => test(row));
 
   private async run(): Promise<Result> {
     if (this.op === 'insert') {
@@ -673,6 +682,38 @@ async function myKitchenStats(days: number) {
   });
 }
 
+async function cancelMyOrder(orderId: string) {
+  const all = await readTable('orders');
+  const order = all.find((o) => o.id === orderId && o.user_id === me());
+  if (!order) return fail('Order not found');
+  if (order.status !== 'placed') return fail("The chef already started cooking this order, so it can't be cancelled.");
+  order.status = 'cancelled';
+  order.cancelled_by = 'customer';
+  await writeTable('orders', all);
+  return ok(null);
+}
+
+async function startDeal(dishId: string, price: number, quantity: number) {
+  const chef = await myKitchen();
+  if (!chef) return fail('Only approved home chefs have a kitchen');
+  const dish = (await readTable('kitchen_dishes')).find((d) => d.id === dishId && d.chef_id === chef.id);
+  if (!dish) return fail('Dish not found');
+  if (!(price > 0) || price >= Number(dish.price)) return fail(`The deal price must be lower than the usual price (EGP ${dish.price}).`);
+  const ends = new Date();
+  ends.setHours(21, 0, 0, 0);
+  if (ends <= new Date()) ends.setTime(Date.now() + 2 * 3600_000);
+  const rows = (await readTable('dish_deals')).map((d) => (d.dish_id === dishId ? { ...d, cancelled: true } : d));
+  rows.push({ id: uuid(), chef_id: chef.id, dish_id: dishId, price, quantity, sold: 0, cancelled: false, expires_at: ends.toISOString() });
+  await writeTable('dish_deals', rows);
+  return ok(null);
+}
+
+async function endDeal(dealId: string) {
+  const rows = (await readTable('dish_deals')).map((d) => (d.id === dealId ? { ...d, cancelled: true } : d));
+  await writeTable('dish_deals', rows);
+  return ok(null);
+}
+
 async function rpc(name: string, args: Row) {
   if (name === 'redeem_reward') return redeemReward(args.p_reward_id);
   if (name === 'approve_chef_application') return approveApplication(args.p_id);
@@ -689,6 +730,9 @@ async function rpc(name: string, args: Row) {
   if (name === 'reply_to_review') return replyToReview(args.p_review, args.p_reply ?? '');
   if (name === 'my_kitchen_stats') return myKitchenStats(Number(args.p_days) || 7);
   if (name === 'dish_portions_ordered') return ok([]);
+  if (name === 'cancel_my_order') return cancelMyOrder(args.p_order);
+  if (name === 'start_deal') return startDeal(args.p_dish, Number(args.p_price), Number(args.p_quantity));
+  if (name === 'end_deal') return endDeal(args.p_deal);
   if (name === 'save_cart' || name === 'register_push_device' || name === 'unregister_push_device') return ok(null);
   return fail(`Unknown function ${name}`);
 }

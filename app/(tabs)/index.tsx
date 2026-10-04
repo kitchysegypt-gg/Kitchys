@@ -14,7 +14,7 @@ import { useAnimatedValue } from '@/lib/useAnimatedValue';
 
 export default function HomeScreen() {
   const { t, colors, isRTL, location } = useSettings();
-  const { chefs, dishes, getChef } = useCatalog();
+  const { chefs, dishes, deals, getChef } = useCatalog();
   const [category, setCategory] = useState<Category | 'all'>('all');
   const [query, setQuery] = useState('');
 
@@ -111,6 +111,23 @@ export default function HomeScreen() {
               </View>
             ) : (
               <>
+
+                {deals.length > 0 && (
+                  <>
+                    {sectionHeader(t('todaysDeals'))}
+                    <Txt variant="caption" muted style={{ paddingHorizontal: 16, marginTop: -6 }}>
+                      {t('todaysDealsBody')}
+                    </Txt>
+                    <FlatList
+                      horizontal
+                      data={deals}
+                      keyExtractor={(d) => d.id}
+                      renderItem={({ item }) => <DishCard dish={item} />}
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={{ paddingHorizontal: 16, gap: 12, paddingVertical: 8 }}
+                    />
+                  </>
+                )}
 
                 {sectionHeader(t('kitchensNearYou'), () => router.navigate('/chefs'))}
                 <ScrollView

@@ -70,6 +70,8 @@ export type Dish = {
   portionGrams?: number;
   /** Home-chef dishes: most portions the chef cooks per day. */
   dailyLimit?: number;
+  /** Set on a "Today's deal": extra portions sold cheaper today. The dish id is the deal's id. */
+  deal?: { dishId: string; originalPrice: number; left: number; endsAt: string };
 };
 
 /** "750 g" or "1.5 kg". */

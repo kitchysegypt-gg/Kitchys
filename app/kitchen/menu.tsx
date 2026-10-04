@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { DealPanel } from '@/components/DealPanel';
 import { DishEditor } from '@/components/DishEditor';
 import { PhotoStrip } from '@/components/PhotoPicker';
 import { DishArt } from '@/components/media';
@@ -28,7 +29,7 @@ const LIMIT_STEPS = [null, 3, 5, 8, 10, 15, 20, 30, 50];
 /** Kitchen > Menu: the chef's dishes, their photos, availability and daily limits. */
 export default function KitchenMenuScreen() {
   const { t, colors, formatPrice } = useSettings();
-  const { kitchen, dishes, reload, setDailyLimit } = useKitchen();
+  const { kitchen, dishes, reload, setDailyLimit, deals, startDeal, endDeal } = useKitchen();
   const { refresh } = useCatalog();
   const [draft, setDraft] = useState<DishDraft | null>(null);
   const [busy, setBusy] = useState(false);
@@ -171,6 +172,16 @@ export default function KitchenMenuScreen() {
                     <Icon name="add-circle" size={30} color={colors.primary} />
                   </Pressable>
                 </View>
+
+                {d.available && (
+                  <DealPanel
+                    dishId={d.id}
+                    price={Number(d.price)}
+                    deal={deals.find((deal) => deal.dish_id === d.id)}
+                    onStart={startDeal}
+                    onEnd={endDeal}
+                  />
+                )}
               </Card>
               {editingPhotos === d.id && (
                 <Card>

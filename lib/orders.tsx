@@ -70,6 +70,8 @@ type OrdersContextValue = {
   next: Rank | undefined;
   refresh: () => Promise<void>;
   placeOrder: (order: NewOrder) => Promise<Order>;
+  /** Cancels the customer's own order; only possible before the chef starts cooking. */
+  cancelOrder: (orderId: string) => Promise<void>;
   redeem: (rewardId: string) => Promise<Voucher>;
 };
 
@@ -157,6 +159,16 @@ export function OrdersProvider({ children }: { children: React.ReactNode }) {
     [refresh]
   );
 
+  const cancelOrder = useCallback(
+    async (orderId: string) => {
+      const { error } = await supabase.rpc('cancel_my_order', { p_order: orderId });
+      if (error) throw error;
+      // Vouchers and credit come back, so reload everything.
+      await refresh();
+    },
+    [refresh]
+  );
+
   const redeem = useCallback(async (rewardId: string) => {
     const { data, error } = await supabase.rpc('redeem_reward', { p_reward_id: rewardId });
     if (error) throw error;
@@ -177,6 +189,7 @@ export function OrdersProvider({ children }: { children: React.ReactNode }) {
       loaded,
       refresh,
       placeOrder,
+      cancelOrder,
       redeem,
       orderCount: counted.length,
       points: Math.max(0, earned - spent),
@@ -185,7 +198,7 @@ export function OrdersProvider({ children }: { children: React.ReactNode }) {
       next: nextRank(counted.length),
       freeDeliveriesLeft: Math.max(0, FREE_DELIVERY_ORDERS - counted.length),
     };
-  }, [orders, vouchers, credit, loading, loaded, refresh, placeOrder, redeem]);
+  }, [orders, vouchers, credit, loading, loaded, refresh, placeOrder, cancelOrder, redeem]);
 
   return <OrdersContext.Provider value={value}>{children}</OrdersContext.Provider>;
 }

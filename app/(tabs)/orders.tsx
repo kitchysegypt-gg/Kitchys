@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { FlatList, Linking, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 
 import { Button, Card, EmptyState, Icon, IconName, Screen, Txt } from '@/components/ui';
+import { showAlert, showConfirm } from '@/lib/alert';
 import { formatSlot } from '@/lib/schedule';
 import { useCatalog } from '@/lib/catalog';
 import { OrderStatus, useOrders } from '@/lib/orders';
@@ -17,7 +18,7 @@ const STATUS_ICON: Record<OrderStatus, IconName> = {
 
 export default function OrdersScreen() {
   const { t, l, colors, formatPrice, language } = useSettings();
-  const { orders, loading, refresh } = useOrders();
+  const { orders, loading, refresh, cancelOrder } = useOrders();
   const { getDish } = useCatalog();
 
   return (
@@ -126,6 +127,29 @@ export default function OrdersScreen() {
                     {item.address ?? t('openInMaps')}
                   </Txt>
                 </Pressable>
+              )}
+              {item.status === 'placed' && (
+                <Button
+                  small
+                  variant="ghost"
+                  icon="close-circle-outline"
+                  title={t('cancelOrder')}
+                  onPress={() =>
+                    showConfirm(t('cancelOrderTitle'), t('cancelOrderBody'), {
+                      label: t('cancelOrder'),
+                      cancelLabel: t('keepOrder'),
+                      onConfirm: () =>
+                        cancelOrder(item.id)
+                          .then(() => showAlert(t('orderCancelledTitle'), t('orderCancelledBody')))
+                          .catch((e) => showAlert(t('error'), e?.message ?? String(e))),
+                    })
+                  }
+                />
+              )}
+              {item.status === 'cooking' && (
+                <Txt variant="caption" muted>
+                  {t('cantCancelCooking')}
+                </Txt>
               )}
               {item.status !== 'cancelled' && (
                 <Button

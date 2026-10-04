@@ -128,6 +128,23 @@ export const CUSTOMER_HELP: HelpTopic[] = [
     },
   },
   {
+    id: 'deals',
+    icon: 'flame-outline',
+    title: { en: 'Today\'s deals', ar: 'عروض النهارده', fr: 'Bons plans du jour' },
+    steps: [
+      {
+        en: 'On Home, look for {todaysDeals}: extra portions a chef cooked today, at a lower price (the old price is crossed out).',
+        ar: 'في الرئيسية، دوّر على {todaysDeals}: حصص زيادة الشيف طبخها النهارده بسعر أقل (السعر القديم عليه شرطة).',
+        fr: 'Sur l\'accueil, cherchez {todaysDeals} : des portions en plus cuisinées aujourd\'hui, moins chères (l\'ancien prix est barré).',
+      },
+      {
+        en: 'Deals are delivered today, as soon as possible, and only while portions last ("3 left").',
+        ar: 'العروض بتتوصّل النهارده في أسرع وقت، ولحد ما الحصص تخلص ("فاضل ٣").',
+        fr: 'Les bons plans sont livrés aujourd\'hui, dès que possible, dans la limite des portions (« Plus que 3 »).',
+      },
+    ],
+  },
+  {
     id: 'time',
     icon: 'time-outline',
     title: { en: 'Choose when it arrives', ar: 'اختار ميعاد التوصيل', fr: 'Choisir l\'heure de livraison' },
@@ -200,6 +217,28 @@ export const CUSTOMER_HELP: HelpTopic[] = [
         en: 'If a chef can\'t take your order, it shows "Cancelled" and any credit you used comes back to you.',
         ar: 'لو الشيف مقدرش ياخد طلبك، هيظهر "اتلغى" وأي رصيد استخدمته هيرجعلك.',
         fr: 'Si un chef ne peut pas prendre votre commande, elle passe à « Annulée » et le crédit utilisé vous est rendu.',
+      },
+    ],
+  },
+  {
+    id: 'cancel',
+    icon: 'close-circle-outline',
+    title: { en: 'Cancel an order', ar: 'إلغاء طلب', fr: 'Annuler une commande' },
+    steps: [
+      {
+        en: 'Open the {tabOrders} tab and tap {cancelOrder} on the order. You can cancel while it\'s new or accepted.',
+        ar: 'افتح تاب {tabOrders} ودوس {cancelOrder} على الطلب. تقدر تلغي طول ما هو جديد أو اتقبل.',
+        fr: 'Ouvrez l\'onglet {tabOrders} et touchez {cancelOrder} sur la commande. C\'est possible tant qu\'elle est nouvelle ou acceptée.',
+      },
+      {
+        en: 'Once the chef starts cooking, the order can\'t be cancelled any more.',
+        ar: 'أول ما الشيف يبدأ يطبخ، الطلب مينفعش يتلغي.',
+        fr: 'Dès que le chef commence à cuisiner, la commande ne peut plus être annulée.',
+      },
+      {
+        en: 'Any credit or reward you used comes back to you, and the chef is told.',
+        ar: 'أي رصيد أو مكافأة استخدمتها بترجعلك، والشيف بيتبلّغ.',
+        fr: 'Le crédit ou la récompense utilisés vous sont rendus, et le chef est prévenu.',
       },
     ],
   },
@@ -500,6 +539,33 @@ export const CHEF_HELP: HelpTopic[] = [
         en: 'Turn it back on when you\'re ready. The {kitchenDashboard} always shows whether you\'re taking orders or paused.',
         ar: 'افتحيه تاني لما تكوني جاهزة. {kitchenDashboard} دايماً بتوضح إنتي بتستقبلي طلبات ولا واقفة.',
         fr: 'Réactivez-le quand vous êtes prête. L\'onglet {kitchenDashboard} indique toujours si vous êtes ouverte ou en pause.',
+      },
+    ],
+  },
+  {
+    id: 'deals',
+    icon: 'flame-outline',
+    title: { en: 'Sell extra portions cheaper', ar: 'بيعي الحصص الزيادة بسعر أقل', fr: 'Vendre les portions en plus' },
+    steps: [
+      {
+        en: 'Cooked more than was ordered? In the {kitchenMenu} tab, tap {sellExtraToday} under the dish.',
+        ar: 'طبختي أكتر من الطلبات؟ في تاب {kitchenMenu}، دوسي {sellExtraToday} تحت الأكلة.',
+        fr: 'Vous avez cuisiné plus que commandé ? Dans l\'onglet {kitchenMenu}, touchez {sellExtraToday} sous le plat.',
+      },
+      {
+        en: 'Choose how many portions and a lower price, then tap {startDeal}.',
+        ar: 'اختاري عدد الحصص وسعر أقل، ودوسي {startDeal}.',
+        fr: 'Choisissez le nombre de portions et un prix plus bas, puis touchez {startDeal}.',
+      },
+      {
+        en: 'Customers near you see it in {todaysDeals} until your last delivery time or until it\'s sold out. Orders come in like any order, as soon as possible.',
+        ar: 'الزباين اللي جنبك هيشوفوه في {todaysDeals} لحد آخر ميعاد توصيل أو لحد ما يخلص. الطلبات بتيجي زي أي طلب، في أسرع وقت.',
+        fr: 'Les clients proches le voient dans {todaysDeals} jusqu\'à votre dernière livraison ou jusqu\'à épuisement. Les commandes arrivent comme les autres, dès que possible.',
+      },
+      {
+        en: 'Tap {endDeal} to stop it early.',
+        ar: 'دوسي {endDeal} عشان توقفيه بدري.',
+        fr: 'Touchez {endDeal} pour l\'arrêter plus tôt.',
       },
     ],
   },

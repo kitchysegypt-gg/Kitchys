@@ -203,7 +203,12 @@ export default function CartScreen() {
               />
             </Card>
 
-            <SchedulePicker value={schedule} onChange={setSchedule} close={close} />
+            <SchedulePicker
+              value={schedule}
+              onChange={setSchedule}
+              close={close}
+              asapOnly={lines.some((line) => !!line.dish.deal)}
+            />
 
             {availableVouchers.length > 0 && (
               <Card style={{ gap: 10 }}>

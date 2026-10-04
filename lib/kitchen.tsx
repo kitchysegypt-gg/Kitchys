@@ -52,6 +52,16 @@ export type KitchenStats = {
   };
 };
 
+/** A "Today's deal" the chef is running: extra portions of a dish at a lower price. */
+export type KitchenDeal = {
+  id: string;
+  dish_id: string;
+  price: number;
+  quantity: number;
+  sold: number;
+  expires_at: string;
+};
+
 export type KitchenReview = {
   id: string;
   reviewer_name: string | null;
@@ -69,6 +79,10 @@ type KitchenValue = ChefStatus & {
   /** Orders that still need the chef: new, cooking or on the way. */
   openOrders: KitchenOrder[];
   reviews: KitchenReview[];
+  /** Deals running today. */
+  deals: KitchenDeal[];
+  startDeal: (dishId: string, price: number, quantity: number) => Promise<void>;
+  endDeal: (dealId: string) => Promise<void>;
   paused: boolean;
   refreshOrders: () => Promise<void>;
   refreshReviews: () => Promise<void>;
@@ -93,6 +107,7 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
   const [orders, setOrders] = useState<KitchenOrder[]>([]);
   const [reviews, setReviews] = useState<KitchenReview[]>([]);
   const [paused, setPausedState] = useState(false);
+  const [deals, setDeals] = useState<KitchenDeal[]>([]);
   const knownIds = useRef<Set<string> | null>(null);
 
   const refreshOrders = useCallback(async () => {
@@ -124,6 +139,17 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
     if (data) setReviews(data as KitchenReview[]);
   }, [chefId]);
 
+  const refreshDeals = useCallback(async () => {
+    if (!chefId) return;
+    const { data } = await supabase
+      .from('dish_deals')
+      .select('id, dish_id, price, quantity, sold, expires_at')
+      .eq('chef_id', chefId)
+      .eq('cancelled', false)
+      .gt('expires_at', new Date().toISOString());
+    if (data) setDeals((data as KitchenDeal[]).map((d) => ({ ...d, price: Number(d.price) })));
+  }, [chefId]);
+
   const refreshPaused = useCallback(async () => {
     if (!chefId) return;
     const { data } = await supabase.from('chef_hours').select('paused').eq('chef_id', chefId).maybeSingle();
@@ -134,16 +160,19 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
     refreshOrders();
     refreshReviews();
     refreshPaused();
-  }, [refreshOrders, refreshReviews, refreshPaused]);
+    refreshDeals();
+  }, [refreshOrders, refreshReviews, refreshPaused, refreshDeals]);
 
   // Live: new orders and status changes arrive without pulling to refresh.
   useEffect(() => {
     if (!chefId || !session || isDemo) return;
     const channel = supabase
       .channel(`kitchen-${chefId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders', filter: `chef_id=eq.${chefId}` }, () =>
-        refreshOrders()
-      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders', filter: `chef_id=eq.${chefId}` }, () => {
+        refreshOrders();
+        // A new order can use up a deal's portions.
+        refreshDeals();
+      })
       .subscribe();
     // A slow poll as a safety net in case the live connection drops.
     const timer = setInterval(refreshOrders, 60_000);
@@ -151,7 +180,7 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
       clearInterval(timer);
       supabase.removeChannel(channel);
     };
-  }, [chefId, session, refreshOrders]);
+  }, [chefId, session, refreshOrders, refreshDeals]);
 
   const setOrderStatus = useCallback(
     async (orderId: string, next: ChefAction) => {
@@ -197,6 +226,24 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
     [status]
   );
 
+  const startDeal = useCallback(
+    async (dishId: string, price: number, quantity: number) => {
+      const { error } = await supabase.rpc('start_deal', { p_dish: dishId, p_price: price, p_quantity: quantity });
+      if (error) throw error;
+      await Promise.all([refreshDeals(), refreshCatalog()]);
+    },
+    [refreshDeals, refreshCatalog]
+  );
+
+  const endDeal = useCallback(
+    async (dealId: string) => {
+      const { error } = await supabase.rpc('end_deal', { p_deal: dealId });
+      if (error) throw error;
+      await Promise.all([refreshDeals(), refreshCatalog()]);
+    },
+    [refreshDeals, refreshCatalog]
+  );
+
   const loadStats = useCallback(async (days: number) => {
     const { data, error } = await supabase.rpc('my_kitchen_stats', { p_days: days });
     if (error) throw error;
@@ -209,6 +256,9 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
       orders,
       openOrders: orders.filter((o) => OPEN.includes(o.status)),
       reviews,
+      deals,
+      startDeal,
+      endDeal,
       paused,
       refreshOrders,
       refreshReviews,
@@ -218,7 +268,7 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
       setDailyLimit,
       loadStats,
     }),
-    [status, orders, reviews, paused, refreshOrders, refreshReviews, setOrderStatus, replyToReview, setPaused, setDailyLimit, loadStats]
+    [status, orders, reviews, deals, startDeal, endDeal, paused, refreshOrders, refreshReviews, setOrderStatus, replyToReview, setPaused, setDailyLimit, loadStats]
   );
 
   return <KitchenContext.Provider value={value}>{children}</KitchenContext.Provider>;

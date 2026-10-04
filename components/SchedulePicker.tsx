@@ -35,11 +35,14 @@ export function SchedulePicker({
   value,
   onChange,
   close = CLOSE_MINUTES,
+  asapOnly = false,
 }: {
   value: ScheduleValue;
   onChange: (v: ScheduleValue) => void;
   /** The chef's last delivery time, in minutes after midnight. */
   close?: number;
+  /** Today's deals are already cooked: they can only be delivered as soon as possible. */
+  asapOnly?: boolean;
 }) {
   const { t, colors, language } = useSettings();
   const open = isKitchenOpen(new Date(), close);
@@ -53,11 +56,13 @@ export function SchedulePicker({
   };
 
   // Kitchens are closed: "as soon as possible" isn't possible, so start on a scheduled time.
+  // With a deal in the cart it's the other way round: only "as soon as possible".
   useEffect(() => {
-    if (!open && value.mode === 'asap') pickLater();
-    // Only when the picker opens or the kitchens close.
+    if (asapOnly && value.mode === 'later') onChange({ mode: 'asap' });
+    else if (!asapOnly && !open && value.mode === 'asap') pickLater();
+    // Only when the picker opens, the kitchens close or a deal is added.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [open, asapOnly]);
 
   // The chef's hours can change (another chef in the cart): keep the picked time inside them.
   const laterDay = value.mode === 'later' ? value.day : -1;
@@ -88,7 +93,7 @@ export function SchedulePicker({
         </Txt>
       </View>
       <View style={styles.row}>
-        {open && (
+        {(open || asapOnly) && (
           <Chip
             label={t('asap')}
             icon="delivery"
@@ -96,10 +101,14 @@ export function SchedulePicker({
             onPress={() => onChange({ mode: 'asap' })}
           />
         )}
-        <Chip label={t('schedule')} icon="calendar-outline" active={value.mode === 'later'} onPress={pickLater} />
+        {!asapOnly && (
+          <Chip label={t('schedule')} icon="calendar-outline" active={value.mode === 'later'} onPress={pickLater} />
+        )}
       </View>
       <Txt variant="caption" muted>
-        {open
+        {asapOnly
+          ? t('dealAsapOnly')
+          : open
           ? t('kitchenHours', { from: formatTime(OPEN_MINUTES, language), to: formatTime(close, language) })
           : t('closedSchedule', {
               day: formatDay(nextOpening().day, language, { today: t('today'), tomorrow: t('tomorrow') }),

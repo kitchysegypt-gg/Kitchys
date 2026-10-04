@@ -32,6 +32,13 @@ export function useAddToCart() {
       showAlert(t('tooFarTitle'), t('tooFarBody', { chef: chefName(dish.chefId), km: DELIVERY_RADIUS_KM }));
       return;
     }
+    if (dish.deal) {
+      const inCart = lines.find((line) => line.dish.id === dish.id)?.quantity ?? 0;
+      if (inCart + quantity > dish.deal.left) {
+        showAlert(t('todaysDeals'), t('dealDetail', { n: dish.deal.left }));
+        return;
+      }
+    }
     if (isPaused(dish.chefId)) {
       showAlert(t('kitchenPaused'), t('kitchenPausedCustomer', { chef: chefName(dish.chefId) }));
       return;
@@ -76,7 +83,7 @@ export function QuickAddButton({ dish }: { dish: Dish }) {
 }
 
 export function DishCard({ dish, wide }: { dish: Dish; wide?: boolean }) {
-  const { l, colors, formatPrice } = useSettings();
+  const { t, l, colors, formatPrice } = useSettings();
   const { getChef } = useCatalog();
   const chef = getChef(dish.chefId);
   return (
@@ -86,6 +93,14 @@ export function DishCard({ dish, wide }: { dish: Dish; wide?: boolean }) {
         <View style={styles.dishClip}>
           <View>
             <DishArt dish={dish} height={wide ? 120 : 130} />
+            {dish.deal && (
+              <View style={[styles.dealBadge, { backgroundColor: colors.primary }]}>
+                <Icon name="flame" size={12} color={colors.onPrimary} />
+                <Txt style={{ color: colors.onPrimary, fontSize: 11, fontWeight: '800' }}>
+                  {t('dealLeft', { n: dish.deal.left })}
+                </Txt>
+              </View>
+            )}
             {(dish.spicy || dish.vegetarian) && (
               <View style={styles.badges}>
                 {dish.spicy && <Icon name="flame" size={14} color="#E53935" />}
@@ -103,7 +118,14 @@ export function DishCard({ dish, wide }: { dish: Dish; wide?: boolean }) {
                 .join(' · ')}
             </Txt>
             <View style={styles.priceRow}>
-              <Txt style={{ fontWeight: '800', color: colors.primary, fontSize: 15 }}>{formatPrice(dish.price)}</Txt>
+              <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 6, flexShrink: 1 }}>
+                <Txt style={{ fontWeight: '800', color: colors.primary, fontSize: 15 }}>{formatPrice(dish.price)}</Txt>
+                {dish.deal && (
+                  <Txt variant="caption" muted style={{ textDecorationLine: 'line-through' }}>
+                    {formatPrice(dish.deal.originalPrice)}
+                  </Txt>
+                )}
+              </View>
               <QuickAddButton dish={dish} />
             </View>
           </View>
@@ -274,6 +296,17 @@ const styles = StyleSheet.create({
   allergenWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   allergen: { paddingVertical: 5, paddingHorizontal: 12, borderRadius: 14, borderWidth: 1 },
   dishClip: { borderRadius: 17, overflow: 'hidden' },
+  dealBadge: {
+    position: 'absolute',
+    top: 8,
+    start: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    paddingVertical: 3,
+    paddingHorizontal: 7,
+    borderRadius: 9,
+  },
   stampCard: { borderRadius: 20, borderWidth: 1, overflow: 'hidden' },
   stampTop: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16 },
   stamps: { flexDirection: 'row', gap: 6 },

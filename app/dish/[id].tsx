@@ -65,7 +65,18 @@ export default function DishScreen() {
             <Txt variant="title">{l(dish.name)}</Txt>
             <Txt variant="heading" style={{ marginTop: 4, color: colors.primary }}>
               {formatPrice(dish.price)}
+              {dish.deal ? (
+                <Txt muted style={{ fontSize: 15, textDecorationLine: 'line-through' }}>
+                  {'  '}
+                  {formatPrice(dish.deal.originalPrice)}
+                </Txt>
+              ) : null}
             </Txt>
+            {dish.deal && (
+              <Txt variant="caption" style={{ marginTop: 4, fontWeight: '700', color: colors.primary }}>
+                🔥 {t('dealDetail', { n: dish.deal.left })}
+              </Txt>
+            )}
             {left !== null && left <= 5 && (
               <Txt variant="caption" style={{ marginTop: 4, fontWeight: '700', color: left === 0 ? colors.danger : colors.primary }}>
                 {left === 0 ? t('soldOutToday') : t('onlyLeftToday', { n: left })}
