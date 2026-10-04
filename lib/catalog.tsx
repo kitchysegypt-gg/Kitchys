@@ -4,6 +4,7 @@ import { Allergen, CHEFS, Category, Chef, DISHES, Dish } from '@/data/menu';
 import { useAuth } from './auth';
 import type { EmojiName } from './emoji';
 import type { Localized } from './i18n';
+import { CLOSE_MINUTES } from './schedule';
 import { useSettings } from './settings';
 import { supabase } from './supabase';
 
@@ -124,6 +125,8 @@ type CatalogValue = {
   isNear: (chefId: string) => boolean;
   /** Popular (busy in the last 30 days), Verified and Homemade badges for a chef. */
   chefTags: (chefId: string) => ChefTag[];
+  /** The chef's last delivery time, in minutes after midnight (9 PM until they pick one). */
+  lastDelivery: (chefId: string) => number;
   ratings: Record<string, ChefRating>;
   /** True once the home chefs' dishes have been fetched for this account. */
   loaded: boolean;
@@ -144,6 +147,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   const [loaded, setLoaded] = useState(false);
   // Orders per chef in the last 30 days.
   const [popularity, setPopularity] = useState<Record<string, number>>({});
+  const [lastDeliveries, setLastDeliveries] = useState<Record<string, number>>({});
   const { location } = useSettings();
   const lat = location?.latitude;
   const lng = location?.longitude;
@@ -168,12 +172,23 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
       setLoaded(false);
       return;
     }
-    const [chefsRes, dishesRes, ratingsRes, popularRes] = await Promise.all([
+    const [chefsRes, dishesRes, ratingsRes, popularRes, hoursRes] = await Promise.all([
       supabase.from('kitchen_chefs').select('*').order('created_at', { ascending: true }),
       supabase.from('kitchen_dishes').select('*').order('created_at', { ascending: true }),
       supabase.from('chef_ratings').select('*').order('chef_id', { ascending: true }),
       supabase.rpc('chef_popularity'),
+      supabase.from('chef_hours').select('chef_id, last_delivery_minutes'),
     ]);
+    if (!hoursRes.error && Array.isArray(hoursRes.data)) {
+      setLastDeliveries(
+        Object.fromEntries(
+          (hoursRes.data as { chef_id: string; last_delivery_minutes: number }[]).map((r) => [
+            r.chef_id,
+            r.last_delivery_minutes,
+          ])
+        )
+      );
+    }
     if (!popularRes.error && Array.isArray(popularRes.data)) {
       setPopularity(
         Object.fromEntries(
@@ -210,6 +225,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
         'verified',
         'homemade',
       ],
+      lastDelivery: (chefId) => lastDeliveries[chefId] ?? CLOSE_MINUTES,
       ratings,
       loaded,
       refresh,
@@ -218,7 +234,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
       getDish: (id) => allDishes.find((d) => d.id === id),
       dishesByChef: (chefId) => allDishes.filter((d) => d.chefId === chefId),
     };
-  }, [kitchenChefs, kitchenDishes, ratings, loaded, refresh, nearIds, popularity]);
+  }, [kitchenChefs, kitchenDishes, ratings, loaded, refresh, nearIds, popularity, lastDeliveries]);
 
   return <CatalogContext.Provider value={value}>{children}</CatalogContext.Provider>;
 }

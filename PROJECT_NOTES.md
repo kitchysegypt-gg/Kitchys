@@ -20,7 +20,7 @@ Prices, delivery fees, discounts, points, referral cashback and credit are all c
 
 ## Features
 
-Dinner-only menu from home chefs; kitchens open 10:00-21:00 Cairo time (`lib/schedule.ts` OPEN_MINUTES/CLOSE_MINUTES and the `orders_check_hours` trigger; reminders follow the same hours); one chef per order, and customers only see chefs within 15 km of their delivery address (chef locations are private: `chef_locations` table, `chefs_near()` RPC, checked again on every order by the `orders_check_chef` trigger; radius in `delivery_radius_km()` and `DELIVERY_RADIUS_KM` in `lib/catalog.tsx`); dish photos and sizes; cart with scheduling, vouchers, referral code and credit; orders and chef reviews; points, ranks and rewards; refer a friend (10% of the friend's first order as credit, no cap); Kitchy AI chat (Claude); smart notifications (see below); apply as a chef (photos, dishes) → email to the owner with Approve / Reject links → approved chefs manage dishes and photos in My kitchen; languages (English, Arabic, French), themes and accent colours.
+Dinner-only menu from home chefs; kitchens open at 10:00 Cairo time and each chef picks their last delivery time in My kitchen (1 PM-11 PM, 9 PM by default; `chef_hours` table, `set_last_delivery()` RPC); ordering while the chef is closed, the next day they open starts at 1 PM (`lib/schedule.ts` and the `orders_check_hours` trigger; reminders use 10:00-21:00); one chef per order, and customers only see chefs within 15 km of their delivery address (chef locations are private: `chef_locations` table, `chefs_near()` RPC, checked again on every order by the `orders_check_chef` trigger; radius in `delivery_radius_km()` and `DELIVERY_RADIUS_KM` in `lib/catalog.tsx`); dish photos and sizes; cart with scheduling, vouchers, referral code and credit; orders and chef reviews; points, ranks and rewards; refer a friend (10% of the friend's first order as credit, no cap); Kitchy AI chat (Claude); smart notifications (see below); apply as a chef (photos, dishes) → email to the owner with Approve / Reject links → approved chefs manage dishes and photos in My kitchen; languages (English, Arabic, French), themes and accent colours.
 
 ## Smart notifications
 
@@ -28,7 +28,7 @@ App saves the phone's push token (`push_devices`) and the cart (`saved_carts`) �
 
 - "Your cart is calling": cart left 2+ hours (up to 3 days) without ordering; opens the cart.
 - "We miss you": no order for 7+ days, at most once a week; opens Home.
-- Max one notification per person per 20 hours, only 12:00-22:00 Cairo time. Customers can turn them off in Settings.
+- Max one notification per person per 20 hours, only 10:00-21:00 Cairo time. Customers can turn them off in Settings.
 - Test without sending: POST to the function with header `x-cron-secret` (Vault secret `notifications_cron_secret`) and body `{"dryRun": true}`.
 - **Android push uses Firebase** project `kitchys-dbcc6` (package `com.kitchys.app`): `google-services.json` is in the project root (`android.googleServicesFile` in `app.json`) and the FCM V1 service account key is stored in expo.dev → project → Credentials (never in git). Phones on an APK built before this fall back to reminders scheduled on the phone itself.
 

@@ -262,3 +262,9 @@ export async function setKitchenLocation(c: { latitude: number; longitude: numbe
   const { error } = await supabase.rpc('set_kitchen_location', { p_lat: c.latitude, p_lng: c.longitude });
   if (error) throw error;
 }
+
+/** The signed-in chef's last delivery time, in minutes after midnight (1 PM - 11 PM). */
+export async function setLastDelivery(minutes: number) {
+  const { error } = await supabase.rpc('set_last_delivery', { p_minutes: minutes });
+  if (error) throw error;
+}

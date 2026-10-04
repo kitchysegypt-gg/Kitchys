@@ -7,32 +7,58 @@ export const STEP_MINUTES = 15;
 export const MIN_LEAD_MINUTES = 30;
 /** Dinner time is the suggested default. */
 export const DEFAULT_MINUTES = 19 * 60;
-/** Kitchens take and deliver orders from 10:00 to 21:00 (the database checks this in Cairo time). */
+/**
+ * Kitchens open at 10:00. Each chef picks their last delivery time (1 PM - 11 PM, 9 PM until
+ * they choose). The database checks the same rules in Cairo time.
+ */
 export const OPEN_MINUTES = 10 * 60;
 export const CLOSE_MINUTES = 21 * 60;
+export const EARLIEST_LAST_DELIVERY = 13 * 60;
+export const LATEST_LAST_DELIVERY = 23 * 60;
+/** Ordered while the kitchen is closed: the next day it opens starts at 1 PM, so the chef can cook. */
+export const AFTER_CLOSED_FIRST_MINUTES = 13 * 60;
 
 const minutesOf = (d: Date) => d.getHours() * 60 + d.getMinutes();
 
-/** True while kitchens are open, so "as soon as possible" orders are possible. */
-export function isKitchenOpen(now = new Date()) {
+/** True while a kitchen is open (10:00 until its last delivery time), so "as soon as possible" works. */
+export function isKitchenOpen(now = new Date(), close = CLOSE_MINUTES) {
   const m = minutesOf(now);
-  return m >= OPEN_MINUTES && m < CLOSE_MINUTES;
+  return m >= OPEN_MINUTES && m < close;
 }
 
-/** True when a delivery time falls inside opening hours (21:00 itself is the last slot). */
-export function isWithinHours(date: Date) {
+/** True when a delivery time falls inside opening hours (the closing time itself is the last slot). */
+export function isWithinHours(date: Date, close = CLOSE_MINUTES) {
   const m = minutesOf(date);
-  return m >= OPEN_MINUTES && m <= CLOSE_MINUTES;
+  return m >= OPEN_MINUTES && m <= close;
 }
 
-/** Keeps a picked time of day inside opening hours. */
-export function clampToHours(minutes: number) {
-  return Math.min(CLOSE_MINUTES, Math.max(OPEN_MINUTES, minutes));
-}
-
-/** When kitchens next open: today (before 10:00) or tomorrow (after 21:00). */
+/** When a kitchen next opens: today (before 10:00) or tomorrow (after closing). */
 export function nextOpening(now = new Date()): { day: 0 | 1; minutes: number } {
   return minutesOf(now) < OPEN_MINUTES ? { day: 0, minutes: OPEN_MINUTES } : { day: 1, minutes: OPEN_MINUTES };
+}
+
+/** The earliest time of day a customer can pick for a day (0 = today), given the chef's closing time. */
+export function firstMinutesFor(day: number, close = CLOSE_MINUTES, now = new Date()) {
+  if (!isKitchenOpen(now, close) && day === nextOpening(now).day) return AFTER_CLOSED_FIRST_MINUTES;
+  if (day === 0) return Math.max(OPEN_MINUTES, earliestMinutesToday(now));
+  return OPEN_MINUTES;
+}
+
+/** Keeps a picked time of day inside what that day allows. */
+export function clampToHours(minutes: number, day = 1, close = CLOSE_MINUTES, now = new Date()) {
+  return Math.min(close, Math.max(firstMinutesFor(day, close, now), minutes));
+}
+
+/** True when the chef can still deliver on that day at all (late in the evening "today" is over). */
+export function dayHasSlots(day: number, close = CLOSE_MINUTES, now = new Date()) {
+  return firstMinutesFor(day, close, now) <= close;
+}
+
+/** True when a scheduled time is before 1 PM on the first day after ordering while closed. */
+export function isBeforeAfterClosedStart(date: Date, close = CLOSE_MINUTES, now = new Date()) {
+  if (isKitchenOpen(now, close)) return false;
+  const first = startOfDay(nextOpening(now).day, now);
+  return startOfDay(0, date).getTime() === first.getTime() && minutesOf(date) < AFTER_CLOSED_FIRST_MINUTES;
 }
 
 const locale = (language: Language) => (language === 'ar' ? 'ar-EG' : language);

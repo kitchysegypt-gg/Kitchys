@@ -11,9 +11,10 @@ import { useCart } from '@/lib/cart';
 import { DELIVERY_RADIUS_KM, useCatalog } from '@/lib/catalog';
 import { applyReward, getReward, pointsFor } from '@/lib/loyalty';
 import {
-  CLOSE_MINUTES,
+  AFTER_CLOSED_FIRST_MINUTES,
   OPEN_MINUTES,
   formatTime,
+  isBeforeAfterClosedStart,
   isKitchenOpen,
   isTooSoon,
   isWithinHours,
@@ -29,7 +30,7 @@ import { DELIVERY_FEE } from '@/lib/supabase';
 export default function CartScreen() {
   const { t, l, colors, formatPrice, isRTL, location, language } = useSettings();
   const { lines, subtotal, setQuantity, clear } = useCart();
-  const { getChef, isNear } = useCatalog();
+  const { getChef, isNear, lastDelivery } = useCatalog();
   const { freeDeliveriesLeft, placeOrder, availableVouchers, orderCount, orders, credit } = useOrders();
   const { playOrderSuccess } = useSounds();
   // Prefilled from the saved map location until the customer types their own.
@@ -37,6 +38,9 @@ export default function CartScreen() {
   const address = typedAddress ?? (location ? [location.address, location.details].filter(Boolean).join(', ') : '');
   const [voucherId, setVoucherId] = useState<string | null>(null);
   const [schedule, setSchedule] = useState<ScheduleValue>({ mode: 'asap' });
+  // Orders come from one chef, so the cart follows that chef's last delivery time.
+  const cartChefId = lines[0]?.dish.chefId;
+  const close = lastDelivery(cartChefId ?? '');
   const [earned, setEarned] = useState(0);
   const [notes, setNotes] = useState('');
   const [referralCode, setReferralCode] = useState('');
@@ -67,9 +71,16 @@ export default function CartScreen() {
       return showAlert(t('tooFarTitle'), t('tooFarBody', { chef: chef ? l(chef.name) : '', km: DELIVERY_RADIUS_KM }));
     }
     const scheduledFor = schedule.mode === 'later' ? slotDate(schedule.day, schedule.minutes) : null;
-    const hours = { from: formatTime(OPEN_MINUTES, language), to: formatTime(CLOSE_MINUTES, language) };
-    if (!scheduledFor && !isKitchenOpen()) return showAlert(t('deliveryTime'), t('closedSchedule', hours));
-    if (scheduledFor && !isWithinHours(scheduledFor)) return showAlert(t('deliveryTime'), t('kitchenHours', hours));
+    const hours = { from: formatTime(OPEN_MINUTES, language), to: formatTime(close, language) };
+    if (!scheduledFor && !isKitchenOpen(new Date(), close)) {
+      return showAlert(t('deliveryTime'), t('kitchenHours', hours));
+    }
+    if (scheduledFor && !isWithinHours(scheduledFor, close)) {
+      return showAlert(t('deliveryTime'), t('kitchenHours', hours));
+    }
+    if (scheduledFor && isBeforeAfterClosedStart(scheduledFor, close)) {
+      return showAlert(t('deliveryTime'), t('closedEarliest', { time: formatTime(AFTER_CLOSED_FIRST_MINUTES, language) }));
+    }
     if (scheduledFor && isTooSoon(scheduledFor)) return showAlert(t('deliveryTime'), t('timeTooSoon'));
     setBusy(true);
     try {
@@ -192,7 +203,7 @@ export default function CartScreen() {
               />
             </Card>
 
-            <SchedulePicker value={schedule} onChange={setSchedule} />
+            <SchedulePicker value={schedule} onChange={setSchedule} close={close} />
 
             {availableVouchers.length > 0 && (
               <Card style={{ gap: 10 }}>

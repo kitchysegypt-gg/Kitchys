@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { Coordinate } from '@/components/DeliveryMap';
 import { DishEditor } from '@/components/DishEditor';
 import { KitchenLocationPicker } from '@/components/KitchenLocationPicker';
+import { LastDeliveryCard } from '@/components/LastDeliveryCard';
 import { PhotoStrip, pickImage } from '@/components/PhotoPicker';
 import { ChefAvatar, DishArt, RatingBadge } from '@/components/media';
 import { formatPortion } from '@/data/menu';
@@ -214,6 +215,8 @@ export default function KitchenScreen() {
                 )}
               </KitchenLocationPicker>
             )}
+
+            <LastDeliveryCard chefId={kitchen.id} />
 
             <Txt muted>{t('kitchenBody')}</Txt>
 

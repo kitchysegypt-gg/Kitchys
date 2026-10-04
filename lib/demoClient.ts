@@ -542,6 +542,14 @@ async function approveApplication(id: string): Promise<Result> {
   return ok(chef.id);
 }
 
+async function setLastDelivery(minutes: number) {
+  const chef = await myKitchen();
+  if (!chef) return fail('Only approved home chefs have a kitchen');
+  const rows = (await readTable('chef_hours')).filter((r) => r.chef_id !== chef.id);
+  await writeTable('chef_hours', [...rows, { chef_id: chef.id, last_delivery_minutes: minutes }]);
+  return ok(null);
+}
+
 async function rpc(name: string, args: Row) {
   if (name === 'redeem_reward') return redeemReward(args.p_reward_id);
   if (name === 'approve_chef_application') return approveApplication(args.p_id);
@@ -552,6 +560,7 @@ async function rpc(name: string, args: Row) {
   if (name === 'chef_popularity') return ok([]);
   if (name === 'set_kitchen_location') return setKitchenLocation(args.p_lat, args.p_lng);
   if (name === 'my_kitchen_location') return myKitchenLocation();
+  if (name === 'set_last_delivery') return setLastDelivery(args.p_minutes);
   if (name === 'save_cart' || name === 'register_push_device' || name === 'unregister_push_device') return ok(null);
   return fail(`Unknown function ${name}`);
 }
