@@ -12,6 +12,8 @@ export type Review = {
   value: number;
   comment: string;
   created_at: string;
+  /** The chef's answer, if they replied. */
+  chef_reply?: string | null;
 };
 
 export type NewReview = Pick<Review, 'chef_id' | 'order_id' | 'food' | 'delivery' | 'packaging' | 'value' | 'comment'>;

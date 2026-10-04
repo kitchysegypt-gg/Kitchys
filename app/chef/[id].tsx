@@ -147,6 +147,14 @@ export default function ChefScreen() {
                 ))}
               </View>
               {!!r.comment && <Txt>{r.comment}</Txt>}
+              {!!r.chef_reply && (
+                <View style={[styles.reply, { backgroundColor: colors.surfaceAlt, borderColor: colors.primary }]}>
+                  <Txt variant="caption" style={{ fontWeight: '700', color: colors.primary }}>
+                    {t('chefReply')}
+                  </Txt>
+                  <Txt variant="caption">{r.chef_reply}</Txt>
+                </View>
+              )}
             </Card>
           ))}
         </View>
@@ -156,6 +164,7 @@ export default function ChefScreen() {
 }
 
 const styles = StyleSheet.create({
+  reply: { gap: 4, padding: 10, borderRadius: 12, borderStartWidth: 3 },
   farNotice: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 14 },
   hero: {
     alignItems: 'center',

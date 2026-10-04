@@ -139,10 +139,12 @@ async function insertOrder(values: Row): Promise<Result> {
     }
   }
   let subtotal = 0;
+  let chefId: string | null = null;
   for (const item of items) {
     const found = await priceOf(item.dishId);
     if (!found) return fail('One of the dishes is no longer on the menu');
     subtotal += found.price * item.quantity;
+    chefId = found.chefId;
   }
   const previous = mine.filter((o) => o.status !== 'cancelled').length;
   let deliveryFee = previous < FREE_DELIVERY_ORDERS ? 0 : DELIVERY_FEE;
@@ -189,6 +191,7 @@ async function insertOrder(values: Row): Promise<Result> {
     referred_by: referrer,
     points_earned: pointsFor(subtotal - discount, previous),
     status: 'placed',
+    chef_id: chefId,
     created_at: new Date().toISOString(),
   };
   await writeTable('orders', [row, ...all]);
@@ -349,7 +352,11 @@ async function chefRatings() {
 async function visibleRows(table: string): Promise<Row[]> {
   if (table === 'chef_ratings') return chefRatings();
   const rows = await readTable(table);
-  if (['orders', 'reward_vouchers', 'chef_applications', 'wallet_entries', 'referral_codes'].includes(table)) {
+  if (table === 'orders') {
+    const kitchen = await myKitchen();
+    return rows.filter((r) => r.user_id === me() || (kitchen && r.chef_id === kitchen.id));
+  }
+  if (['reward_vouchers', 'chef_applications', 'wallet_entries', 'referral_codes'].includes(table)) {
     return rows.filter((r) => r.user_id === me());
   }
   if (table === 'referrals') return rows.filter((r) => r.referrer_id === me());
@@ -550,6 +557,112 @@ async function setLastDelivery(minutes: number) {
   return ok(null);
 }
 
+async function setKitchenPaused(paused: boolean) {
+  const chef = await myKitchen();
+  if (!chef) return fail('Only approved home chefs have a kitchen');
+  const rows = await readTable('chef_hours');
+  const row = rows.find((r) => r.chef_id === chef.id);
+  if (row) row.paused = paused;
+  else rows.push({ chef_id: chef.id, last_delivery_minutes: 1260, paused });
+  await writeTable('chef_hours', rows);
+  return ok(null);
+}
+
+const NEXT_STATUS: Record<string, string[]> = {
+  placed: ['cooking', 'cancelled'],
+  cooking: ['on_the_way', 'cancelled'],
+  on_the_way: ['delivered'],
+};
+
+async function chefSetOrderStatus(orderId: string, status: string) {
+  const chef = await myKitchen();
+  if (!chef) return fail('Only approved home chefs have a kitchen');
+  const all = await readTable('orders');
+  const order = all.find((o) => o.id === orderId && o.chef_id === chef.id);
+  if (!order) return fail('Order not found');
+  if (!(NEXT_STATUS[order.status] ?? []).includes(status)) return fail(`This order can't go from ${order.status} to ${status}`);
+  order.status = status;
+  await writeTable('orders', all);
+  return ok(null);
+}
+
+async function replyToReview(reviewId: string, reply: string) {
+  const chef = await myKitchen();
+  if (!chef) return fail('Only approved home chefs have a kitchen');
+  const all = await readTable('chef_reviews');
+  const review = all.find((r) => r.id === reviewId && r.chef_id === chef.id);
+  if (!review) return fail('Review not found');
+  review.chef_reply = reply.trim() || null;
+  await writeTable('chef_reviews', all);
+  return ok(null);
+}
+
+/** The same numbers as the kitchen_stats database function, worked out in the browser. */
+async function myKitchenStats(days: number) {
+  const chef = await myKitchen();
+  if (!chef) return fail('Only approved home chefs have a kitchen');
+  const dayOf = (o: Row) => new Date(o.scheduled_for ?? o.created_at).toISOString().slice(0, 10);
+  const all = (await readTable('orders')).filter((o) => o.chef_id === chef.id);
+  const live = all.filter((o) => o.status !== 'cancelled');
+  const today = new Date().toISOString().slice(0, 10);
+  const dayList = Array.from({ length: days }, (_, i) => new Date(Date.now() - (days - 1 - i) * 86_400_000).toISOString().slice(0, 10));
+  const inWin = live.filter((o) => dayOf(o) >= dayList[0] && dayOf(o) <= today);
+  const sum = (rows: Row[]) => rows.reduce((s, o) => s + Number(o.subtotal), 0);
+  const dishes: Record<string, { dish_id: string; name: string; qty: number; sales: number }> = {};
+  for (const o of inWin) {
+    for (const item of o.items as { dishId: string; name: string; price: number; quantity: number }[]) {
+      const d = (dishes[item.dishId] ??= { dish_id: item.dishId, name: item.name, qty: 0, sales: 0 });
+      d.qty += item.quantity;
+      d.sales += item.price * item.quantity;
+    }
+  }
+  const byUser: Record<string, number> = {};
+  inWin.forEach((o) => (byUser[o.user_id] = (byUser[o.user_id] ?? 0) + 1));
+  const reviews = (await readTable('chef_reviews')).filter((r) => r.chef_id === chef.id);
+  const avg = (key: string) => (reviews.length ? reviews.reduce((s, r) => s + r[key], 0) / reviews.length : null);
+  const hours: Record<number, number> = {};
+  inWin.forEach((o) => {
+    const h = new Date(o.scheduled_for ?? o.created_at).getHours();
+    hours[h] = (hours[h] ?? 0) + 1;
+  });
+  return ok({
+    days,
+    today: {
+      orders: live.filter((o) => dayOf(o) === today).length,
+      sales: sum(live.filter((o) => dayOf(o) === today)),
+      open: all.filter((o) => ['placed', 'cooking', 'on_the_way'].includes(o.status)).length,
+    },
+    orders: inWin.length,
+    sales: sum(inWin),
+    prev_orders: 0,
+    prev_sales: 0,
+    average_order: inWin.length ? Math.round(sum(inWin) / inWin.length) : 0,
+    customers: Object.keys(byUser).length,
+    repeat_customers: Object.values(byUser).filter((n) => n > 1).length,
+    cancelled: all.filter((o) => o.status === 'cancelled').length,
+    by_day: dayList.map((day) => {
+      const rows = inWin.filter((o) => dayOf(o) === day);
+      return { day, orders: rows.length, sales: sum(rows) };
+    }),
+    by_weekday: Array.from({ length: 7 }, (_, wd) => ({
+      weekday: wd,
+      orders: inWin.filter((o) => new Date(dayOf(o)).getDay() === wd).length,
+    })),
+    by_hour: Object.entries(hours).map(([hour, orders]) => ({ hour: Number(hour), orders })),
+    top_dishes: Object.values(dishes).sort((a, b) => b.qty - a.qty).slice(0, 5),
+    rating: {
+      count: reviews.length,
+      overall: reviews.length ? ((avg('food') ?? 0) + (avg('delivery') ?? 0) + (avg('packaging') ?? 0) + (avg('value') ?? 0)) / 4 : null,
+      food: avg('food'),
+      delivery: avg('delivery'),
+      packaging: avg('packaging'),
+      value: avg('value'),
+      recent: null,
+      unanswered: reviews.filter((r) => r.comment && !r.chef_reply).length,
+    },
+  });
+}
+
 async function rpc(name: string, args: Row) {
   if (name === 'redeem_reward') return redeemReward(args.p_reward_id);
   if (name === 'approve_chef_application') return approveApplication(args.p_id);
@@ -561,6 +674,11 @@ async function rpc(name: string, args: Row) {
   if (name === 'set_kitchen_location') return setKitchenLocation(args.p_lat, args.p_lng);
   if (name === 'my_kitchen_location') return myKitchenLocation();
   if (name === 'set_last_delivery') return setLastDelivery(args.p_minutes);
+  if (name === 'set_kitchen_paused') return setKitchenPaused(Boolean(args.p_paused));
+  if (name === 'chef_set_order_status') return chefSetOrderStatus(args.p_order, args.p_status);
+  if (name === 'reply_to_review') return replyToReview(args.p_review, args.p_reply ?? '');
+  if (name === 'my_kitchen_stats') return myKitchenStats(Number(args.p_days) || 7);
+  if (name === 'dish_portions_ordered') return ok([]);
   if (name === 'save_cart' || name === 'register_push_device' || name === 'unregister_push_device') return ok(null);
   return fail(`Unknown function ${name}`);
 }

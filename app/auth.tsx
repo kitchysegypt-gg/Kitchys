@@ -12,7 +12,9 @@ import { isDemo, isSupabaseConfigured, supabase } from '@/lib/supabase';
 
 export default function AuthScreen() {
   const { t, colors, language, setLanguage, isRTL, wantsChefApply, setWantsChefApply } = useSettings();
-  const [mode, setMode] = useState<'signIn' | 'signUp'>('signIn');
+  // 'verify': the account was created and is waiting for the 6-digit code from the email.
+  const [mode, setMode] = useState<'signIn' | 'signUp' | 'verify'>('signIn');
+  const [code, setCode] = useState('');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -38,13 +40,36 @@ export default function AuthScreen() {
       if (error.name === 'AuthRetryableFetchError' || /fetch|network/i.test(error.message)) {
         return showAlert(t('error'), t('cantReachServer'));
       }
+      // Signed up but never confirmed: send a fresh code and ask for it.
+      if (mode === 'signIn' && /not confirmed/i.test(error.message)) {
+        await supabase.auth.resend({ type: 'signup', email: email.trim() }).catch(() => {});
+        setCode('');
+        return setMode('verify');
+      }
       return showAlert(t('error'), error.message);
     }
-    // With "Confirm email" on in Supabase, sign-up returns no session until the link is clicked.
+    // With "Confirm email" on in Supabase, sign-up returns no session until the email is confirmed.
     if (mode === 'signUp' && !data.session) {
-      showAlert(t('email'), t('checkEmail'));
-      setMode('signIn');
+      setCode('');
+      setMode('verify');
     }
+  };
+
+  const verify = async () => {
+    const token = code.replace(/\D/g, '');
+    if (token.length < 6) return showAlert(t('error'), t('enterCode'));
+    setBusy(true);
+    const { error } = await supabase.auth.verifyOtp({ email: email.trim(), token, type: 'signup' });
+    setBusy(false);
+    // On success the new session signs them in and the app moves on by itself.
+    if (error) showAlert(t('error'), /expired|invalid/i.test(error.message) ? t('codeWrong') : error.message);
+  };
+
+  const resendCode = async () => {
+    setBusy(true);
+    const { error } = await supabase.auth.resend({ type: 'signup', email: email.trim() });
+    setBusy(false);
+    showAlert(t('email'), error ? error.message : t('codeSent', { email: email.trim() }));
   };
 
   const input = (icon: IconName, props: React.ComponentProps<typeof TextInput>) => (
@@ -74,7 +99,9 @@ export default function AuthScreen() {
                     backgroundColor: colors.surface,
                   },
                 ]}>
-                <Txt variant="caption" style={{ fontWeight: '600', color: language === lang.code ? colors.primary : colors.text }}>
+                <Txt
+                  variant="caption"
+                  style={{ fontWeight: '600', color: language === lang.code ? colors.primary : colors.text }}>
                   {lang.label}
                 </Txt>
               </Pressable>
@@ -97,36 +124,72 @@ export default function AuthScreen() {
             </View>
           )}
 
-          <Card style={{ gap: 12, padding: 18 }}>
-            <Txt variant="heading" style={{ marginBottom: 4 }}>
-              {mode === 'signIn' ? t('signIn') : t('signUp')}
-            </Txt>
+          {mode === 'verify' ? (
+            <Card style={{ gap: 12, padding: 18 }}>
+              <Txt variant="heading">{t('confirmEmailTitle')}</Txt>
+              <Txt muted>{t('confirmEmailBody', { email: email.trim() })}</Txt>
+              <TextInput
+                value={code}
+                onChangeText={(v) => setCode(v.replace(/\D/g, '').slice(0, 6))}
+                placeholder="123456"
+                placeholderTextColor={colors.textMuted}
+                keyboardType="number-pad"
+                autoComplete="one-time-code"
+                textContentType="oneTimeCode"
+                maxLength={6}
+                accessibilityLabel={t('enterCode')}
+                style={[
+                  styles.code,
+                  { backgroundColor: colors.surfaceAlt, borderColor: colors.border, color: colors.text },
+                ]}
+              />
+              <Button title={t('confirmEmailButton')} onPress={verify} loading={busy} />
+              <View style={styles.verifyLinks}>
+                <Pressable onPress={resendCode} disabled={busy} hitSlop={8}>
+                  <Txt style={{ color: colors.primary, fontWeight: '600' }}>{t('resendCode')}</Txt>
+                </Pressable>
+                <Pressable onPress={() => setMode('signIn')} hitSlop={8}>
+                  <Txt muted>{t('useAnotherEmail')}</Txt>
+                </Pressable>
+              </View>
+            </Card>
+          ) : (
+            <Card style={{ gap: 12, padding: 18 }}>
+              <Txt variant="heading" style={{ marginBottom: 4 }}>
+                {mode === 'signIn' ? t('signIn') : t('signUp')}
+              </Txt>
 
-            {mode === 'signUp' &&
-              input('person-outline', { placeholder: t('fullName'), value: name, onChangeText: setName, autoComplete: 'name' })}
-            {input('mail-outline', {
-              placeholder: t('email'),
-              value: email,
-              onChangeText: setEmail,
-              autoCapitalize: 'none',
-              keyboardType: 'email-address',
-              autoComplete: 'email',
-            })}
-            {input('lock-closed-outline', {
-              placeholder: t('password'),
-              value: password,
-              onChangeText: setPassword,
-              secureTextEntry: true,
-              autoComplete: mode === 'signIn' ? 'current-password' : 'new-password',
-            })}
+              {mode === 'signUp' &&
+                input('person-outline', {
+                  placeholder: t('fullName'),
+                  value: name,
+                  onChangeText: setName,
+                  autoComplete: 'name',
+                })}
+              {input('mail-outline', {
+                placeholder: t('email'),
+                value: email,
+                onChangeText: setEmail,
+                autoCapitalize: 'none',
+                keyboardType: 'email-address',
+                autoComplete: 'email',
+              })}
+              {input('lock-closed-outline', {
+                placeholder: t('password'),
+                value: password,
+                onChangeText: setPassword,
+                secureTextEntry: true,
+                autoComplete: mode === 'signIn' ? 'current-password' : 'new-password',
+              })}
 
-            <Button
-              title={mode === 'signIn' ? t('signIn') : t('signUp')}
-              onPress={submit}
-              loading={busy}
-              style={{ marginTop: 6 }}
-            />
-          </Card>
+              <Button
+                title={mode === 'signIn' ? t('signIn') : t('signUp')}
+                onPress={submit}
+                loading={busy}
+                style={{ marginTop: 6 }}
+              />
+            </Card>
+          )}
 
           <Pressable onPress={() => setMode(mode === 'signIn' ? 'signUp' : 'signIn')} style={{ padding: 16 }}>
             <Txt center style={{ color: colors.primary, fontWeight: '600' }}>
@@ -167,6 +230,16 @@ export default function AuthScreen() {
 
 const styles = StyleSheet.create({
   scroll: { padding: 20, paddingBottom: 40 },
+  code: {
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingVertical: 14,
+    fontSize: 28,
+    letterSpacing: 10,
+    textAlign: 'center',
+    fontFamily: FONT.bold,
+  },
+  verifyLinks: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 4 },
   chefApply: {
     flexDirection: 'row',
     alignItems: 'center',

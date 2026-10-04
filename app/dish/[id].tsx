@@ -18,9 +18,10 @@ export default function DishScreen() {
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
   const bounce = useAnimatedValue(1);
-  const { getChef, getDish, ratings } = useCatalog();
+  const { getChef, getDish, ratings, portionsLeft } = useCatalog();
   const dish = getDish(id);
   const chef = dish && getChef(dish.chefId);
+  const left = dish ? portionsLeft(dish) : null;
 
   if (!dish || !chef)
     return (
@@ -65,6 +66,11 @@ export default function DishScreen() {
             <Txt variant="heading" style={{ marginTop: 4, color: colors.primary }}>
               {formatPrice(dish.price)}
             </Txt>
+            {left !== null && left <= 5 && (
+              <Txt variant="caption" style={{ marginTop: 4, fontWeight: '700', color: left === 0 ? colors.danger : colors.primary }}>
+                {left === 0 ? t('soldOutToday') : t('onlyLeftToday', { n: left })}
+              </Txt>
+            )}
           </View>
 
           <View style={styles.facts}>

@@ -20,7 +20,7 @@ import { Button, Card, Icon, PressableScale, Txt } from './ui';
  */
 export function useAddToCart() {
   const { add, clear, lines } = useCart();
-  const { getChef, isNear } = useCatalog();
+  const { getChef, isNear, isPaused } = useCatalog();
   const { t, l } = useSettings();
   const { playAddToCart } = useSounds();
   return (dish: Dish, quantity = 1, onAdded?: () => void) => {
@@ -30,6 +30,10 @@ export function useAddToCart() {
     };
     if (!isNear(dish.chefId)) {
       showAlert(t('tooFarTitle'), t('tooFarBody', { chef: chefName(dish.chefId), km: DELIVERY_RADIUS_KM }));
+      return;
+    }
+    if (isPaused(dish.chefId)) {
+      showAlert(t('kitchenPaused'), t('kitchenPausedCustomer', { chef: chefName(dish.chefId) }));
       return;
     }
     const addNow = () => {

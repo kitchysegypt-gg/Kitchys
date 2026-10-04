@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 
 import { useAuth } from './auth';
 import { Rank, nextRank, rankFor } from './loyalty';
-import { FREE_DELIVERY_ORDERS, supabase } from './supabase';
+import { FREE_DELIVERY_ORDERS, isDemo, supabase } from './supabase';
 
 export type OrderStatus = 'placed' | 'cooking' | 'on_the_way' | 'delivered' | 'cancelled';
 
@@ -104,7 +104,8 @@ export function OrdersProvider({ children }: { children: React.ReactNode }) {
     }
     setLoading(true);
     const [ordersRes, vouchersRes, creditRes] = await Promise.all([
-      supabase.from('orders').select('*').order('created_at', { ascending: false }),
+      // Only the customer's own orders (chefs can also read their kitchen's orders).
+      supabase.from('orders').select('*').eq('user_id', session.user.id).order('created_at', { ascending: false }),
       supabase.from('reward_vouchers').select('*').order('created_at', { ascending: false }),
       supabase.rpc('my_wallet_balance', {}),
     ]);
@@ -118,6 +119,26 @@ export function OrdersProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     refresh();
   }, [refresh]);
+
+  // Live: the chef accepting, sending out or delivering an order shows up straight away.
+  const userId = session?.user.id;
+  useEffect(() => {
+    if (!userId || isDemo) return;
+    const channel = supabase
+      .channel(`orders-${userId}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'orders', filter: `user_id=eq.${userId}` },
+        (payload) => {
+          const row = payload.new as { id: string; status: OrderStatus };
+          setOrders((prev) => prev.map((o) => (o.id === row.id ? { ...o, status: row.status } : o)));
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userId]);
 
   const placeOrder = useCallback(
     async (order: NewOrder) => {

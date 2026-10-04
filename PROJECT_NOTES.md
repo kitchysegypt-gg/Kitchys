@@ -64,3 +64,16 @@ App saves the phone's push token (`push_devices`) and the cart (`saved_carts`) �
 - Owner wants to send custom sound files for add-to-cart and order-placed (`assets/sounds/`).
 - Real photos per dish (all dishes currently share one koshari photo; `lib/photos.ts` maps dish id → photo) and per chef.
 - Before launch: turn email confirmation back on, clear test accounts/orders, rotate any keys that were pasted into chats, publish to the Play Store.
+
+## Chef kitchen (its own app)
+
+`app/kitchen/` is a tab app for approved chefs: Dashboard (`my_kitchen_stats()` → `kitchen_stats(chef, days)`: today, orders/sales vs the period before, average order, customers and repeat customers, sales by day, busiest weekdays/hour, top dishes, rating), Orders (live via Supabase Realtime on `orders`; `chef_set_order_status()` moves placed → cooking → on_the_way → delivered, or declines to cancelled), Menu (dishes, photos, on/off, `kitchen_dishes.daily_limit`), Reviews (`reply_to_review()`; replies show on the chef page) and Kitchen settings (photo, pause switch `chef_hours.paused` via `set_kitchen_paused()`, last delivery time, location). Shared state lives in `lib/kitchen.tsx`.
+
+- Every order stores `chef_id` (set by `check_order_chef`); chefs can read their kitchen's orders through RLS, so the customer order list filters by `user_id`.
+- `check_order_limits` rejects orders for paused kitchens or over a dish's daily limit (per Cairo delivery day). `dish_portions_ordered()` feeds "Only N left today".
+- `notify_order_change` pushes "New order" to the chef and status changes to the customer through Expo push (pg_net).
+- Weekly email: edge function `chef-weekly-report`, cron `chef-weekly-report` Sundays 07:00 UTC, sent with Resend. Until a domain is verified in Resend (and `EMAIL_FROM` set to it) Resend only delivers to the account owner. Test with body `{"dryRun": true}`.
+
+## Email confirmation
+
+The sign-in screen asks for a 6-digit code after sign-up (`verifyOtp` type `signup`) and resends it. To switch it on: verify a domain in Resend, set Supabase → Authentication → SMTP to Resend (host `smtp.resend.com`, port 465, user `resend`, password = Resend API key, sender `no-reply@<domain>`), add `{{ .Token }}` to the "Confirm signup" email template, then turn on "Confirm email". Supabase's built-in email only reaches the project's team members.

@@ -68,6 +68,8 @@ export type Dish = {
   photos?: string[];
   /** Portion size in grams. */
   portionGrams?: number;
+  /** Home-chef dishes: most portions the chef cooks per day. */
+  dailyLimit?: number;
 };
 
 /** "750 g" or "1.5 kg". */

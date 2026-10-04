@@ -56,6 +56,8 @@ export type KitchenDishRow = {
   /** Up to 4 photos; the first is the cover (photo_url). */
   photo_urls?: string[] | null;
   portion_grams?: number | null;
+  /** Most portions the chef will cook per day; null means no limit. */
+  daily_limit?: number | null;
 };
 
 const same = (text: string): Localized => ({ en: text, ar: text, fr: text });
@@ -113,6 +115,7 @@ export function kitchenDishToDish(row: KitchenDishRow): Dish {
     photo: row.photo_urls?.[0] ?? row.photo_url ?? undefined,
     photos: row.photo_urls?.length ? row.photo_urls : row.photo_url ? [row.photo_url] : undefined,
     portionGrams: row.portion_grams ?? undefined,
+    dailyLimit: row.daily_limit ?? undefined,
   };
 }
 
@@ -127,6 +130,10 @@ type CatalogValue = {
   chefTags: (chefId: string) => ChefTag[];
   /** The chef's last delivery time, in minutes after midnight (9 PM until they pick one). */
   lastDelivery: (chefId: string) => number;
+  /** True when the chef has paused orders (their kitchen is left out of the lists). */
+  isPaused: (chefId: string) => boolean;
+  /** Portions of a dish still available today, or null when it has no daily limit. */
+  portionsLeft: (dish: Dish) => number | null;
   ratings: Record<string, ChefRating>;
   /** True once the home chefs' dishes have been fetched for this account. */
   loaded: boolean;
@@ -148,6 +155,9 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   // Orders per chef in the last 30 days.
   const [popularity, setPopularity] = useState<Record<string, number>>({});
   const [lastDeliveries, setLastDeliveries] = useState<Record<string, number>>({});
+  const [pausedIds, setPausedIds] = useState<Set<string>>(new Set());
+  // Portions ordered per dish for today.
+  const [ordered, setOrdered] = useState<Record<string, number>>({});
   const { location } = useSettings();
   const lat = location?.latitude;
   const lng = location?.longitude;
@@ -172,13 +182,19 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
       setLoaded(false);
       return;
     }
-    const [chefsRes, dishesRes, ratingsRes, popularRes, hoursRes] = await Promise.all([
+    const [chefsRes, dishesRes, ratingsRes, popularRes, hoursRes, orderedRes] = await Promise.all([
       supabase.from('kitchen_chefs').select('*').order('created_at', { ascending: true }),
       supabase.from('kitchen_dishes').select('*').order('created_at', { ascending: true }),
       supabase.from('chef_ratings').select('*').order('chef_id', { ascending: true }),
       supabase.rpc('chef_popularity'),
-      supabase.from('chef_hours').select('chef_id, last_delivery_minutes'),
+      supabase.from('chef_hours').select('chef_id, last_delivery_minutes, paused'),
+      supabase.rpc('dish_portions_ordered'),
     ]);
+    if (!orderedRes.error && Array.isArray(orderedRes.data)) {
+      setOrdered(
+        Object.fromEntries((orderedRes.data as { dish_id: string; portions: number }[]).map((r) => [r.dish_id, r.portions]))
+      );
+    }
     if (!hoursRes.error && Array.isArray(hoursRes.data)) {
       setLastDeliveries(
         Object.fromEntries(
@@ -188,6 +204,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
           ])
         )
       );
+      setPausedIds(new Set((hoursRes.data as { chef_id: string; paused: boolean }[]).filter((r) => r.paused).map((r) => r.chef_id)));
     }
     if (!popularRes.error && Array.isArray(popularRes.data)) {
       setPopularity(
@@ -216,10 +233,14 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     const allChefs = [...CHEFS, ...kitchenChefs];
     const allDishes = [...DISHES, ...kitchenDishes.filter((d) => kitchenChefs.some((c) => c.id === d.chefId))];
     const isNear = (chefId: string) => !nearIds || nearIds.has(chefId);
+    const isPaused = (chefId: string) => pausedIds.has(chefId);
+    const listed = (chefId: string) => isNear(chefId) && !isPaused(chefId);
     return {
-      chefs: allChefs.filter((c) => isNear(c.id)),
-      dishes: allDishes.filter((d) => isNear(d.chefId)),
+      chefs: allChefs.filter((c) => listed(c.id)),
+      dishes: allDishes.filter((d) => listed(d.chefId)),
       isNear,
+      isPaused,
+      portionsLeft: (dish) => (dish.dailyLimit ? Math.max(0, dish.dailyLimit - (ordered[dish.id] ?? 0)) : null),
       chefTags: (chefId) => [
         ...((popularity[chefId] ?? 0) >= POPULAR_MIN_ORDERS ? (['popular'] as const) : []),
         'verified',
@@ -234,7 +255,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
       getDish: (id) => allDishes.find((d) => d.id === id),
       dishesByChef: (chefId) => allDishes.filter((d) => d.chefId === chefId),
     };
-  }, [kitchenChefs, kitchenDishes, ratings, loaded, refresh, nearIds, popularity, lastDeliveries]);
+  }, [kitchenChefs, kitchenDishes, ratings, loaded, refresh, nearIds, popularity, lastDeliveries, pausedIds, ordered]);
 
   return <CatalogContext.Provider value={value}>{children}</CatalogContext.Provider>;
 }
