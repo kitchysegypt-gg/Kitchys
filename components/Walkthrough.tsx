@@ -33,7 +33,7 @@ const STEPS: Step[] = [
 ];
 
 /** "How to use the app" — shown on first launch and from Settings. */
-export function Walkthrough({ onDone }: { onDone: () => void }) {
+export function Walkthrough({ onDone, onFullGuide }: { onDone: () => void; /** Shows a "Read the full guide" link. */ onFullGuide?: () => void }) {
   const { t, colors } = useSettings();
   const { width } = useWindowDimensions();
   const [index, setIndex] = useState(0);
@@ -93,6 +93,9 @@ export function Walkthrough({ onDone }: { onDone: () => void }) {
 
         <View style={styles.bottom}>
           <Button title={last ? t('getStarted') : t('next')} onPress={next} />
+          {onFullGuide && (
+            <Button title={t('helpReadFullGuide')} icon="book-outline" variant="ghost" onPress={onFullGuide} />
+          )}
         </View>
       </SafeAreaView>
     </View>

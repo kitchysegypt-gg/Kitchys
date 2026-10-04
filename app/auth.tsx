@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
@@ -197,6 +198,19 @@ export default function AuthScreen() {
             </Txt>
           </Pressable>
 
+          <Pressable onPress={() => router.push('/help')} accessibilityRole="button" style={{ marginBottom: 12 }}>
+            <View style={[styles.guideLink, { borderColor: colors.primary, backgroundColor: colors.surface }]}>
+              <Icon name="book-outline" size={24} color={colors.primary} />
+              <View style={{ flex: 1 }}>
+                <Txt style={{ fontWeight: '800', color: colors.primary }}>{t('helpNewHere')}</Txt>
+                <Txt variant="caption" muted>
+                  {t('helpNewHereBody')}
+                </Txt>
+              </View>
+              <Icon name={isRTL ? 'chevron-back' : 'chevron-forward'} size={20} color={colors.primary} />
+            </View>
+          </Pressable>
+
           <View style={[styles.freeHint, { backgroundColor: colors.successBg }]}>
             <Icon name="delivery" size={26} color={colors.success} />
             <Txt style={{ flex: 1, fontWeight: '500', color: colors.success }}>{t('onb7Body')}</Txt>
@@ -239,6 +253,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: FONT.bold,
   },
+  guideLink: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 16, borderWidth: 1.5 },
   verifyLinks: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 4 },
   chefApply: {
     flexDirection: 'row',

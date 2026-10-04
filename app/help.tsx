@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Card, Chip, Icon, ScreenHeader, Txt } from '@/components/ui';
 import { HELP, HelpAudience, HelpTopic } from '@/data/help';
+import { useAuth } from '@/lib/auth';
 import type { TranslationKey } from '@/lib/i18n';
 import { useSettings } from '@/lib/settings';
 
@@ -21,6 +22,8 @@ export default function HelpScreen() {
   const [audience, setAudience] = useState<HelpAudience>(params.for === 'chef' ? 'chef' : 'customer');
   const [open, setOpen] = useState<string | null>(HELP[audience][0]?.id ?? null);
   const [query, setQuery] = useState('');
+  // The quick tour lives inside the signed-in app.
+  const { session } = useAuth();
 
   const plain = (text: string) => text.replace(LABEL, (_, key) => t(key as TranslationKey));
 
@@ -108,7 +111,7 @@ export default function HelpScreen() {
           />
         ))}
 
-        {!searching && (
+        {!searching && !!session && (
           <Pressable onPress={() => router.push('/guide')} accessibilityRole="button">
             <Card style={styles.tour}>
               <Icon name="play-circle-outline" size={26} color={colors.primary} />

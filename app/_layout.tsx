@@ -94,7 +94,6 @@ function RootNavigator() {
             <Stack.Screen name="chef/[id]" />
             <Stack.Screen name="dish/[id]" options={{ presentation: 'modal' }} />
             <Stack.Screen name="guide" options={{ presentation: 'modal' }} />
-            <Stack.Screen name="help" />
             <Stack.Screen name="location" />
             <Stack.Screen name="apply" />
             <Stack.Screen name="kitchen" />
@@ -104,6 +103,10 @@ function RootNavigator() {
             <Stack.Screen name="refer" />
             <Stack.Screen name="review/[orderId]" options={{ presentation: 'modal' }} />
           </Stack.Protected>
+
+          {/* The full guide is open to everyone, also before signing in. Listed last so it is
+              never the screen the app opens on. */}
+          <Stack.Screen name="help" />
         </Stack>
         {onboarded && session && <NotificationsBridge />}
       </ThemeProvider>
