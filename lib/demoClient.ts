@@ -714,7 +714,51 @@ async function endDeal(dealId: string) {
   return ok(null);
 }
 
+/** Orders and best-selling dish per kitchen, like the chef_highlights database function. */
+async function chefHighlights() {
+  const deals = await readTable('dish_deals');
+  const base = (id: string) => deals.find((d) => d.id === id)?.dish_id ?? id;
+  const live = (await readTable('orders')).filter((o) => o.status !== 'cancelled' && o.chef_id);
+  const byChef: Record<string, { orders: number; qty: Record<string, number> }> = {};
+  for (const o of live) {
+    const c = (byChef[o.chef_id] ??= { orders: 0, qty: {} });
+    c.orders += 1;
+    for (const item of o.items as { dishId: string; quantity: number }[]) {
+      c.qty[base(item.dishId)] = (c.qty[base(item.dishId)] ?? 0) + item.quantity;
+    }
+  }
+  return ok(
+    Object.entries(byChef).map(([chef_id, c]) => ({
+      chef_id,
+      orders: c.orders,
+      top_dish: Object.entries(c.qty).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null,
+    }))
+  );
+}
+
+/** Portions per dish over the last 30 days, like the popular_dishes database function. */
+async function popularDishes() {
+  const deals = await readTable('dish_deals');
+  const since = Date.now() - 30 * 86_400_000;
+  const qty: Record<string, number> = {};
+  for (const o of await readTable('orders')) {
+    if (o.status === 'cancelled' || new Date(o.created_at).getTime() < since) continue;
+    for (const item of o.items as { dishId: string; quantity: number }[]) {
+      const id = deals.find((d) => d.id === item.dishId)?.dish_id ?? item.dishId;
+      qty[id] = (qty[id] ?? 0) + item.quantity;
+    }
+  }
+  return ok(
+    Object.entries(qty)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 20)
+      .map(([dish_id, portions]) => ({ dish_id, portions }))
+  );
+}
+
 async function rpc(name: string, args: Row) {
+  if (name === 'chef_highlights') return chefHighlights();
+  if (name === 'popular_dishes') return popularDishes();
   if (name === 'redeem_reward') return redeemReward(args.p_reward_id);
   if (name === 'approve_chef_application') return approveApplication(args.p_id);
   if (name === 'my_referral_code') return myReferralCode();

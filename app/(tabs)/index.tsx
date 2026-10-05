@@ -14,7 +14,7 @@ import { useAnimatedValue } from '@/lib/useAnimatedValue';
 
 export default function HomeScreen() {
   const { t, colors, isRTL, location } = useSettings();
-  const { chefs, dishes, deals, getChef } = useCatalog();
+  const { chefs, dishes, deals, popular, getChef } = useCatalog();
   const [category, setCategory] = useState<Category | 'all'>('all');
   const [query, setQuery] = useState('');
 
@@ -30,38 +30,31 @@ export default function HomeScreen() {
     });
   }, [category, query, dishes, getChef]);
 
-  const popular = dishes.filter((d) => d.popular);
   const browsing = query.trim() !== '' || category !== 'all';
   const noneNear = !!location && chefs.length === 0;
 
   return (
     <Screen>
+      {/* One calm row: where we deliver, whether kitchens are open, and the chat. Settings live in More. */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.push('/location')} style={{ flex: 1 }} hitSlop={6}>
+        <Pressable
+          onPress={() => router.push('/location')}
+          style={{ flex: 1 }}
+          hitSlop={6}
+          accessibilityRole="button"
+          accessibilityLabel={`${t('deliveryTo')} ${location?.address || t('setLocation')}`}>
           <View style={styles.addressRow}>
-            <Icon name="location" size={20} color={colors.primary} />
-            <View style={{ flexShrink: 1 }}>
-              <Txt variant="caption" muted style={{ fontSize: 12 }}>
-                {t('deliveryTo')}
-              </Txt>
-              <View style={styles.addressRow}>
-                <Txt numberOfLines={1} style={{ fontSize: 16, fontWeight: '700', flexShrink: 1 }}>
-                  {location?.address || t('setLocation')}
-                </Txt>
-                <Icon name="chevron-down" size={16} color={colors.text} />
-              </View>
-            </View>
+            <Icon name="location" size={18} color={colors.primary} />
+            <Txt numberOfLines={1} style={{ fontSize: 16, fontWeight: '700', flexShrink: 1 }}>
+              {location?.address || t('setLocation')}
+            </Txt>
+            <Icon name="chevron-down" size={16} color={colors.text} />
           </View>
+          <KitchenStatus />
         </Pressable>
         <Pressable onPress={() => router.push('/chat')} hitSlop={8} accessibilityLabel={t('chatTitle')}>
-          <Icon name="k-chat" size={44} color={colors.text} />
+          <Icon name="k-chat" size={40} color={colors.text} />
         </Pressable>
-        <Pressable onPress={() => router.push('/settings')} hitSlop={8} accessibilityLabel={t('settings')}>
-          <Icon name="k-settings" size={44} color={colors.text} />
-        </Pressable>
-      </View>
-      <View style={{ paddingHorizontal: 16 }}>
-        <KitchenStatus />
       </View>
 
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
@@ -139,15 +132,20 @@ export default function HomeScreen() {
                   ))}
                 </ScrollView>
 
-                {sectionHeader(t('popularDishes'))}
-                <FlatList
-                  horizontal
-                  data={popular}
-                  keyExtractor={(d) => d.id}
-                  renderItem={({ item }) => <DishCard dish={item} />}
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{ paddingHorizontal: 16, gap: 12, paddingVertical: 8 }}
-                />
+                {/* Only once enough dishes have real orders; an empty row looks broken. */}
+                {popular.length > 0 && (
+                  <>
+                    {sectionHeader(t('popularDishes'))}
+                    <FlatList
+                      horizontal
+                      data={popular}
+                      keyExtractor={(d) => d.id}
+                      renderItem={({ item }) => <DishCard dish={item} />}
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={{ paddingHorizontal: 16, gap: 12, paddingVertical: 8 }}
+                    />
+                  </>
+                )}
 
                 {sectionHeader(t('allDishes'))}
                 <View style={styles.grid}>
@@ -182,11 +180,11 @@ export default function HomeScreen() {
   }
 }
 
-/** "Kitchens open · 45 - 60 min" with a softly pulsing live dot. */
+/** "● Kitchens open · 45–60 min" under the address, with a softly pulsing live dot. */
 function KitchenStatus() {
   const { t, colors, language } = useSettings();
   const pulse = useAnimatedValue(0);
-  // Re-check every minute so the pill flips at 10 AM and 9 PM.
+  // Re-check every minute so the line flips at 10 AM and 9 PM.
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 60_000);
@@ -202,7 +200,7 @@ function KitchenStatus() {
   const opening = nextOpening(now);
   const opensText = t(opening.day === 0 ? 'opensAt' : 'opensTomorrow', { time: formatTime(opening.minutes, language) });
   return (
-    <View style={[styles.status, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+    <View style={styles.status}>
       <View style={styles.pulseWrap}>
         {open && (
           <Animated.View
@@ -218,40 +216,17 @@ function KitchenStatus() {
         )}
         <View style={[styles.pulseDot, { backgroundColor: dot }]} />
       </View>
-      <Txt variant="caption" style={{ fontWeight: '600' }}>
-        {open ? t('kitchensOpen') : t('kitchensClosed')}
+      <Txt variant="caption" muted numberOfLines={1} style={{ fontSize: 12, flexShrink: 1 }}>
+        {open ? `${t('kitchensOpen')} · ${t('deliveryWindow')}` : `${t('kitchensClosed')} · ${opensText}`}
       </Txt>
-      {open ? (
-        <>
-          <Icon name="delivery" size={16} color={colors.primary} />
-          <Txt variant="caption" style={{ fontWeight: '600', color: colors.primary }}>
-            {t('deliveryWindow')}
-          </Txt>
-        </>
-      ) : (
-        <Txt variant="caption" style={{ fontWeight: '600', color: colors.primary }}>
-          · {opensText}
-        </Txt>
-      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingTop: 10, paddingBottom: 6 },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingTop: 10, paddingBottom: 4 },
   addressRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  status: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    gap: 6,
-    marginTop: 6,
-    paddingVertical: 5,
-    paddingStart: 8,
-    paddingEnd: 10,
-    borderRadius: 20,
-    borderWidth: 1,
-  },
+  status: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 3, paddingStart: 2 },
   pulseWrap: { width: 10, height: 10, alignItems: 'center', justifyContent: 'center' },
   pulseRing: { position: 'absolute', width: 10, height: 10, borderRadius: 5 },
   pulseDot: { width: 6, height: 6, borderRadius: 3 },

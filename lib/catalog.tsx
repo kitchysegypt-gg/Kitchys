@@ -28,6 +28,11 @@ export type ChefRating = {
   overall: number;
 };
 
+export type ChefHighlight = { orders: number; topDish: string | null };
+
+/** "Popular dishes" only shows once at least this many dishes have orders. */
+const POPULAR_MIN_DISHES = 3;
+
 export type KitchenChefRow = {
   id: string;
   user_id: string;
@@ -147,6 +152,10 @@ type CatalogValue = {
   /** Portions of a dish still available today, or null when it has no daily limit. */
   portionsLeft: (dish: Dish) => number | null;
   ratings: Record<string, ChefRating>;
+  /** Orders so far and best-selling dish per kitchen (only kitchens with orders). */
+  highlights: Record<string, ChefHighlight>;
+  /** Dishes people ordered most in the last 30 days, most popular first. */
+  popular: Dish[];
   /** True once the home chefs' dishes have been fetched for this account. */
   loaded: boolean;
   getChef: (id: string) => Chef | undefined;
@@ -169,6 +178,9 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   const [lastDeliveries, setLastDeliveries] = useState<Record<string, number>>({});
   const [pausedIds, setPausedIds] = useState<Set<string>>(new Set());
   const [dealRows, setDealRows] = useState<DealRow[]>([]);
+  const [highlights, setHighlights] = useState<Record<string, ChefHighlight>>({});
+  // Dish ids, most ordered first (last 30 days).
+  const [popularIds, setPopularIds] = useState<string[]>([]);
   // Portions ordered per dish for today.
   const [ordered, setOrdered] = useState<Record<string, number>>({});
   const { location } = useSettings();
@@ -195,7 +207,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
       setLoaded(false);
       return;
     }
-    const [chefsRes, dishesRes, ratingsRes, popularRes, hoursRes, orderedRes, dealsRes] = await Promise.all([
+    const [chefsRes, dishesRes, ratingsRes, popularRes, hoursRes, orderedRes, dealsRes, highlightsRes, popularDishesRes] = await Promise.all([
       supabase.from('kitchen_chefs').select('*').order('created_at', { ascending: true }),
       supabase.from('kitchen_dishes').select('*').order('created_at', { ascending: true }),
       supabase.from('chef_ratings').select('*').order('chef_id', { ascending: true }),
@@ -207,7 +219,22 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
         .select('id, chef_id, dish_id, price, quantity, sold, expires_at')
         .eq('cancelled', false)
         .gt('expires_at', new Date().toISOString()),
+      supabase.rpc('chef_highlights'),
+      supabase.rpc('popular_dishes'),
     ]);
+    if (!highlightsRes.error && Array.isArray(highlightsRes.data)) {
+      setHighlights(
+        Object.fromEntries(
+          (highlightsRes.data as { chef_id: string; orders: number; top_dish: string | null }[]).map((r) => [
+            r.chef_id,
+            { orders: r.orders, topDish: r.top_dish },
+          ])
+        )
+      );
+    }
+    if (!popularDishesRes.error && Array.isArray(popularDishesRes.data)) {
+      setPopularIds((popularDishesRes.data as { dish_id: string }[]).map((r) => r.dish_id));
+    }
     if (!dealsRes.error && Array.isArray(dealsRes.data)) setDealRows(dealsRes.data as DealRow[]);
     if (!orderedRes.error && Array.isArray(orderedRes.data)) {
       setOrdered(
@@ -269,9 +296,13 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     const isNear = (chefId: string) => !nearIds || nearIds.has(chefId);
     const isPaused = (chefId: string) => pausedIds.has(chefId);
     const listed = (chefId: string) => isNear(chefId) && !isPaused(chefId);
+    const shown = allDishes.filter((d) => listed(d.chefId));
+    const popular = popularIds.flatMap((id) => shown.filter((d) => d.id === id));
     return {
       chefs: allChefs.filter((c) => listed(c.id)),
-      dishes: allDishes.filter((d) => listed(d.chefId)),
+      dishes: shown,
+      popular: popular.length >= POPULAR_MIN_DISHES ? popular : [],
+      highlights,
       deals: dealDishes.filter((d) => listed(d.chefId)),
       isNear,
       isPaused,
@@ -290,7 +321,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
       getDish: (id) => allDishes.find((d) => d.id === id) ?? dealDishes.find((d) => d.id === id),
       dishesByChef: (chefId) => allDishes.filter((d) => d.chefId === chefId),
     };
-  }, [kitchenChefs, kitchenDishes, ratings, loaded, refresh, nearIds, popularity, lastDeliveries, pausedIds, ordered, dealRows]);
+  }, [kitchenChefs, kitchenDishes, ratings, loaded, refresh, nearIds, popularity, lastDeliveries, pausedIds, ordered, dealRows, highlights, popularIds]);
 
   return <CatalogContext.Provider value={value}>{children}</CatalogContext.Provider>;
 }

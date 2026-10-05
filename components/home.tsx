@@ -9,7 +9,7 @@ import { useOrders } from '@/lib/orders';
 import { useSettings } from '@/lib/settings';
 import { DELIVERY_FEE, supabase } from '@/lib/supabase';
 import { softShadow } from '@/lib/theme';
-import { CategoryPhoto, ChefAvatar, ChefName, ChefTags, DishArt } from './media';
+import { CategoryPhoto, ChefAvatar, ChefName, DishArt } from './media';
 import { Icon, PressableScale, Txt } from './ui';
 
 // Kitchy's promo banners (1200 x 676).
@@ -216,11 +216,19 @@ export function PromoCarousel() {
 /** "Kitchen near you" card: the chef's cover dish, rating, delivery info and tags. */
 export function KitchenCard({ chef }: { chef: Chef }) {
   const { t, l, colors, formatPrice } = useSettings();
-  const { ratings, dishesByChef } = useCatalog();
+  const { ratings, dishesByChef, highlights, chefTags, getDish } = useCatalog();
   const { freeDeliveriesLeft } = useOrders();
   const dishes = dishesByChef(chef.id);
   const cover = dishes.find((d) => d.photo) ?? dishes[0];
   const rating = ratings[chef.id];
+  const highlight = highlights[chef.id];
+  const topDish = highlight?.topDish ? getDish(highlight.topDish) : undefined;
+  const popular = chefTags(chef.id).includes('popular');
+  // "⭐ 4.8 (12) · 120 orders", or "New kitchen" before the first review and order.
+  const proof = [
+    rating ? `${rating.overall.toFixed(1)} (${rating.review_count})` : null,
+    highlight?.orders ? t('ordersSoFar', { n: highlight.orders }) : null,
+  ].filter(Boolean);
   return (
     <PressableScale onPress={() => router.push(`/chef/${chef.id}`)} style={[styles.kitchenShadow, softShadow(colors.shadow)]}>
       <View style={[styles.kitchen, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -230,36 +238,46 @@ export function KitchenCard({ chef }: { chef: Chef }) {
           ) : (
             <View style={{ height: 136, backgroundColor: colors.surfaceAlt }} />
           )}
-          <View style={styles.ratingPill}>
-            <Icon name={rating ? 'star' : 'sparkles'} size={12} color="#FFB300" />
-            <Txt style={{ fontSize: 12, fontWeight: '700', color: '#1B1D1F' }}>
-              {rating ? rating.overall.toFixed(1) : t('newChef')}
-            </Txt>
-          </View>
+          {popular && (
+            <View style={styles.photoPill}>
+              <Icon name="flame" size={12} color="#E8590C" />
+              <Txt style={{ fontSize: 12, fontWeight: '700', color: '#1B1D1F' }}>{t('tag_popular')}</Txt>
+            </View>
+          )}
           <View style={[styles.kitchenAvatar, { borderColor: colors.surface }]}>
-            <ChefAvatar chef={chef} size={40} />
+            <ChefAvatar chef={chef} size={30} />
           </View>
         </View>
-        <View style={{ padding: 12, gap: 4 }}>
-          <View style={{ paddingEnd: 40 }}>
+        <View style={{ padding: 12, gap: 5, flex: 1 }}>
+          <View style={{ paddingEnd: 30 }}>
             <ChefName chef={chef} />
           </View>
-          <ChefTags chefId={chef.id} />
           <View style={styles.metaRow}>
-            <Icon name="delivery" size={14} color={colors.primary} />
-            <Txt variant="caption" muted numberOfLines={1}>
-              {freeDeliveriesLeft > 0 ? t('freeDeliveryBadge') : formatPrice(DELIVERY_FEE)} · {t('deliveryWindow')}
+            <Icon name={rating ? 'star' : 'sparkles'} size={13} color="#FFB300" />
+            <Txt variant="caption" style={{ fontWeight: '700' }} numberOfLines={1}>
+              {proof.length ? proof.join(' · ') : t('newChef')}
             </Txt>
           </View>
-          <View style={styles.tags}>
-            <View style={[styles.tag, { backgroundColor: colors.surfaceAlt }]}>
-              <Txt numberOfLines={1} style={styles.tagText}>
-                {l(chef.specialty)}
+          <Txt variant="caption" muted numberOfLines={1}>
+            {l(chef.specialty)} · {t('tag_homemade')}
+          </Txt>
+          {topDish && (
+            <Txt variant="caption" numberOfLines={1} style={{ fontStyle: 'italic' }}>
+              {t('bestSeller', { dish: l(topDish.name) })}
+            </Txt>
+          )}
+          <View style={[styles.deliveryRow, { borderTopColor: colors.border }]}>
+            <View style={styles.metaRow}>
+              <Icon name="delivery" size={15} color={colors.primary} />
+              <Txt variant="caption" style={{ fontWeight: '600' }}>
+                {freeDeliveriesLeft > 0 ? t('freeDeliveryBadge') : formatPrice(DELIVERY_FEE)}
               </Txt>
             </View>
-            <View style={[styles.tag, { backgroundColor: colors.surfaceAlt }]}>
-              <Txt style={styles.tagText}>
-                {dishes.length} {t('dishes')}
+            <View style={[styles.sep, { backgroundColor: colors.border }]} />
+            <View style={styles.metaRow}>
+              <Icon name="time-outline" size={14} color={colors.primary} />
+              <Txt variant="caption" style={{ fontWeight: '600' }}>
+                {t('deliveryWindow')}
               </Txt>
             </View>
           </View>
@@ -280,8 +298,8 @@ const styles = StyleSheet.create({
   dots: { flexDirection: 'row', justifyContent: 'center', gap: 5, marginTop: 10 },
   dot: { height: 6, borderRadius: 3 },
   kitchenShadow: { width: 252, borderRadius: 18 },
-  kitchen: { borderRadius: 18, overflow: 'hidden', borderWidth: 1 },
-  ratingPill: {
+  kitchen: { flex: 1, borderRadius: 18, overflow: 'hidden', borderWidth: 1 },
+  photoPill: {
     position: 'absolute',
     top: 10,
     start: 10,
@@ -293,9 +311,8 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: 'rgba(255,255,255,0.95)',
   },
-  kitchenAvatar: { position: 'absolute', end: 10, bottom: -20, borderRadius: 24, borderWidth: 3 },
+  kitchenAvatar: { position: 'absolute', end: 10, bottom: -15, borderRadius: 20, borderWidth: 2 },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  tags: { flexDirection: 'row', gap: 6, marginTop: 4 },
-  tag: { paddingVertical: 4, paddingHorizontal: 9, borderRadius: 8, maxWidth: 150 },
-  tagText: { fontSize: 12, fontWeight: '500' },
+  deliveryRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 'auto', paddingTop: 8, borderTopWidth: StyleSheet.hairlineWidth },
+  sep: { width: 1, height: 14 },
 });

@@ -9,7 +9,7 @@ import { useCart } from '@/lib/cart';
 import { useOrders } from '@/lib/orders';
 import { useSettings } from '@/lib/settings';
 import { DELIVERY_FEE, FREE_DELIVERY_ORDERS } from '@/lib/supabase';
-import { ChefAvatar, ChefName, ChefTags, DishArt, RatingBadge } from './media';
+import { ChefAvatar, ChefName, ChefTags, DishGallery, RatingBadge } from './media';
 import { Button, Card, Icon, PressableScale, Txt } from './ui';
 
 /**
@@ -89,7 +89,7 @@ export function DishCard({ dish, wide }: { dish: Dish; wide?: boolean }) {
         {/* Clip the photo to the rounded corners here, so the card's shadow isn't clipped. */}
         <View style={styles.dishClip}>
           <View>
-            <DishArt dish={dish} height={wide ? 120 : 130} />
+            <DishGallery dish={dish} height={wide ? 120 : 130} />
             {dish.deal && (
               <View style={[styles.dealBadge, { backgroundColor: colors.primary }]}>
                 <Icon name="flame" size={12} color={colors.onPrimary} />
