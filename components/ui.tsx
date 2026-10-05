@@ -1,5 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import {
   ActivityIndicator,
@@ -101,20 +102,24 @@ export function IconBadge({
   solid?: boolean;
 }) {
   const color = ICON_TONES[tone];
-  const radius = Math.round(size * 0.3);
-  // Flat tint, no gradient or glow: a clean, minimal look.
+  const radius = Math.round(size * 0.32);
   return (
-    <View
+    <LinearGradient
+      colors={solid ? [color, `${color}CC`] : [`${color}2E`, `${color}12`]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
       style={{
         width: size,
         height: size,
         borderRadius: radius,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: solid ? color : `${color}1A`,
+        borderWidth: 1,
+        borderColor: solid ? `${color}` : `${color}33`,
+        boxShadow: solid ? `0px 4px 10px ${color}55` : undefined,
       }}>
-      <Icon name={name} size={Math.round(size * 0.5)} color={solid ? '#FFFFFF' : color} />
-    </View>
+      <Icon name={filledIcon(name)} size={Math.round(size * 0.52)} color={solid ? '#FFFFFF' : color} />
+    </LinearGradient>
   );
 }
 

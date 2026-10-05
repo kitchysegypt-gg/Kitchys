@@ -9,7 +9,7 @@ import { useOrders } from '@/lib/orders';
 import { useSettings } from '@/lib/settings';
 import { DELIVERY_FEE, supabase } from '@/lib/supabase';
 import { softShadow } from '@/lib/theme';
-import { CATEGORY_LINE_ICONS, ChefAvatar, ChefName, DishArt } from './media';
+import { CategoryPhoto, ChefAvatar, ChefName, DishArt } from './media';
 import { Icon, PressableScale, Txt } from './ui';
 
 // Kitchy's promo banners (1200 x 676).
@@ -21,7 +21,16 @@ const PROMO_BANNERS = {
 };
 const BANNER_RATIO = 1200 / 676;
 
-/** Round category buttons with plain line icons; tap again to show everything. */
+// Kitchy's 3D category icons; a category without one shows its photo.
+const CATEGORY_ICONS: Partial<Record<Category, number>> = {
+  main: require('@/assets/categories/main.png'),
+  baked: require('@/assets/categories/baked.png'),
+  seafood: require('@/assets/categories/seafood.png'),
+  desserts: require('@/assets/categories/desserts.png'),
+  healthy: require('@/assets/categories/healthy.png'),
+};
+
+/** Round category bubbles (3D icon or photo); tap again to show everything. */
 export function CategoryBubbles({ value, onChange }: { value: Category | 'all'; onChange: (c: Category | 'all') => void }) {
   const { t, colors } = useSettings();
   return (
@@ -35,12 +44,18 @@ export function CategoryBubbles({ value, onChange }: { value: Category | 'all'; 
             accessibilityRole="button"
             accessibilityState={{ selected: active }}
             style={styles.bubbleItem}>
-            <View style={[styles.bubbleRing, { backgroundColor: active ? colors.primary : colors.surfaceAlt }]}>
-              <Icon
-                name={CATEGORY_LINE_ICONS[c.id as Category]}
-                size={26}
-                color={active ? colors.onPrimary : colors.text}
-              />
+            <View
+              style={[
+                styles.bubbleRing,
+                { borderColor: active ? colors.primary : 'transparent', backgroundColor: `${colors.primary}14` },
+              ]}>
+              {CATEGORY_ICONS[c.id as Category] ? (
+                <Image source={CATEGORY_ICONS[c.id as Category]} style={styles.bubbleIcon} contentFit="contain" />
+              ) : (
+                <View style={styles.bubble}>
+                  <CategoryPhoto category={c.id as Category} />
+                </View>
+              )}
             </View>
             <Txt
               variant="caption"
@@ -238,7 +253,7 @@ export function KitchenCard({ chef }: { chef: Chef }) {
             <ChefName chef={chef} />
           </View>
           <View style={styles.metaRow}>
-            {rating && <Icon name="star" size={13} color="#FFB300" />}
+            <Icon name={rating ? 'star' : 'sparkles'} size={13} color="#FFB300" />
             <Txt variant="caption" style={{ fontWeight: '700' }} numberOfLines={1}>
               {proof.length ? proof.join(' · ') : t('newChef')}
             </Txt>
@@ -274,8 +289,8 @@ export function KitchenCard({ chef }: { chef: Chef }) {
 
 const styles = StyleSheet.create({
   bubbles: { gap: 14, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 4 },
-  bubbleItem: { width: 72, alignItems: 'center', gap: 6 },
-  bubbleRing: { width: 58, height: 58, borderRadius: 29, alignItems: 'center', justifyContent: 'center' },
+  bubbleItem: { width: 78, alignItems: 'center', gap: 6 },
+  bubbleRing: { width: 66, height: 66, borderRadius: 33, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   bubble: { width: 56, height: 56, borderRadius: 28, overflow: 'hidden' },
   bubbleIcon: { width: 50, height: 50 },
   promoShadow: { borderRadius: 20 },

@@ -177,7 +177,7 @@ function BotAvatar({ size }: { size: number }) {
         alignItems: 'center',
         justifyContent: 'center',
       }}>
-      <Icon name="chatbubble-ellipses" size={size * 0.5} color={colors.onPrimary} />
+      <Icon name="sparkles" size={size * 0.5} color={colors.onPrimary} />
     </View>
   );
 }

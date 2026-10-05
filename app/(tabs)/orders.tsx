@@ -75,7 +75,7 @@ export default function OrdersScreen() {
               <View style={styles.badges}>
                 {item.points_earned > 0 && (
                   <View style={styles.row}>
-                    <Icon name="gift-outline" size={16} color={colors.primary} />
+                    <Icon name="sparkles-outline" size={16} color={colors.primary} />
                     <Txt variant="caption" style={{ color: colors.primary, fontWeight: '600' }}>
                       {t('pointsEarned', { n: item.points_earned })}
                     </Txt>

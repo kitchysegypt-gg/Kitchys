@@ -58,7 +58,7 @@ export default function ChefScreen() {
           </View>
           <View style={styles.stats}>
             <View style={[styles.stat, { backgroundColor: colors.surfaceAlt }]}>
-              <Icon name={rating ? 'star' : 'star-outline'} size={16} color="#FFB300" />
+              <Icon name={rating ? 'star' : 'sparkles'} size={16} color="#FFB300" />
               <Txt style={{ fontWeight: '600' }}>
                 {rating
                   ? `${rating.overall.toFixed(1)} · ${t('reviewsCount', { n: rating.review_count })}`

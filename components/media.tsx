@@ -9,31 +9,20 @@ import { useSettings } from '@/lib/settings';
 import { Icon, IconName, Txt } from './ui';
 
 const DEFAULT_CHEF_PHOTO = require('@/assets/photos/chef.jpg');
+const DEFAULT_DISH_PHOTO = require('@/assets/photos/dish.jpg');
 const STAR = '#FFB300';
 
-/** Plain line icon per category, for dishes the chef hasn't photographed yet. */
-export const CATEGORY_LINE_ICONS: Record<Category, IconName> = {
-  main: 'restaurant-outline',
-  baked: 'flame-outline',
-  seafood: 'fish-outline',
-  desserts: 'ice-cream-outline',
-  healthy: 'leaf-outline',
-};
-
-/**
- * The chef's own photo of the dish. Without one we show a plain tile, never a stock photo,
- * so every picture in the app is food the customer can actually get.
- */
+/** The dish's own photo, or the shared Kitchy's dish photo until it has one. */
 export function DishArt({ dish, height, radius = 0 }: { dish: Dish; height: number; radius?: number }) {
   const { colors } = useSettings();
-  const photo = DISH_PHOTOS[dish.id] ?? (dish.photo ? { uri: dish.photo } : null);
   return (
     <View style={[styles.art, { height, borderRadius: radius, backgroundColor: colors.surfaceAlt }]}>
-      {photo ? (
-        <Image source={photo} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} />
-      ) : (
-        <Icon name={CATEGORY_LINE_ICONS[dish.category] ?? 'restaurant-outline'} size={Math.min(40, height * 0.3)} color={colors.textMuted} />
-      )}
+      <Image
+        source={DISH_PHOTOS[dish.id] ?? (dish.photo ? { uri: dish.photo } : DEFAULT_DISH_PHOTO)}
+        style={StyleSheet.absoluteFill}
+        contentFit="cover"
+        transition={200}
+      />
     </View>
   );
 }
@@ -135,7 +124,7 @@ export function RatingBadge({ rating, color }: { rating?: ChefRating; color?: st
   const { t } = useSettings();
   return (
     <View style={styles.badge}>
-      <Icon name={rating ? 'star' : 'star-outline'} size={14} color={rating ? STAR : color} />
+      <Icon name={rating ? 'star' : 'sparkles'} size={14} color={rating ? STAR : color} />
       <Txt variant="caption" color={color} style={{ fontWeight: '800' }}>
         {rating ? `${rating.overall.toFixed(1)} (${rating.review_count})` : t('newChef')}
       </Txt>
