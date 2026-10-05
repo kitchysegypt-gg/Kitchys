@@ -38,6 +38,7 @@ const TEXT = {
     intro: "Here's how your kitchen did in the last 7 days.",
     orders: 'Orders',
     sales: 'Sales',
+    earnings: "Your earnings after Kitchy's 15%",
     average: 'Average order',
     customers: 'Customers',
     vs: 'vs the week before',
@@ -63,6 +64,7 @@ const TEXT = {
     intro: 'ده أداء مطبخك في آخر ٧ أيام.',
     orders: 'الطلبات',
     sales: 'المبيعات',
+    earnings: 'أرباحك بعد عمولة كيتشيز ١٥٪',
     average: 'متوسط الطلب',
     customers: 'الزباين',
     vs: 'عن الأسبوع اللي قبله',
@@ -128,6 +130,9 @@ function buildEmail(name: string, s: Stats, lang: Lang) {
       <div style="font-size:22px;font-weight:800;color:#1B1D1F">${escape(value)}</div>
       <div style="font-size:13px;color:#7A7F86">${escape(label)}</div>${extra}</div></td>`;
 
+  // Kitchy's keeps 15% of food sales; delivery fees are not counted.
+  const earnings = Number(s.sales) - Math.round(Number(s.sales) * 0.15);
+
   const html = `<!doctype html><html dir="${dir}"><body style="margin:0;background:#F4F6F5;font-family:Arial,Helvetica,sans-serif">
   <div style="max-width:560px;margin:0 auto;padding:24px 12px">
     <div style="background:#fff;border-radius:20px;padding:24px;border:1px solid #E1E5E2">
@@ -138,6 +143,7 @@ function buildEmail(name: string, s: Stats, lang: Lang) {
         <tr>${tile(T.orders, String(s.orders), delta(change(s.orders, s.prev_orders)))}${tile(T.sales, egp(s.sales), delta(change(s.sales, s.prev_sales)))}</tr>
         <tr>${tile(T.average, egp(s.average_order))}${tile(T.customers, String(s.customers))}</tr>
       </table>
+      <p style="margin:12px 6px 0;font-size:16px"><b>${escape(T.earnings)}:</b> <span style="color:#1E9E4F;font-weight:800">${escape(egp(earnings))}</span></p>
       ${top ? `<p style="margin:16px 0 0"><b>${escape(T.best)}:</b> ${escape(top.name)} · ${escape(T.portions(top.qty))} · ${escape(egp(top.sales))}</p>` : ''}
       ${busiest?.orders ? `<p style="margin:6px 0 0"><b>${escape(T.busiest)}:</b> ${escape(T.days[busiest.weekday])}</p>` : ''}
       ${s.rating.count ? `<p style="margin:6px 0 0"><b>${escape(T.rating)}:</b> ⭐ ${Number(s.rating.overall).toFixed(1)} (${escape(T.reviews(s.rating.count))})</p>` : ''}
@@ -152,6 +158,7 @@ function buildEmail(name: string, s: Stats, lang: Lang) {
     T.intro,
     `${T.orders}: ${s.orders}`,
     `${T.sales}: ${egp(s.sales)}`,
+    `${T.earnings}: ${egp(earnings)}`,
     `${T.average}: ${egp(s.average_order)}`,
     `${T.customers}: ${s.customers}`,
     top ? `${T.best}: ${top.name} (${T.portions(top.qty)})` : '',

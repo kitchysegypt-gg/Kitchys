@@ -309,6 +309,13 @@ export function nextStep(order: KitchenOrder, now = new Date()): NextStep | null
   return null;
 }
 
+/** Kitchy's commission on food sales (not on delivery fees). */
+export const COMMISSION_RATE = 0.15;
+export const splitSales = (sales: number) => {
+  const commission = Math.round(sales * COMMISSION_RATE);
+  return { commission, earnings: sales - commission };
+};
+
 export const canDecline = (status: OrderStatus) => status === 'placed' || status === 'cooking';
 
 /** Leaves the kitchen and goes back to the customer app. */

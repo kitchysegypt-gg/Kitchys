@@ -661,6 +661,11 @@ export const CHEF_HELP: HelpTopic[] = [
         fr: 'Choisissez 7, 30 ou 90 jours pour voir commandes, ventes, panier moyen et clients. Un +% vert signifie mieux que la période précédente.',
       },
       {
+        en: 'Kitchy\'s takes a 15% commission on your food sales (not on the delivery fee). "Your earnings" shows what\'s left for you after it.',
+        ar: 'كيتشيز بتاخد عمولة ١٥٪ من مبيعات الأكل بتاعك (مش من التوصيل). "أرباحك" بتوضح اللي فاضل ليكي بعدها.',
+        fr: 'Kitchy\'s prend une commission de 15 % sur vos ventes de plats (pas sur la livraison). « Vos gains » montre ce qui vous reste après.',
+      },
+      {
         en: 'The charts show your sales by day and your busiest days. Tap a bar to read its number.',
         ar: 'الرسومات بتوضح مبيعاتك كل يوم وأكتر الأيام عليها طلبات. دوسي على أي عمود عشان تشوفي رقمه.',
         fr: 'Les graphiques montrent vos ventes par jour et vos jours les plus chargés. Touchez une barre pour lire son chiffre.',

@@ -7,7 +7,7 @@ import { Bar, BarChart } from '@/components/BarChart';
 import { Stars } from '@/components/media';
 import { Card, Chip, Icon, IconBadge, IconName, ScreenHeader, Txt } from '@/components/ui';
 import type { Language } from '@/lib/i18n';
-import { KitchenStats, leaveKitchen, useKitchen } from '@/lib/kitchen';
+import { COMMISSION_RATE, KitchenStats, leaveKitchen, splitSales, useKitchen } from '@/lib/kitchen';
 import { formatTime } from '@/lib/schedule';
 import type { IconTone } from '@/lib/theme';
 import { useSettings } from '@/lib/settings';
@@ -141,6 +141,8 @@ export default function KitchenDashboard() {
               />
             </View>
 
+            <EarningsCard sales={Number(stats.sales)} />
+
             <Card style={{ gap: 10 }}>
               <SectionTitle icon="trending-up-outline" tone="green" title={t('salesOverTime')} />
               <SalesChart stats={stats} />
@@ -240,6 +242,33 @@ export default function KitchenDashboard() {
 }
 
 /** A card heading with its coloured icon tile. */
+/** Sales, minus Kitchy's commission, equals what the chef earns. */
+function EarningsCard({ sales }: { sales: number }) {
+  const { t, colors, formatPrice } = useSettings();
+  const { commission, earnings } = splitSales(sales);
+  const pct = Math.round(COMMISSION_RATE * 100);
+  return (
+    <Card style={{ gap: 8 }}>
+      <SectionTitle icon="wallet-outline" tone="green" title={t('earningsTitle')} />
+      <View style={styles.moneyRow}>
+        <Txt muted>{t('salesWord')}</Txt>
+        <Txt style={{ fontWeight: '700' }}>{formatPrice(sales)}</Txt>
+      </View>
+      <View style={styles.moneyRow}>
+        <Txt muted>{t('commissionLine', { pct })}</Txt>
+        <Txt style={{ fontWeight: '700' }}>−{formatPrice(commission)}</Txt>
+      </View>
+      <View style={[styles.moneyRow, styles.moneyTotal, { borderTopColor: colors.border }]}>
+        <Txt style={{ fontWeight: '800' }}>{t('earningsTitle')}</Txt>
+        <Txt style={{ fontWeight: '800', fontSize: 18, color: colors.success }}>{formatPrice(earnings)}</Txt>
+      </View>
+      <Txt variant="caption" muted>
+        {t('earningsNote', { pct })}
+      </Txt>
+    </Card>
+  );
+}
+
 function SectionTitle({ icon, tone, title }: { icon: IconName; tone: IconTone; title: string }) {
   return (
     <View style={styles.sectionTitle}>
@@ -357,6 +386,8 @@ function WeekdayChart({ stats }: { stats: KitchenStats }) {
 }
 
 const styles = StyleSheet.create({
+  moneyRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
+  moneyTotal: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 8 },
   hello: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   sectionTitle: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   statePill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 12 },
