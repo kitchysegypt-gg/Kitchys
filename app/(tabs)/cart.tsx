@@ -284,7 +284,7 @@ export default function CartScreen() {
               <View style={[styles.divider, { backgroundColor: colors.border }]} />
               <SummaryRow label={t('total')} value={formatPrice(total)} big />
               <View style={styles.row}>
-                <Icon name="sparkles-outline" size={16} color={colors.primary} />
+                <Icon name="gift-outline" size={16} color={colors.primary} />
                 <Txt variant="caption" style={{ fontWeight: '600', color: colors.primary }}>
                   {t('youWillEarn', { n: pointsFor(subtotal - discount, orderCount) })}
                 </Txt>
@@ -314,7 +314,7 @@ export default function CartScreen() {
             </Txt>
             {earned > 0 && (
               <View style={[styles.row, styles.earnedPill, { backgroundColor: colors.surfaceAlt }]}>
-                <Icon name="sparkles" size={20} color={colors.primary} />
+                <Icon name="gift" size={20} color={colors.primary} />
                 <Txt variant="heading" style={{ color: colors.primary }}>
                   {t('pointsEarned', { n: earned })}
                 </Txt>
