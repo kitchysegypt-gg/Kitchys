@@ -756,9 +756,25 @@ async function popularDishes() {
   );
 }
 
+/** Orders per dish over the last 7 days, like the dish_week_orders database function. */
+async function dishWeekOrders() {
+  const deals = await readTable('dish_deals');
+  const since = Date.now() - 7 * 86_400_000;
+  const orders: Record<string, Set<string>> = {};
+  for (const o of await readTable('orders')) {
+    if (o.status === 'cancelled' || new Date(o.created_at).getTime() < since) continue;
+    for (const item of o.items as { dishId: string }[]) {
+      const id = deals.find((d) => d.id === item.dishId)?.dish_id ?? item.dishId;
+      (orders[id] ??= new Set()).add(o.id);
+    }
+  }
+  return ok(Object.entries(orders).map(([dish_id, ids]) => ({ dish_id, orders: ids.size })));
+}
+
 async function rpc(name: string, args: Row) {
   if (name === 'chef_highlights') return chefHighlights();
   if (name === 'popular_dishes') return popularDishes();
+  if (name === 'dish_week_orders') return dishWeekOrders();
   if (name === 'redeem_reward') return redeemReward(args.p_reward_id);
   if (name === 'approve_chef_application') return approveApplication(args.p_id);
   if (name === 'my_referral_code') return myReferralCode();

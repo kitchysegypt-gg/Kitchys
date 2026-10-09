@@ -487,15 +487,15 @@ export const CHEF_HELP: HelpTopic[] = [
         fr: 'Choisissez la catégorie, cochez les allergènes (lait, œufs, fruits à coque…) et « épicé » ou « végétarien » si c\'est le cas.',
       },
       {
-        en: 'Add up to 4 photos, the best one first, then tap {saveDish}. It appears for customers right away.',
-        ar: 'ضيفي لحد ٤ صور، أحلاهم الأول، ودوسي {saveDish}. هتظهر للزباين على طول.',
-        fr: 'Ajoutez jusqu\'à 4 photos, la plus belle en premier, puis touchez {saveDish}. Le plat apparaît tout de suite.',
+        en: 'Add 1 to 4 photos (at least one is needed), the best one first, then tap {saveDish}. It appears for customers right away.',
+        ar: 'ضيفي من ١ لـ ٤ صور (لازم صورة واحدة على الأقل)، أحلاهم الأول، ودوسي {saveDish}. هتظهر للزباين على طول.',
+        fr: 'Ajoutez 1 à 4 photos (au moins une est nécessaire), la plus belle en premier, puis touchez {saveDish}. Le plat apparaît tout de suite.',
       },
     ],
     tip: {
-      en: 'Take photos in daylight near a window, on a clean plate. Good photos get many more orders.',
-      ar: 'صوّري في نور النهار جنب الشباك، في طبق نضيف. الصور الحلوة بتجيب طلبات أكتر بكتير.',
-      fr: 'Photographiez à la lumière du jour près d\'une fenêtre, dans une assiette propre. De belles photos attirent beaucoup plus de commandes.',
+      en: 'Take photos in daylight near a window, close up, on a nice plate, while the food is hot and steaming. Your best dishes can appear as "Tonight\'s dinner" at the top of the app and in the 5 PM notification.',
+      ar: 'صوّري في نور النهار جنب الشباك، قرّبي من الأكل، في طبق حلو، وهو سخن وطالع منه بخار. أحلى أكلاتك ممكن تظهر كـ"عشا النهارده" فوق في التطبيق وفي إشعار الساعة ٥.',
+      fr: 'Photographiez à la lumière du jour près d\'une fenêtre, de près, dans une belle assiette, bien chaud quand ça fume. Vos meilleurs plats peuvent apparaître en « Le dîner de ce soir » en haut de l\'app et dans la notification de 17 h.',
     },
   },
   {

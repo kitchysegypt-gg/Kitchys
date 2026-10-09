@@ -156,6 +156,8 @@ type CatalogValue = {
   highlights: Record<string, ChefHighlight>;
   /** Dishes people ordered most in the last 30 days, most popular first. */
   popular: Dish[];
+  /** How many orders included this dish in the last 7 days (deals count for their dish). */
+  weekOrders: (dish: Dish) => number;
   /** True once the home chefs' dishes have been fetched for this account. */
   loaded: boolean;
   getChef: (id: string) => Chef | undefined;
@@ -181,6 +183,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   const [highlights, setHighlights] = useState<Record<string, ChefHighlight>>({});
   // Dish ids, most ordered first (last 30 days).
   const [popularIds, setPopularIds] = useState<string[]>([]);
+  const [weekCounts, setWeekCounts] = useState<Record<string, number>>({});
   // Portions ordered per dish for today.
   const [ordered, setOrdered] = useState<Record<string, number>>({});
   const { location } = useSettings();
@@ -207,7 +210,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
       setLoaded(false);
       return;
     }
-    const [chefsRes, dishesRes, ratingsRes, popularRes, hoursRes, orderedRes, dealsRes, highlightsRes, popularDishesRes] = await Promise.all([
+    const [chefsRes, dishesRes, ratingsRes, popularRes, hoursRes, orderedRes, dealsRes, highlightsRes, popularDishesRes, weekRes] = await Promise.all([
       supabase.from('kitchen_chefs').select('*').order('created_at', { ascending: true }),
       supabase.from('kitchen_dishes').select('*').order('created_at', { ascending: true }),
       supabase.from('chef_ratings').select('*').order('chef_id', { ascending: true }),
@@ -221,7 +224,11 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
         .gt('expires_at', new Date().toISOString()),
       supabase.rpc('chef_highlights'),
       supabase.rpc('popular_dishes'),
+      supabase.rpc('dish_week_orders'),
     ]);
+    if (!weekRes.error && Array.isArray(weekRes.data)) {
+      setWeekCounts(Object.fromEntries((weekRes.data as { dish_id: string; orders: number }[]).map((r) => [r.dish_id, r.orders])));
+    }
     if (!highlightsRes.error && Array.isArray(highlightsRes.data)) {
       setHighlights(
         Object.fromEntries(
@@ -303,6 +310,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
       dishes: shown,
       popular: popular.length >= POPULAR_MIN_DISHES ? popular : [],
       highlights,
+      weekOrders: (dish) => weekCounts[dish.deal?.dishId ?? dish.id] ?? 0,
       deals: dealDishes.filter((d) => listed(d.chefId)),
       isNear,
       isPaused,
@@ -321,7 +329,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
       getDish: (id) => allDishes.find((d) => d.id === id) ?? dealDishes.find((d) => d.id === id),
       dishesByChef: (chefId) => allDishes.filter((d) => d.chefId === chefId),
     };
-  }, [kitchenChefs, kitchenDishes, ratings, loaded, refresh, nearIds, popularity, lastDeliveries, pausedIds, ordered, dealRows, highlights, popularIds]);
+  }, [kitchenChefs, kitchenDishes, ratings, loaded, refresh, nearIds, popularity, lastDeliveries, pausedIds, ordered, dealRows, highlights, popularIds, weekCounts]);
 
   return <CatalogContext.Provider value={value}>{children}</CatalogContext.Provider>;
 }

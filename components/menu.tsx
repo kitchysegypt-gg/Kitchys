@@ -81,8 +81,9 @@ export function QuickAddButton({ dish }: { dish: Dish }) {
 
 export function DishCard({ dish, wide }: { dish: Dish; wide?: boolean }) {
   const { t, l, colors, formatPrice } = useSettings();
-  const { getChef } = useCatalog();
+  const { getChef, weekOrders } = useCatalog();
   const chef = getChef(dish.chefId);
+  const orders = weekOrders(dish);
   return (
     <PressableScale onPress={() => router.push(`/dish/${dish.id}`)} style={wide ? undefined : { width: 170 }}>
       <Card style={{ padding: 0 }}>
@@ -96,6 +97,11 @@ export function DishCard({ dish, wide }: { dish: Dish; wide?: boolean }) {
                 <Txt style={{ color: colors.onPrimary, fontSize: 11, fontWeight: '800' }}>
                   {t('dealLeft', { n: dish.deal.left })}
                 </Txt>
+              </View>
+            )}
+            {!dish.deal && orders >= 2 && (
+              <View style={styles.weekBadge}>
+                <Txt style={{ color: '#1B1D1F', fontSize: 11, fontWeight: '800' }}>🔥 {t('orderedWeekShort', { n: orders })}</Txt>
               </View>
             )}
             {(dish.spicy || dish.vegetarian) && (
@@ -273,6 +279,15 @@ export function QuantityStepper({ value, onChange }: { value: number; onChange: 
 export { Button };
 
 const styles = StyleSheet.create({
+  weekBadge: {
+    position: 'absolute',
+    top: 8,
+    start: 8,
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+  },
   badges: {
     position: 'absolute',
     top: 8,

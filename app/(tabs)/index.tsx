@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Animated, FlatList, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import { CategoryBubbles, KitchenCard, PromoCarousel } from '@/components/home';
+import { Greeting, TonightHero } from '@/components/hungry';
 import { DishCard } from '@/components/menu';
 import { Button, EmptyState, Icon, Screen, Txt } from '@/components/ui';
 import { Category } from '@/data/menu';
@@ -58,6 +59,7 @@ export default function HomeScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
+        {!browsing && <Greeting />}
         <View style={[styles.search, { backgroundColor: colors.surfaceAlt }]}>
           <Icon name="search" size={20} color={colors.textMuted} />
           <TextInput
@@ -80,6 +82,7 @@ export default function HomeScreen() {
           </EmptyState>
         ) : (
           <>
+            {!browsing && <TonightHero />}
             {!browsing && (
               <View style={{ marginTop: 16 }}>
                 <PromoCarousel />

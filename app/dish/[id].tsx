@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Animated, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Animated, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAnimatedValue } from '@/lib/useAnimatedValue';
@@ -18,7 +18,10 @@ export default function DishScreen() {
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
   const bounce = useAnimatedValue(1);
-  const { getChef, getDish, ratings, portionsLeft } = useCatalog();
+  const { getChef, getDish, ratings, portionsLeft, weekOrders } = useCatalog();
+  // A big photo sells the food: about half the screen.
+  const { height: screenHeight } = useWindowDimensions();
+  const photoHeight = Math.round(Math.min(560, Math.max(320, screenHeight * 0.5)));
   const dish = getDish(id);
   const chef = dish && getChef(dish.chefId);
   const left = dish ? portionsLeft(dish) : null;
@@ -51,7 +54,7 @@ export default function DishScreen() {
       <ScrollView contentContainerStyle={{ paddingBottom: 140 }}>
         <View style={styles.photoHero}>
           <Animated.View style={{ transform: [{ scale: bounce }] }}>
-            <DishGallery dish={dish} height={320} />
+            <DishGallery dish={dish} height={photoHeight} />
           </Animated.View>
           <SafeAreaView edges={['top']} style={styles.photoClose}>
             <Pressable onPress={() => router.back()} style={styles.close} hitSlop={10}>
@@ -72,6 +75,11 @@ export default function DishScreen() {
                 </Txt>
               ) : null}
             </Txt>
+            {weekOrders(dish) >= 2 && (
+              <Txt variant="caption" style={{ marginTop: 4, fontWeight: '700' }}>
+                🔥 {t('orderedThisWeek', { n: weekOrders(dish) })}
+              </Txt>
+            )}
             {dish.deal && (
               <Txt variant="caption" style={{ marginTop: 4, fontWeight: '700', color: colors.primary }}>
                 🔥 {t('dealDetail', { n: dish.deal.left })}

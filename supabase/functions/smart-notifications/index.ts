@@ -1,5 +1,6 @@
 // Smart notifications: woken every hour by a pg_cron job (see the smart_notifications migration).
-// 1. Asks the database who is due a reminder ("your cart is calling", "we miss you").
+// 1. Asks the database who is due a reminder ("your cart is calling", "we miss you",
+//    and at 5 PM a photo of tonight's dish).
 // 2. Claude writes a short personal message for each customer, in their language.
 //    Without the ANTHROPIC_API_KEY secret, friendly built-in messages are used instead.
 // 3. Sends it to their phones through Expo's push service and logs it.
@@ -16,7 +17,7 @@ const LANGUAGES: Record<string, string> = { en: 'English', ar: 'Egyptian Arabic'
 const MAX_TITLE = 50;
 const MAX_BODY = 150;
 
-type Kind = 'cart' | 'weekly';
+type Kind = 'cart' | 'weekly' | 'dinner';
 type Language = 'en' | 'ar' | 'fr';
 type Context = {
   first_name: string | null;
@@ -26,6 +27,8 @@ type Context = {
   free_deliveries_left: number;
   credit_egp: number;
   favourite_dishes: string[];
+  /** Tonight's dish, for the dinner-time reminder. */
+  dish: { id: string; name: string; chef: string; photo: string } | null;
 };
 type Candidate = { user_id: string; kind: Kind; language: Language; tokens: string[]; context: Context };
 type Message = { title: string; body: string; writtenBy: 'claude' | 'template' };
@@ -35,6 +38,7 @@ const SYSTEM = `You write push notifications for Kitchy's, an app in Egypt that 
 You get one customer's details and the kind of reminder:
 - "cart": they left dishes in their cart without ordering. Nudge them to finish the order, naming a dish from the cart.
 - "weekly": they haven't ordered for a week or more. Invite them back warmly, mentioning a favourite dish if they have one.
+- "dinner": it's 5 PM and they haven't ordered today. Make them hungry for tonight's dish (named, with its home chef), described with warm, tasty words; the notification shows its photo.
 
 Rules:
 - Title at most 40 characters, body at most 120 characters.
@@ -67,6 +71,8 @@ function templateMessage(kind: Kind, language: Language, c: Context): Message {
   const name = c.first_name ? clip(c.first_name, 20) : null;
   const dish = c.cart?.[0]?.name ? clip(c.cart[0].name, 30) : null;
   const fav = c.favourite_dishes[0] ? clip(c.favourite_dishes[0], 30) : null;
+  const tonight = c.dish?.name ? clip(c.dish.name, 30) : null;
+  const chef = c.dish?.chef ? clip(c.dish.chef.split(' ')[0], 20) : null;
   const extra = {
     en: c.free_deliveries_left > 0 ? ' Delivery is on us.' : c.credit_egp > 0 ? ` You have EGP ${c.credit_egp} credit.` : '',
     ar: c.free_deliveries_left > 0 ? ' والتوصيل علينا.' : c.credit_egp > 0 ? ` معاك رصيد ${c.credit_egp} جنيه.` : '',
@@ -83,6 +89,10 @@ function templateMessage(kind: Kind, language: Language, c: Context): Message {
         title: name ? `We miss you, ${name} 👋` : 'We miss you 👋',
         body: `${fav ? `Craving ${fav} again?` : 'Fancy a homemade dinner tonight?'} Our home chefs are cooking.${extra}`,
       },
+      dinner: {
+        title: `Tonight: ${tonight ?? 'homemade dinner'} 🍲`,
+        body: `${chef ? `Fresh from ${chef}'s kitchen` : 'Fresh from a home kitchen'}, hot at your door in 45-60 min. Hungry${name ? `, ${name}` : ''}?${extra}`,
+      },
     },
     ar: {
       cart: {
@@ -93,6 +103,10 @@ function templateMessage(kind: Kind, language: Language, c: Context): Message {
         title: name ? `وحشتنا يا ${name} 👋` : 'وحشتنا 👋',
         body: `${fav ? `نفسك في ${fav} تاني؟` : 'إيه رأيك في عشا بيتي النهارده؟'} الشيفات بيطبخوا دلوقتي.${extra}`,
       },
+      dinner: {
+        title: `عشا النهارده: ${tonight ?? 'أكل بيتي'} 🍲`,
+        body: `${chef ? `طازة من مطبخ ${chef}` : 'طازة من مطبخ بيتي'}، توصلك سخنة في ٤٥-٦٠ دقيقة. جعان${name ? ` يا ${name}` : ''}؟${extra}`,
+      },
     },
     fr: {
       cart: {
@@ -102,6 +116,10 @@ function templateMessage(kind: Kind, language: Language, c: Context): Message {
       weekly: {
         title: name ? `Vous nous manquez, ${name} 👋` : 'Vous nous manquez 👋',
         body: `${fav ? `Envie de ${fav} ?` : 'Un dîner fait maison ce soir ?'} Nos chefs cuisinent.${extra}`,
+      },
+      dinner: {
+        title: `Ce soir : ${tonight ?? 'dîner fait maison'} 🍲`,
+        body: `${chef ? `Tout juste sorti de la cuisine de ${chef}` : 'Tout juste sorti d’une cuisine maison'}, livré chaud en 45-60 min. Une petite faim${name ? `, ${name}` : ''} ?${extra}`,
       },
     },
   };
@@ -120,6 +138,7 @@ async function claudeMessage(client: Anthropic, candidate: Candidate): Promise<M
     orders_so_far: context.orders_count,
     days_since_last_order: context.days_since_last_order,
     favourite_dishes: context.favourite_dishes,
+    tonights_dish: kind === 'dinner' && context.dish ? { name: context.dish.name, home_chef: context.dish.chef } : undefined,
     free_deliveries_left: context.free_deliveries_left,
     credit_egp: context.credit_egp,
   };
@@ -151,7 +170,8 @@ async function claudeMessage(client: Anthropic, candidate: Candidate): Promise<M
 // ---- Expo push -------------------------------------------------------------------------
 type PushResult = { delivered: number; deadTokens: string[]; errors: string[] };
 
-async function sendPush(tokens: string[], message: Message, kind: Kind): Promise<PushResult> {
+async function sendPush(tokens: string[], message: Message, kind: Kind, context: Context): Promise<PushResult> {
+  const dish = kind === 'dinner' ? context.dish : null;
   const headers: Record<string, string> = { 'Content-Type': 'application/json', Accept: 'application/json' };
   const expoToken = Deno.env.get('EXPO_ACCESS_TOKEN');
   if (expoToken) headers.Authorization = `Bearer ${expoToken}`;
@@ -166,7 +186,9 @@ async function sendPush(tokens: string[], message: Message, kind: Kind): Promise
         body: message.body,
         sound: 'default',
         channelId: 'reminders',
-        data: { url: kind === 'cart' ? '/cart' : '/', kind },
+        data: { url: kind === 'cart' ? '/cart' : dish ? `/dish/${dish.id}` : '/', kind },
+        // Android shows the dish photo in the notification.
+        ...(dish?.photo ? { richContent: { image: dish.photo } } : {}),
       }))
     ),
   });
@@ -230,7 +252,7 @@ Deno.serve(async (req) => {
 
     if (dryRun) return { user_id: candidate.user_id, kind: candidate.kind, ...message, sent: false };
 
-    const push = await sendPush(candidate.tokens, message, candidate.kind);
+    const push = await sendPush(candidate.tokens, message, candidate.kind, candidate.context);
     if (push.deadTokens.length) {
       await admin.from('push_devices').delete().in('token', push.deadTokens);
     }

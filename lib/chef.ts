@@ -80,6 +80,7 @@ export const MIN_INGREDIENT_WORDS = 3;
 export const wordCount = (text: string) => text.trim().split(/\s+/).filter(Boolean).length;
 
 export const isDishReady = (d: DishDraft) =>
+  d.photos.length >= 1 &&
   d.name.trim().length >= 2 &&
   Number(d.price) > 0 &&
   wordCount(d.description) >= MIN_DESCRIPTION_WORDS &&

@@ -5,7 +5,7 @@ import { DishDraft, MAX_DISH_PHOTOS, MIN_DESCRIPTION_WORDS, MIN_INGREDIENT_WORDS
 import { useSettings } from '@/lib/settings';
 import { FONT } from '@/lib/fonts';
 import { PhotoStrip } from './PhotoPicker';
-import { Card, Chip, Icon, Txt } from './ui';
+import { Card, Chip, Icon, IconName, Txt } from './ui';
 
 const ALLERGENS = Object.keys(ALLERGEN_EMOJI) as Allergen[];
 
@@ -47,6 +47,7 @@ export function DishEditor({
         )}
       </View>
       <PhotoStrip value={value.photos} onChange={(photos) => set({ photos })} max={MAX_DISH_PHOTOS} />
+      <Tip icon="camera-outline" title={t('photoTipsTitle')} body={t('photoTips')} />
       <TextInput
         value={value.name}
         onChangeText={(name) => set({ name })}
@@ -65,6 +66,7 @@ export function DishEditor({
         style={[input, { minHeight: 70 }]}
       />
       <WordCounter count={wordCount(value.description)} min={MIN_DESCRIPTION_WORDS} />
+      <Tip icon="restaurant-outline" body={t('tastyTip')} />
       <TextInput
         value={value.ingredients}
         onChangeText={(ingredients) => set({ ingredients })}
@@ -177,6 +179,22 @@ export function DishEditor({
   );
 }
 
+/** A small orange hint box, e.g. how to take photos that make people hungry. */
+function Tip({ icon, title, body }: { icon: IconName; title?: string; body: string }) {
+  const { colors } = useSettings();
+  return (
+    <View style={[styles.tip, { backgroundColor: `${colors.primary}12`, borderColor: `${colors.primary}33` }]}>
+      <Icon name={icon} size={18} color={colors.primary} />
+      <View style={{ flex: 1, gap: 2 }}>
+        {title ? <Txt style={{ fontWeight: '700', fontSize: 14 }}>{title}</Txt> : null}
+        <Txt variant="caption" style={{ lineHeight: 18 }}>
+          {body}
+        </Txt>
+      </View>
+    </View>
+  );
+}
+
 /** "6/10 words": red until the minimum is reached, then green with a tick. */
 function WordCounter({ count, min }: { count: number; min: number }) {
   const { t, colors } = useSettings();
@@ -198,5 +216,6 @@ function WordCounter({ count, min }: { count: number; min: number }) {
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  tip: { flexDirection: 'row', gap: 8, padding: 10, borderRadius: 12, borderWidth: 1 },
   input: { borderRadius: 14, borderWidth: 1, padding: 12, fontSize: 15, fontFamily: FONT.regular },
 });
