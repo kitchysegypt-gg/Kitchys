@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import type { Localized } from '@/lib/i18n';
-
 import { uploadKitchenPhoto } from './chef';
 import { supabase } from './supabase';
 
@@ -19,27 +17,6 @@ export type CareRequest = {
   created_at: string;
 };
 
-export type ShopOrder = {
-  id: string;
-  item_id: string;
-  method: 'points' | 'instalments';
-  points_spent: number;
-  months: number | null;
-  monthly: number | null;
-  status: 'requested' | 'delivered' | 'cancelled';
-  created_at: string;
-  delivered_at: string | null;
-};
-
-export type ShopItem = {
-  id: string;
-  name: Localized;
-  description: Localized;
-  emoji: string;
-  price: number;
-  points: number;
-};
-
 export type PremiumInfo = {
   active: boolean;
   price: number;
@@ -50,32 +27,21 @@ export type PremiumInfo = {
   care_from: string | null;
   care_used: number;
   care_limit: number;
-  points: number;
-  /** 2 for Premium kitchens, else 1 (points per EGP 10 of food delivered). */
-  points_multiplier: number;
   care_requests: CareRequest[];
-  shop_orders: ShopOrder[];
 };
 
 /** Emails the Kitchy's team (a failed email doesn't undo what the chef did). */
-const tellTeam = (kind: 'premium' | 'care' | 'shop', id?: string) =>
+const tellTeam = (kind: 'premium' | 'care', id?: string) =>
   supabase.functions.invoke('kitchen-requests', { body: { kind, id } }).catch(() => null);
 
-/** Everything on the Premium screen: subscription, points, chef shop and Kitchy's Care. */
+/** Everything on the Premium screen: the subscription and Kitchy's Care. */
 export function usePremium() {
   const [info, setInfo] = useState<PremiumInfo | null>(null);
-  const [items, setItems] = useState<ShopItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
-    const [premiumRes, itemsRes] = await Promise.all([
-      supabase.rpc('my_premium'),
-      supabase.from('shop_items').select('id, name, description, emoji, price, points').order('sort'),
-    ]);
-    if (!premiumRes.error && premiumRes.data) setInfo(premiumRes.data as PremiumInfo);
-    if (!itemsRes.error && Array.isArray(itemsRes.data)) {
-      setItems((itemsRes.data as ShopItem[]).map((i) => ({ ...i, price: Number(i.price) })));
-    }
+    const { data, error } = await supabase.rpc('my_premium');
+    if (!error && data) setInfo(data as PremiumInfo);
     setLoading(false);
   }, []);
 
@@ -101,14 +67,6 @@ export function usePremium() {
 
   const cancel = useCallback(() => run('premium_cancel').then(() => undefined), [run]);
 
-  const redeem = useCallback(
-    async (itemId: string, method: 'points' | 'instalments') => {
-      const id = (await run('shop_redeem', { p_item: itemId, p_method: method })) as string;
-      tellTeam('shop', id);
-    },
-    [run]
-  );
-
   const requestCare = useCallback(
     async (appliance: Appliance, problem: string, photoUri: string | null) => {
       const photo = await uploadKitchenPhoto(photoUri);
@@ -118,5 +76,5 @@ export function usePremium() {
     [run]
   );
 
-  return { info, items, loading, refresh, subscribe, cancel, redeem, requestCare };
+  return { info, loading, refresh, subscribe, cancel, requestCare };
 }

@@ -1,6 +1,5 @@
-// Kitchy's Premium requests from chefs: emails the Kitchy's team when a chef subscribes,
-// asks for a Kitchy's Care repair visit or gets something from the chef shop, with one-click
-// links to mark it done / delivered (or cancel a shop order and give the points back).
+// Kitchy's Premium requests from chefs: emails the Kitchy's team when a chef subscribes or
+// asks for a Kitchy's Care repair visit, with a one-click link to mark the repair done.
 //
 // Secrets: same as rider-applications (RESEND_API_KEY or Vault resend_api_key, OWNER_EMAIL, EMAIL_FROM).
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
@@ -73,53 +72,19 @@ async function handleAction(url: URL) {
   const id = url.searchParams.get('id') ?? '';
   const action = url.searchParams.get('action') ?? '';
   const sig = url.searchParams.get('sig') ?? '';
-  const allowed = (kind === 'care' && action === 'done') || (kind === 'shop' && ['delivered', 'cancel'].includes(action));
+  const allowed = kind === 'care' && action === 'done';
   if (!/^[0-9a-f-]{36}$/.test(id) || !allowed) return page('Link not valid', 'This link is incomplete.', '#D93025');
   if (sig !== (await sign(`${kind}:${id}:${action}`))) {
     return page('Link not valid', 'This link was changed or is not from Kitchy’s.', '#D93025');
   }
 
-  if (kind === 'care') {
-    const { data: req } = await admin.from('care_requests').select('chef_id, status, appliance').eq('id', id).single();
-    if (!req) return page('Not found', 'This request no longer exists.', '#D93025');
-    if (req.status !== 'open') return page('Already handled', 'This repair visit was already marked.', '#B8330D');
-    await admin.from('care_requests').update({ status: 'done', done_at: new Date().toISOString() }).eq('id', id);
-    const chef = await chefUser(req.chef_id);
-    if (chef) await push(chef.user_id, "Kitchy's Care ✓", `Your ${APPLIANCES[req.appliance]?.toLowerCase() ?? 'appliance'} repair is done.`);
-    return page('Done ✓', 'The repair visit is marked as done and the chef was told.', '#2E9E5B');
-  }
-
-  const { data: order } = await admin
-    .from('shop_orders')
-    .select('chef_id, status, method, points_spent, item_id, shop_items(name)')
-    .eq('id', id)
-    .single();
-  if (!order) return page('Not found', 'This shop order no longer exists.', '#D93025');
-  if (order.status !== 'requested') return page('Already handled', `This shop order is already ${order.status}.`, '#B8330D');
-  const itemName = (order.shop_items as { name?: { en?: string } } | null)?.name?.en ?? order.item_id;
-  const chef = await chefUser(order.chef_id);
-
-  if (action === 'delivered') {
-    await admin.from('shop_orders').update({ status: 'delivered', delivered_at: new Date().toISOString() }).eq('id', id);
-    if (chef) await push(chef.user_id, 'Your order from the chef shop 🎁', `${itemName} was delivered. Enjoy cooking with it!`);
-    if (order.method === 'instalments') await admin.rpc('charge_instalments');
-    return page('Delivered ✓', `${itemName} is marked as delivered.`, '#2E9E5B');
-  }
-
-  await admin.from('shop_orders').update({ status: 'cancelled' }).eq('id', id);
-  if (order.method === 'points' && order.points_spent > 0) {
-    await admin
-      .from('chef_points')
-      .insert({ chef_id: order.chef_id, amount: order.points_spent, reason: 'refund', shop_order_id: id });
-  }
-  if (chef) {
-    await push(
-      chef.user_id,
-      'Chef shop order cancelled',
-      order.method === 'points' ? `We couldn't get ${itemName}. Your points are back.` : `We couldn't get ${itemName}.`
-    );
-  }
-  return page('Cancelled', order.method === 'points' ? 'The order is cancelled and the points were given back.' : 'The order is cancelled.', '#B8330D');
+  const { data: req } = await admin.from('care_requests').select('chef_id, status, appliance').eq('id', id).single();
+  if (!req) return page('Not found', 'This request no longer exists.', '#D93025');
+  if (req.status !== 'open') return page('Already handled', 'This repair visit was already marked.', '#B8330D');
+  await admin.from('care_requests').update({ status: 'done', done_at: new Date().toISOString() }).eq('id', id);
+  const chef = await chefUser(req.chef_id);
+  if (chef) await push(chef.user_id, "Kitchy's Care", `Your ${APPLIANCES[req.appliance]?.toLowerCase() ?? 'appliance'} repair is done.`);
+  return page('Done', 'The repair visit is marked as done and the chef was told.', '#2E9E5B');
 }
 
 /** The chef app calls this right after a chef subscribes or sends a request. */
@@ -147,31 +112,18 @@ async function handleNotify(req: Request, functionUrl: string) {
     const { data: prem } = await admin.from('chef_premium').select('period_end').eq('chef_id', chefId).single();
     if (!prem) return json({ error: 'Not found' }, 404);
     subject = `Kitchy's Premium: ${kitchen.name} subscribed`;
-    html = `<h2 style="color:#F4511E">New Kitchy's Premium kitchen ⭐</h2>${who}
+    html = `<h2 style="color:#F4511E">New Kitchy's Premium kitchen</h2>${who}
 <p>EGP 320 a month comes out of their earnings. First month paid until ${new Date(prem.period_end).toDateString()}.</p>`;
   } else if (kind === 'care') {
     const { data: care } = await admin.from('care_requests').select('*').eq('id', id).single();
     if (!care || String(care.chef_id) !== chefId) return json({ error: 'Not found' }, 404);
     subject = `Kitchy's Care: ${APPLIANCES[care.appliance] ?? care.appliance} repair for ${kitchen.name}`;
-    html = `<h2 style="color:#F4511E">Kitchy's Care repair visit 🔧</h2>${who}
+    html = `<h2 style="color:#F4511E">Kitchy's Care repair visit</h2>${who}
 <p><b>${escapeHtml(APPLIANCES[care.appliance] ?? care.appliance)}</b></p>
 <p style="white-space:pre-wrap">${escapeHtml(care.problem)}</p>
 ${care.photo_url ? `<p><img src="${escapeHtml(care.photo_url)}" style="max-width:100%;border-radius:12px"></p>` : ''}
 <p>Send a technician, then mark it done:</p>
 <p>${button(await link('care', 'done'), 'Repair done', '#2E9E5B')}</p>`;
-  } else if (kind === 'shop') {
-    const { data: order } = await admin.from('shop_orders').select('*, shop_items(name, price)').eq('id', id).single();
-    if (!order || String(order.chef_id) !== chefId) return json({ error: 'Not found' }, 404);
-    const item = order.shop_items as { name: { en: string }; price: number };
-    subject = `Chef shop: ${item.name.en} for ${kitchen.name}`;
-    html = `<h2 style="color:#F4511E">Chef shop order 🎁</h2>${who}
-<p><b>${escapeHtml(item.name.en)}</b> (EGP ${item.price})</p>
-<p>${
-      order.method === 'points'
-        ? `Paid with <b>${order.points_spent}</b> points.`
-        : `Paying monthly: <b>EGP ${order.monthly} × ${order.months} months</b> from their earnings, starting when it's delivered.`
-    }</p>
-<p>${button(await link('shop', 'delivered'), 'Delivered', '#2E9E5B')} ${button(await link('shop', 'cancel'), order.method === 'points' ? 'Cancel & give points back' : 'Cancel', '#D93025')}</p>`;
   } else {
     return json({ error: 'Unknown request' }, 400);
   }

@@ -4,7 +4,6 @@ import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, V
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Bar, BarChart } from '@/components/BarChart';
-import { Emoji3D } from '@/components/Emoji3D';
 import { Stars } from '@/components/media';
 import { Card, Chip, Icon, IconBadge, IconName, ScreenHeader, Txt } from '@/components/ui';
 import type { Language } from '@/lib/i18n';
@@ -247,25 +246,22 @@ export default function KitchenDashboard() {
 
 /** A card heading with its coloured icon tile. */
 /** Sales, minus Kitchy's commission, equals what the chef earns. */
-/** Kitchy's Premium: an invitation, or the chef's points once they're in. */
+/** Kitchy's Premium: an invitation, or a way back to it once the chef has joined. */
 function PremiumCard() {
-  const { t } = useSettings();
+  const { t, colors } = useSettings();
   const { info } = usePremium();
   if (!info) return null;
   return (
     <Pressable onPress={() => router.push('/kitchen/premium')} accessibilityRole="button">
-      <Card style={[styles.premiumCard, { backgroundColor: '#FFF4D6', borderColor: '#F2D48A' }]}>
-        <Emoji3D name="crown" size={40} />
+      <Card style={styles.premiumCard}>
+        <IconBadge name="diamond-outline" tone="amber" size={40} solid />
         <View style={{ flex: 1 }}>
-          <Txt style={{ fontWeight: '800', color: '#3D2A00' }}>
-            {t('premiumCardTitle')}
-            {info.active ? ' ⭐' : ''}
-          </Txt>
-          <Txt variant="caption" style={{ color: '#5C4510' }}>
-            {info.active ? t('premiumCardActive', { points: info.points.toLocaleString() }) : t('premiumCardBody')}
+          <Txt style={{ fontWeight: '700' }}>{t('premiumCardTitle')}</Txt>
+          <Txt variant="caption" muted>
+            {info.active ? t('premiumCardActive') : t('premiumCardBody')}
           </Txt>
         </View>
-        <Icon name="chevron-forward" size={20} color="#9A6700" />
+        <Icon name="chevron-forward" size={20} color={colors.textMuted} />
       </Card>
     </Pressable>
   );
