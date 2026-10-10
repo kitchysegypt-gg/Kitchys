@@ -17,6 +17,7 @@ const SESSION_KEY = 'kitchys.demo.session';
 const TABLE_KEY = (table: string) => `kitchys.demo.db.${table}`;
 const DELIVERY_FEE = 30;
 const SERVICE_FEE = 20;
+const RIDER_DELIVERY_PAY = 30;
 const FREE_DELIVERY_ORDERS = 3;
 
 type Row = Record<string, any>;
@@ -181,8 +182,10 @@ async function insertOrder(values: Row): Promise<Result> {
     await writeTable('reward_vouchers', vouchers);
   }
   const serviceFee = SERVICE_FEE;
-  let total = subtotal - discount + deliveryFee + serviceFee;
-  const creditUsed = values.use_credit ? Math.max(0, Math.min(await walletBalance(me()), total)) : 0;
+  const tip = Math.max(0, Math.min(Math.round(Number(values.tip ?? 0)), 500));
+  let total = subtotal - discount + deliveryFee + serviceFee + tip;
+  // Credit doesn't pay the rider's tip.
+  const creditUsed = values.use_credit ? Math.max(0, Math.min(await walletBalance(me()), total - tip)) : 0;
   total -= creditUsed;
   const row: Row = {
     ...values,
@@ -192,6 +195,7 @@ async function insertOrder(values: Row): Promise<Result> {
     discount,
     delivery_fee: deliveryFee,
     service_fee: serviceFee,
+    tip,
     total,
     credit_used: creditUsed,
     referral_code: referralCode,
@@ -829,6 +833,8 @@ async function riderOrderJson(o: Row, full: boolean) {
     items: (o.items as { quantity: number }[]).reduce((n, i) => n + i.quantity, 0),
     cash: Number(o.total ?? o.subtotal),
     delivery_fee: Number(o.delivery_fee ?? 0),
+    tip: Number(o.tip ?? 0),
+    pay: RIDER_DELIVERY_PAY + Number(o.tip ?? 0),
     chef: { name: chef?.name ?? '', area: chef?.area ?? null, lat: 30.04, lng: 31.23, phone: full ? '01000000000' : null },
     customer: {
       name: full ? 'Omar' : null,
@@ -912,14 +918,21 @@ async function riderStats() {
   const rider = await myRider();
   const done = (await readTable('orders')).filter((o) => rider && o.rider_id === rider.id && o.status === 'delivered');
   const cash = done.reduce((n, o) => n + Number(o.total ?? o.subtotal), 0);
+  const tips = done.reduce((n, o) => n + Number(o.tip ?? 0), 0);
+  const earnings = done.length * RIDER_DELIVERY_PAY + tips;
   const today = new Date().toISOString().slice(0, 10);
   return ok({
     deliveries: done.length,
     cash,
     delivery_fees: 0,
+    earnings,
+    tips,
+    hand_over: cash - earnings,
     today_deliveries: done.length,
     today_cash: cash,
-    by_day: done.length ? [{ day: today, deliveries: done.length, cash }] : [],
+    today_earnings: earnings,
+    today_hand_over: cash - earnings,
+    by_day: done.length ? [{ day: today, deliveries: done.length, cash, earnings }] : [],
   });
 }
 

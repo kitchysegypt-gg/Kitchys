@@ -107,3 +107,13 @@ The sign-in screen asks for a 6-digit code after sign-up (`verifyOtp` type `sign
   only riders move orders to on the way / delivered. Chefs read their orders through
   `kitchen_orders()` (no address, location or phone) and get live updates from the
   `kitchen_order_pings` table; they have no direct read access to `orders`.
+
+## Money split (per order)
+
+- Food (subtotal): 85% to the chef, 15% Kitchy's commission (`COMMISSION_RATE`).
+- Delivery: the rider gets EGP 30 for every delivery (`rider_delivery_pay()`), also when the customer's
+  delivery was free (Kitchy's covers it).
+- Service fee EGP 20: Kitchy's (packaging).
+- Tip (`orders.tip`, chosen at checkout, 0–500): all to the rider. Credit never pays the tip.
+- The rider collects the cash total, keeps 30 + tip per order and hands the rest to Kitchy's
+  (`rider_stats`: `earnings`, `hand_over`).

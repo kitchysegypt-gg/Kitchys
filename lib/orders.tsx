@@ -21,6 +21,8 @@ export type Order = {
   delivery_fee: number;
   /** Packaging fee (EGP 20; 0 on older orders). */
   service_fee: number;
+  /** Tip for the rider (all of it goes to them). */
+  tip?: number;
   total: number;
   points_earned: number;
   voucher_id: string | null;
@@ -58,7 +60,7 @@ export type Voucher = {
 };
 
 type NewOrder = Pick<Order, 'items' | 'subtotal' | 'address' | 'notes'> &
-  Partial<Pick<Order, 'voucher_id' | 'delivery_lat' | 'delivery_lng' | 'scheduled_for' | 'referral_code' | 'phone'>> & {
+  Partial<Pick<Order, 'voucher_id' | 'delivery_lat' | 'delivery_lng' | 'scheduled_for' | 'referral_code' | 'phone' | 'tip'>> & {
     /** Take the customer's credit off this order. */
     use_credit?: boolean;
   };

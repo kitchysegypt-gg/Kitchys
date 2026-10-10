@@ -7,7 +7,10 @@ import { Card, IconBadge, Txt } from '@/components/ui';
 import { RiderStats, useRider } from '@/lib/rider';
 import { useSettings } from '@/lib/settings';
 
-/** Rider > Earnings: deliveries and cash collected today and over the last 7 days. */
+/**
+ * Rider > Earnings: what the rider earned (EGP 30 a delivery plus every tip), the cash they
+ * collected, and what they hand to Kitchy's, today and over the last 7 days.
+ */
 export default function RiderEarningsScreen() {
   const { t, colors, formatPrice, language } = useSettings();
   const { loadStats } = useRider();
@@ -49,15 +52,45 @@ export default function RiderEarningsScreen() {
         <Txt variant="title">{t('riderTabEarnings')}</Txt>
 
         <View style={styles.tiles}>
-          <Tile icon="today-outline" tone="orange" label={t('riderToday')} value={t('riderDeliveriesN', { n: stats?.today_deliveries ?? 0 })} sub={formatPrice(Number(stats?.today_cash ?? 0))} />
-          <Tile icon="calendar-outline" tone="blue" label={t('riderLast7')} value={t('riderDeliveriesN', { n: stats?.deliveries ?? 0 })} sub={formatPrice(Number(stats?.cash ?? 0))} />
+          <Tile
+            icon="today-outline"
+            tone="orange"
+            label={t('riderToday')}
+            value={formatPrice(Number(stats?.today_earnings ?? 0))}
+            sub={t('riderDeliveriesN', { n: stats?.today_deliveries ?? 0 })}
+          />
+          <Tile
+            icon="calendar-outline"
+            tone="blue"
+            label={t('riderLast7')}
+            value={formatPrice(Number(stats?.earnings ?? 0))}
+            sub={t('riderDeliveriesN', { n: stats?.deliveries ?? 0 })}
+          />
         </View>
 
-        <Card style={{ gap: 6 }}>
+        <Card style={{ gap: 10 }}>
+          <Txt variant="caption" muted>
+            {t('riderLast7')}
+          </Txt>
           <View style={styles.row}>
-            <IconBadge name="cash-outline" tone="green" size={30} />
-            <Txt style={{ flex: 1, fontWeight: '700' }}>{t('riderCashCollected')}</Txt>
-            <Txt style={{ fontWeight: '800', fontSize: 18 }}>{formatPrice(Number(stats?.cash ?? 0))}</Txt>
+            <IconBadge name="cash-outline" tone="blue" size={30} />
+            <Txt style={{ flex: 1, fontWeight: '600' }}>{t('riderCashCollected')}</Txt>
+            <Txt style={{ fontWeight: '700' }}>{formatPrice(Number(stats?.cash ?? 0))}</Txt>
+          </View>
+          <View style={styles.row}>
+            <IconBadge name="wallet-outline" tone="green" size={30} />
+            <Txt style={{ flex: 1, fontWeight: '600' }}>{t('riderEarnings')}</Txt>
+            <Txt style={{ fontWeight: '700', color: colors.success }}>{formatPrice(Number(stats?.earnings ?? 0))}</Txt>
+          </View>
+          {Number(stats?.tips ?? 0) > 0 && (
+            <Txt variant="caption" muted style={{ marginTop: -6, marginStart: 40 }}>
+              {t('riderTipIncluded', { amount: formatPrice(Number(stats?.tips ?? 0)) })}
+            </Txt>
+          )}
+          <View style={[styles.row, styles.handOver, { borderColor: colors.border }]}>
+            <IconBadge name="business-outline" tone="orange" size={30} />
+            <Txt style={{ flex: 1, fontWeight: '700' }}>{t('riderHandOver')}</Txt>
+            <Txt style={{ fontWeight: '800', fontSize: 18 }}>{formatPrice(Number(stats?.hand_over ?? 0))}</Txt>
           </View>
           <Txt variant="caption" muted>
             {t('riderCashNote')}
@@ -70,7 +103,9 @@ export default function RiderEarningsScreen() {
               <View key={d.day} style={[styles.dayRow, { borderColor: colors.border }]}>
                 <Txt style={{ flex: 1 }}>{day(d.day)}</Txt>
                 <Txt muted>{t('riderDeliveriesN', { n: d.deliveries })}</Txt>
-                <Txt style={{ fontWeight: '700', minWidth: 90, textAlign: 'right' }}>{formatPrice(Number(d.cash))}</Txt>
+                <Txt style={{ fontWeight: '700', minWidth: 90, textAlign: 'right', color: colors.success }}>
+                  {formatPrice(Number(d.earnings ?? 0))}
+                </Txt>
               </View>
             ))}
           </Card>
@@ -108,5 +143,6 @@ function Tile({
 const styles = StyleSheet.create({
   tiles: { flexDirection: 'row', gap: 12 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  handOver: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 10 },
   dayRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth },
 });

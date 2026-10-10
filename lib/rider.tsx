@@ -26,6 +26,10 @@ export type RiderOrder = {
   /** Cash to collect from the customer. */
   cash: number;
   delivery_fee: number;
+  /** The customer's tip (all of it is the rider's). */
+  tip: number;
+  /** What the rider earns for this delivery: EGP 30 plus the tip. The rest of the cash is Kitchy's. */
+  pay: number;
   chef: { name: string; area: string | null; lat: number | null; lng: number | null; phone: string | null };
   customer: {
     name: string | null;
@@ -43,9 +47,16 @@ export type RiderStats = {
   deliveries: number;
   cash: number;
   delivery_fees: number;
+  /** EGP 30 a delivery plus tips. */
+  earnings: number;
+  tips: number;
+  /** Cash collected minus earnings: what goes to Kitchy's. */
+  hand_over: number;
   today_deliveries: number;
   today_cash: number;
-  by_day: { day: string; deliveries: number; cash: number }[];
+  today_earnings: number;
+  today_hand_over: number;
+  by_day: { day: string; deliveries: number; cash: number; earnings: number }[];
 };
 
 type RiderValue = {

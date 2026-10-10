@@ -138,7 +138,16 @@ function AvailableCard({ order }: { order: RiderOrder }) {
     <Card style={{ gap: 10 }}>
       <View style={styles.head}>
         <StatusPill status={order.status} />
-        <Txt style={{ fontWeight: '800', fontSize: 18, color: colors.primary }}>{formatPrice(order.cash)}</Txt>
+        <View style={{ alignItems: 'flex-end' }}>
+          <Txt style={{ fontWeight: '800', fontSize: 18, color: colors.success }}>
+            {t('riderYouEarn', { amount: formatPrice(order.pay) })}
+          </Txt>
+          {order.tip > 0 ? (
+            <Txt variant="caption" muted>
+              {t('riderTipIncluded', { amount: formatPrice(order.tip) })}
+            </Txt>
+          ) : null}
+        </View>
       </View>
       <View style={styles.line}>
         <IconBadge name="restaurant-outline" tone="orange" size={30} />
@@ -179,11 +188,19 @@ function ActiveCard({ order }: { order: RiderOrder }) {
   };
 
   const delivered = () =>
-    showConfirm(t('riderDeliveredTitle'), t('riderDeliveredBody', { amount: formatPrice(order.cash) }), {
-      label: t('riderDelivered'),
-      cancelLabel: t('cancel'),
-      onConfirm: () => run(() => setStep(order.id, 'delivered')),
-    });
+    showConfirm(
+      t('riderDeliveredTitle'),
+      t('riderDeliveredBody', {
+        amount: formatPrice(order.cash),
+        pay: formatPrice(order.pay),
+        rest: formatPrice(Math.max(0, order.cash - order.pay)),
+      }),
+      {
+        label: t('riderDelivered'),
+        cancelLabel: t('cancel'),
+        onConfirm: () => run(() => setStep(order.id, 'delivered')),
+      }
+    );
 
   const giveBack = () =>
     showConfirm(t('riderGiveBackTitle'), t('riderGiveBackBody'), {
@@ -206,6 +223,13 @@ function ActiveCard({ order }: { order: RiderOrder }) {
         <Txt style={{ flex: 1, fontWeight: '600' }}>{t('riderCash')}</Txt>
         <Txt style={{ fontWeight: '800', fontSize: 20 }}>{formatPrice(order.cash)}</Txt>
       </View>
+      <Txt variant="caption" muted style={{ marginTop: -6 }}>
+        {t('riderKeepLine', {
+          pay: formatPrice(order.pay),
+          tip: formatPrice(order.tip),
+          rest: formatPrice(Math.max(0, order.cash - order.pay)),
+        })}
+      </Txt>
 
       <Stop
         done={pickedUp}

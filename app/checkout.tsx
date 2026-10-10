@@ -22,7 +22,7 @@ import {
   slotDate,
 } from '@/lib/schedule';
 import { useSettings } from '@/lib/settings';
-import { DELIVERY_FEE, FREE_DELIVERY_ORDERS, SERVICE_FEE, supabase } from '@/lib/supabase';
+import { DELIVERY_FEE, FREE_DELIVERY_ORDERS, SERVICE_FEE, TIP_OPTIONS, supabase } from '@/lib/supabase';
 
 /**
  * Checkout, after the cart: delivery time, address and note, payment, rewards and balance,
@@ -48,6 +48,7 @@ export default function CheckoutScreen() {
   const phone = typedPhone ?? lastPhone;
   const [referralCode, setReferralCode] = useState('');
   const [useCredit, setUseCredit] = useState(false);
+  const [tip, setTip] = useState(0);
   const [busy, setBusy] = useState(false);
   const [success, setSuccess] = useState(false);
 
@@ -62,8 +63,9 @@ export default function CheckoutScreen() {
   const voucher = availableVouchers.find((v) => v.id === voucherId);
   const { discount, deliveryFee } = applyReward(voucher && getReward(voucher.reward_id), subtotal, baseDeliveryFee);
   const beforeCredit = subtotal - discount + deliveryFee + SERVICE_FEE;
+  // Credit pays for food and fees, never the rider's tip.
   const creditUsed = useCredit ? Math.min(credit, beforeCredit) : 0;
-  const total = beforeCredit - creditUsed;
+  const total = beforeCredit - creditUsed + tip;
   // Referral codes only work on a customer's very first order.
   const firstOrder = orders.length === 0;
   const points = pointsFor(subtotal - discount, orderCount);
@@ -109,6 +111,7 @@ export default function CheckoutScreen() {
         voucher_id: voucher?.id ?? null,
         referral_code: firstOrder && referralCode.trim() ? referralCode.trim().toUpperCase() : null,
         use_credit: creditUsed > 0,
+        tip,
         delivery_lat: location?.latitude ?? null,
         delivery_lng: location?.longitude ?? null,
         scheduled_for: scheduledFor?.toISOString() ?? null,
@@ -210,6 +213,23 @@ export default function CheckoutScreen() {
             </View>
           </Card>
 
+          <Card style={{ gap: 10 }}>
+            <SectionTitle icon="heart-outline" title={t('tipTitle')} />
+            <View style={styles.chips}>
+              {TIP_OPTIONS.map((amount) => (
+                <Chip
+                  key={amount}
+                  label={amount === 0 ? t('noTip') : formatPrice(amount)}
+                  active={tip === amount}
+                  onPress={() => setTip(amount)}
+                />
+              ))}
+            </View>
+            <Txt variant="caption" muted>
+              {t('tipNote')}
+            </Txt>
+          </Card>
+
           {(availableVouchers.length > 0 || firstOrder || credit > 0) && (
             <Card style={{ gap: 10 }}>
               <SectionTitle icon="gift-outline" title={t('rewardsAndBalance')} />
@@ -276,13 +296,16 @@ export default function CheckoutScreen() {
               value={formatPrice(SERVICE_FEE)}
               onInfo={() => showAlert(t('serviceFee'), t('serviceFeeInfo', { amount: SERVICE_FEE }))}
             />
+            {tip > 0 && <SummaryRow label={t('tipLine')} value={formatPrice(tip)} />}
             {creditUsed > 0 && (
               <SummaryRow label={t('creditLine')} value={`− ${formatPrice(creditUsed)}`} valueColor={colors.success} />
             )}
           </Card>
         </ScrollView>
 
-        <SafeAreaView edges={['bottom']} style={[styles.footer, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
+        <SafeAreaView
+          edges={['bottom']}
+          style={[styles.footer, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
           <View style={styles.summaryRow}>
             <Txt variant="heading">{t('grandTotal')}</Txt>
             <Txt variant="heading" style={{ fontWeight: '800' }}>
@@ -391,7 +414,13 @@ const styles = StyleSheet.create({
   payOption: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 14, borderWidth: 1.5 },
   soonPill: { paddingVertical: 4, paddingHorizontal: 10, borderRadius: 10 },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  footer: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 12, borderTopWidth: StyleSheet.hairlineWidth, gap: 2 },
+  footer: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 12,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    gap: 2,
+  },
   successIcon: { width: 88, height: 88, borderRadius: 44, alignItems: 'center', justifyContent: 'center' },
   earnedPill: { borderRadius: 16, paddingVertical: 8, paddingHorizontal: 14, marginBottom: 14 },
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', padding: 24 },

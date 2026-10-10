@@ -36,3 +36,5 @@ export const DELIVERY_FEE = 30;
 /** Every order pays this for packaging (also set by the database). */
 export const SERVICE_FEE = 20;
 export const FREE_DELIVERY_ORDERS = 3;
+/** Tip choices at checkout (EGP); every pound goes to the rider. */
+export const TIP_OPTIONS = [0, 10, 20, 30] as const;
