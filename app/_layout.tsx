@@ -17,6 +17,7 @@ import { NotificationsBridge } from '@/lib/notifications';
 import { OrdersProvider } from '@/lib/orders';
 import { SettingsProvider, useSettings } from '@/lib/settings';
 import { SoundProvider } from '@/lib/sound';
+import { IS_RIDER } from '@/lib/variant';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -79,17 +80,22 @@ function RootNavigator() {
         <StatusBar style={colors.dark ? 'light' : 'dark'} />
         <Stack screenOptions={{ headerShown: false }}>
           {/* 1. First launch: explain how the app works. */}
-          <Stack.Protected guard={!onboarded}>
+          <Stack.Protected guard={!onboarded && !IS_RIDER}>
             <Stack.Screen name="onboarding" />
           </Stack.Protected>
 
           {/* 2. Email + password sign in with Supabase. */}
-          <Stack.Protected guard={onboarded && !session}>
+          <Stack.Protected guard={(onboarded || IS_RIDER) && !session}>
             <Stack.Screen name="auth" />
           </Stack.Protected>
 
+          {/* Kitchy's Rider (a separate app built from this code, see app.config.ts). */}
+          <Stack.Protected guard={IS_RIDER && !!session}>
+            <Stack.Screen name="rider" />
+          </Stack.Protected>
+
           {/* 3. The app itself. */}
-          <Stack.Protected guard={onboarded && !!session}>
+          <Stack.Protected guard={onboarded && !!session && !IS_RIDER}>
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="chef/[id]" />
             <Stack.Screen name="dish/[id]" options={{ presentation: 'modal' }} />
@@ -109,7 +115,7 @@ function RootNavigator() {
               never the screen the app opens on. */}
           <Stack.Screen name="help" />
         </Stack>
-        {onboarded && session && <NotificationsBridge />}
+        {(onboarded || IS_RIDER) && session && <NotificationsBridge />}
       </ThemeProvider>
       {showIntro && (
         <IntroAnimation

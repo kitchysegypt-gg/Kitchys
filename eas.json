@@ -19,6 +19,17 @@
     "production": {
       "autoIncrement": true,
       "channel": "production"
+    },
+    "rider": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "channel": "rider",
+      "environment": "preview",
+      "env": {
+        "APP_VARIANT": "rider"
+      }
     }
   },
   "submit": {

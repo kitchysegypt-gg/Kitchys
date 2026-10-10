@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { Linking, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button, Card, Chip, EmptyState, Icon, IconBadge, IconName, ScreenHeader, Txt, filledIcon } from '@/components/ui';
 import { showAlert, showConfirm } from '@/lib/alert';
 import type { TranslationKey } from '@/lib/i18n';
 import { ChefAction, KitchenOrder, canDecline, leaveKitchen, nextStep, useKitchen } from '@/lib/kitchen';
+import { OrderRider, useOrderRiders } from '@/lib/orderRiders';
 import type { OrderStatus } from '@/lib/orders';
 import { formatSlot } from '@/lib/schedule';
 import { useSettings } from '@/lib/settings';
@@ -13,6 +14,7 @@ import { useSettings } from '@/lib/settings';
 const STATUS_ICON: Record<OrderStatus, IconName> = {
   placed: 'notifications-outline',
   cooking: 'flame-outline',
+  ready: 'bag-check-outline',
   on_the_way: 'delivery',
   delivered: 'checkmark-circle-outline',
   cancelled: 'close-circle-outline',
@@ -27,10 +29,11 @@ export default function KitchenOrdersScreen() {
 
   const past = orders.filter((o) => o.status === 'delivered' || o.status === 'cancelled');
   // New orders first, then the ones cooking, then out for delivery; soonest delivery first.
-  const rank: Record<string, number> = { placed: 0, cooking: 1, on_the_way: 2 };
+  const rank: Record<string, number> = { placed: 0, cooking: 1, ready: 2, on_the_way: 3 };
   const due = (o: KitchenOrder) => new Date(o.scheduled_for ?? o.created_at).getTime();
   const open = [...openOrders].sort((a, b) => rank[a.status] - rank[b.status] || due(a) - due(b));
   const list = tab === 'open' ? open : past;
+  const riders = useOrderRiders(open.filter((o) => o.rider_id).map((o) => o.id));
 
   const pull = async () => {
     setRefreshing(true);
@@ -57,14 +60,14 @@ export default function KitchenOrdersScreen() {
             body={tab === 'open' ? t('noActiveOrdersBody') : undefined}
           />
         ) : (
-          list.map((o) => <OrderCard key={o.id} order={o} />)
+          list.map((o) => <OrderCard key={o.id} order={o} rider={riders[o.id]} />)
         )}
       </ScrollView>
     </View>
   );
 }
 
-function OrderCard({ order }: { order: KitchenOrder }) {
+function OrderCard({ order, rider }: { order: KitchenOrder; rider?: OrderRider }) {
   const { t, colors, formatPrice, language } = useSettings();
   const { setOrderStatus } = useKitchen();
   const [busy, setBusy] = useState(false);
@@ -147,7 +150,31 @@ function OrderCard({ order }: { order: KitchenOrder }) {
         <Txt variant="caption" muted style={{ flex: 1 }}>
           {order.address}
         </Txt>
+        {order.phone && order.status !== 'delivered' && order.status !== 'cancelled' ? (
+          <Pressable onPress={() => Linking.openURL(`tel:${order.phone}`)} hitSlop={8} accessibilityLabel={t('callCustomer')}>
+            <IconBadge name="call-outline" tone="green" size={30} />
+          </Pressable>
+        ) : null}
       </View>
+
+      {rider ? (
+        <View style={[styles.note, { backgroundColor: `${colors.primary}12` }]}>
+          <IconBadge name="bicycle-outline" tone="orange" size={26} />
+          <Txt variant="caption" style={{ flex: 1, fontWeight: '600' }}>
+            {order.status === 'on_the_way' ? t('riderDelivering', { name: rider.name }) : t('riderComing', { name: rider.name })}
+          </Txt>
+          <Pressable onPress={() => Linking.openURL(`tel:${rider.phone}`)} hitSlop={8} accessibilityLabel={t('callRider')}>
+            <IconBadge name="call-outline" tone="green" size={30} />
+          </Pressable>
+        </View>
+      ) : order.status === 'ready' ? (
+        <View style={[styles.note, { backgroundColor: colors.surfaceAlt }]}>
+          <IconBadge name="time-outline" tone="amber" size={26} />
+          <Txt variant="caption" style={{ flex: 1, fontWeight: '600' }}>
+            {t('waitingForRider')}
+          </Txt>
+        </View>
+      ) : null}
 
       {step?.lockedUntil && (
         <View style={[styles.note, { backgroundColor: `${colors.success}14` }]}>

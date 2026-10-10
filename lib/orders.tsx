@@ -4,7 +4,7 @@ import { useAuth } from './auth';
 import { Rank, nextRank, rankFor } from './loyalty';
 import { FREE_DELIVERY_ORDERS, isDemo, supabase } from './supabase';
 
-export type OrderStatus = 'placed' | 'cooking' | 'on_the_way' | 'delivered' | 'cancelled';
+export type OrderStatus = 'placed' | 'cooking' | 'ready' | 'on_the_way' | 'delivered' | 'cancelled';
 
 export type OrderItem = {
   dishId: string;
@@ -38,6 +38,10 @@ export type Order = {
   referral_code: string | null;
   status: OrderStatus;
   created_at: string;
+  /** Phone the rider calls on arrival. */
+  phone?: string | null;
+  /** Set once a Kitchy's rider has taken the order. */
+  rider_id?: string | null;
 };
 
 export type Voucher = {
@@ -50,7 +54,7 @@ export type Voucher = {
 };
 
 type NewOrder = Pick<Order, 'items' | 'subtotal' | 'address' | 'notes'> &
-  Partial<Pick<Order, 'voucher_id' | 'delivery_lat' | 'delivery_lng' | 'scheduled_for' | 'referral_code'>> & {
+  Partial<Pick<Order, 'voucher_id' | 'delivery_lat' | 'delivery_lng' | 'scheduled_for' | 'referral_code' | 'phone'>> & {
     /** Take the customer's credit off this order. */
     use_credit?: boolean;
   };
@@ -137,9 +141,11 @@ export function OrdersProvider({ children }: { children: React.ReactNode }) {
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'orders', filter: `user_id=eq.${userId}` },
         (payload) => {
-          const row = payload.new as { id: string; status: OrderStatus; accepted_at: string | null };
+          const row = payload.new as { id: string; status: OrderStatus; accepted_at: string | null; rider_id: string | null };
           setOrders((prev) =>
-            prev.map((o) => (o.id === row.id ? { ...o, status: row.status, accepted_at: row.accepted_at } : o))
+            prev.map((o) =>
+              o.id === row.id ? { ...o, status: row.status, accepted_at: row.accepted_at, rider_id: row.rider_id } : o
+            )
           );
         }
       )

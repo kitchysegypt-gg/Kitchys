@@ -42,6 +42,8 @@ export default function CheckoutScreen() {
   const close = lastDelivery(lines[0]?.dish.chefId ?? '');
   const [earned, setEarned] = useState(0);
   const [notes, setNotes] = useState('');
+  // The rider calls this number on arrival; prefilled from the last order.
+  const [phone, setPhone] = useState(() => orders.find((o) => o.phone)?.phone ?? '');
   const [referralCode, setReferralCode] = useState('');
   const [useCredit, setUseCredit] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -59,6 +61,8 @@ export default function CheckoutScreen() {
 
   const submit = async () => {
     if (!address.trim()) return showAlert(t('address'), t('addressRequired'));
+    const cleanPhone = phone.replace(/[^0-9+]/g, '');
+    if (cleanPhone.replace(/\D/g, '').length < 8) return showAlert(t('phoneLabel'), t('phoneRequired'));
     if (!location) {
       showAlert(t('location'), t('setAddressFirst'));
       return router.push('/location');
@@ -91,6 +95,7 @@ export default function CheckoutScreen() {
         })),
         subtotal,
         address: address.trim(),
+        phone: cleanPhone,
         notes: notes.trim() || null,
         voucher_id: voucher?.id ?? null,
         referral_code: firstOrder && referralCode.trim() ? referralCode.trim().toUpperCase() : null,
@@ -154,6 +159,17 @@ export default function CheckoutScreen() {
               multiline
             />
             <Button small variant="secondary" icon="map-outline" title={t('changeOnMap')} onPress={() => router.push('/location')} />
+            <SectionTitle icon="call-outline" title={t('phoneLabel')} />
+            <TextInput
+              value={phone}
+              onChangeText={(v) => setPhone(v.replace(/[^0-9+ ]/g, ''))}
+              placeholder={t('phonePlaceholder')}
+              placeholderTextColor={colors.textMuted}
+              keyboardType="phone-pad"
+              autoComplete="tel"
+              maxLength={20}
+              style={inputStyle}
+            />
             <SectionTitle icon="document-text-outline" title={t('notes')} />
             <TextInput
               value={notes}

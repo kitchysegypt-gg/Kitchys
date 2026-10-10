@@ -5,12 +5,14 @@ import { Button, Card, EmptyState, Icon, IconName, Screen, Txt } from '@/compone
 import { showAlert, showConfirm } from '@/lib/alert';
 import { formatSlot } from '@/lib/schedule';
 import { useCatalog } from '@/lib/catalog';
+import { mapsLink, useOrderRiders } from '@/lib/orderRiders';
 import { OrderStatus, useOrders } from '@/lib/orders';
 import { useSettings } from '@/lib/settings';
 
 const STATUS_ICON: Record<OrderStatus, IconName> = {
   placed: 'receipt-outline',
   cooking: 'flame-outline',
+  ready: 'bag-check-outline',
   on_the_way: 'delivery',
   delivered: 'checkmark-circle-outline',
   cancelled: 'close-circle-outline',
@@ -20,6 +22,9 @@ export default function OrdersScreen() {
   const { t, l, colors, formatPrice, language } = useSettings();
   const { orders, loading, refresh, cancelOrder } = useOrders();
   const { getDish } = useCatalog();
+  const riders = useOrderRiders(
+    orders.filter((o) => o.rider_id && ['cooking', 'ready', 'on_the_way'].includes(o.status)).map((o) => o.id)
+  );
 
   return (
     <Screen>
@@ -106,6 +111,30 @@ export default function OrdersScreen() {
                   </View>
                 )}
               </View>
+              {riders[item.id] && (
+                <View style={[styles.riderRow, { backgroundColor: `${colors.primary}10`, borderColor: `${colors.primary}33` }]}>
+                  <Icon name="bicycle" size={22} color={colors.primary} />
+                  <Txt style={{ flex: 1, fontWeight: '600' }} numberOfLines={2}>
+                    {item.status === 'on_the_way'
+                      ? t('riderBringing', { name: riders[item.id].name })
+                      : t('riderAssigned', { name: riders[item.id].name })}
+                  </Txt>
+                  {item.status === 'on_the_way' && riders[item.id].latitude != null && (
+                    <Pressable
+                      onPress={() => Linking.openURL(mapsLink(riders[item.id].latitude!, riders[item.id].longitude!))}
+                      hitSlop={8}
+                      accessibilityLabel={t('trackRider')}>
+                      <Icon name="navigate-circle" size={30} color={colors.primary} />
+                    </Pressable>
+                  )}
+                  <Pressable
+                    onPress={() => Linking.openURL(`tel:${riders[item.id].phone}`)}
+                    hitSlop={8}
+                    accessibilityLabel={t('callRider')}>
+                    <Icon name="call" size={26} color={colors.success} />
+                  </Pressable>
+                </View>
+              )}
               {item.scheduled_for && (
                 <View style={styles.row}>
                   <Icon name="time-outline" size={16} />
@@ -169,6 +198,7 @@ export default function OrdersScreen() {
 }
 
 const styles = StyleSheet.create({
+  riderRow: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, borderRadius: 12, borderWidth: 1 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   statusIcon: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
   badges: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 16, rowGap: 6 },

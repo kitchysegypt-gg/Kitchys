@@ -77,3 +77,17 @@ App saves the phone's push token (`push_devices`) and the cart (`saved_carts`) �
 ## Email confirmation
 
 The sign-in screen asks for a 6-digit code after sign-up (`verifyOtp` type `signup`) and resends it. To switch it on: verify a domain in Resend, set Supabase → Authentication → SMTP to Resend (host `smtp.resend.com`, port 465, user `resend`, password = Resend API key, sender `no-reply@<domain>`), add `{{ .Token }}` to the "Confirm signup" email template, then turn on "Confirm email". Supabase's built-in email only reaches the project's team members.
+
+## Kitchy's Rider (separate app, same code and database)
+
+- `app.config.ts` builds a second app when `APP_VARIANT=rider`: name "Kitchy's Rider", package
+  `com.kitchys.rider`, rider screens under `app/rider/` (customer screens are hidden).
+- Build the rider APK: `eas build -p android --profile rider` (channel `rider`).
+- Rider OTA updates must be published with the variant set, to the rider channel:
+  `APP_VARIANT=rider eas update --channel rider --environment preview --message "..."`.
+  Customer updates stay `eas update --channel preview ...` WITHOUT `APP_VARIANT`.
+- Riders apply in the app; the team gets an email (edge function `rider-applications`) with
+  Approve / Reject links. Database: `riders`, `rider_applications`, order status `ready`,
+  `orders.rider_id`, RPCs `rider_*`, `order_riders`.
+- Push notifications in the rider app need its own Firebase Android app (`com.kitchys.rider`):
+  put its google-services file at `google-services.rider.json` and upload the FCM key for it in EAS.

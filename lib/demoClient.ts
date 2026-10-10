@@ -582,7 +582,8 @@ async function setKitchenPaused(paused: boolean) {
 
 const NEXT_STATUS: Record<string, string[]> = {
   placed: ['cooking', 'cancelled'],
-  cooking: ['on_the_way', 'cancelled'],
+  cooking: ['ready', 'on_the_way', 'cancelled'],
+  ready: ['on_the_way', 'cancelled'],
   on_the_way: ['delivered'],
 };
 
@@ -774,8 +775,125 @@ async function dishWeekOrders() {
   return ok(Object.entries(orders).map(([dish_id, ids]) => ({ dish_id, orders: ids.size })));
 }
 
+// ---- Kitchy's Rider (demo) --------------------------------------------------------------
+async function myRider() {
+  return (await readTable('riders')).find((r) => r.user_id === me());
+}
+
+async function riderStatus() {
+  const rider = await myRider();
+  if (rider) return ok({ status: 'approved', rider });
+  const app = (await readTable('rider_applications')).filter((a) => a.user_id === me()).pop();
+  return ok({ status: app?.status ?? 'none' });
+}
+
+async function riderApply(args: Row) {
+  const apps = await readTable('rider_applications');
+  const id = `ra-${Date.now()}`;
+  apps.push({ id, user_id: me(), full_name: args.p_name, phone: args.p_phone, vehicle: args.p_vehicle, area: args.p_area, status: 'pending' });
+  await writeTable('rider_applications', apps);
+  return ok(id);
+}
+
+async function riderOrderJson(o: Row, full: boolean) {
+  const chef = (await readTable('kitchen_chefs')).find((c) => c.id === o.chef_id);
+  return {
+    id: o.id,
+    status: o.status,
+    scheduled_for: o.scheduled_for ?? null,
+    created_at: o.created_at,
+    ready_at: o.ready_at ?? null,
+    items: (o.items as { quantity: number }[]).reduce((n, i) => n + i.quantity, 0),
+    cash: Number(o.total ?? o.subtotal),
+    delivery_fee: Number(o.delivery_fee ?? 0),
+    chef: { name: chef?.name ?? '', area: chef?.area ?? null, lat: 30.04, lng: 31.23, phone: full ? '01000000000' : null },
+    customer: {
+      name: full ? 'Omar' : null,
+      phone: full ? (o.phone ?? '01111111111') : null,
+      address: full ? o.address : null,
+      notes: full ? o.notes : null,
+      lat: o.delivery_lat ?? 30.05,
+      lng: o.delivery_lng ?? 31.24,
+    },
+    to_kitchen_km: 2.4,
+    trip_km: 3.1,
+  };
+}
+
+async function riderOrders(mine: boolean) {
+  const rider = await myRider();
+  if (!rider) return ok([]);
+  const rows = (await readTable('orders')).filter((o) =>
+    mine
+      ? o.rider_id === rider.id && ['cooking', 'ready', 'on_the_way', 'delivered'].includes(o.status)
+      : rider.online && !o.rider_id && ['cooking', 'ready'].includes(o.status)
+  );
+  return ok(await Promise.all(rows.map((o) => riderOrderJson(o, mine))));
+}
+
+async function riderUpdate(orderId: string, change: (o: Row, riderId: string) => string | null) {
+  const rider = await myRider();
+  if (!rider) return fail('Only approved riders can take orders');
+  const all = await readTable('orders');
+  const order = all.find((o) => o.id === orderId);
+  if (!order) return fail('Order not found');
+  const error = change(order, rider.id);
+  if (error) return fail(error);
+  await writeTable('orders', all);
+  return ok(null);
+}
+
+async function riderSetOnline(online: boolean) {
+  const riders = await readTable('riders');
+  const rider = riders.find((r) => r.user_id === me());
+  if (!rider) return fail('Only approved riders can go online');
+  rider.online = online;
+  await writeTable('riders', riders);
+  return ok(null);
+}
+
+async function riderStats() {
+  const rider = await myRider();
+  const done = (await readTable('orders')).filter((o) => rider && o.rider_id === rider.id && o.status === 'delivered');
+  const cash = done.reduce((n, o) => n + Number(o.total ?? o.subtotal), 0);
+  const today = new Date().toISOString().slice(0, 10);
+  return ok({
+    deliveries: done.length,
+    cash,
+    delivery_fees: 0,
+    today_deliveries: done.length,
+    today_cash: cash,
+    by_day: done.length ? [{ day: today, deliveries: done.length, cash }] : [],
+  });
+}
+
 async function rpc(name: string, args: Row) {
+  if (name === 'my_rider_status') return riderStatus();
+  if (name === 'submit_rider_application') return riderApply(args);
+  if (name === 'rider_set_online') return riderSetOnline(Boolean(args.p_online));
+  if (name === 'rider_update_location') return ok(null);
+  if (name === 'rider_available_orders') return riderOrders(false);
+  if (name === 'rider_my_orders') return riderOrders(true);
+  if (name === 'rider_stats') return riderStats();
+  if (name === 'rider_claim_order')
+    return riderUpdate(args.p_order, (o, riderId) => {
+      if (o.rider_id) return 'Another rider already took this order';
+      o.rider_id = riderId;
+      return null;
+    });
+  if (name === 'rider_release_order')
+    return riderUpdate(args.p_order, (o) => {
+      o.rider_id = null;
+      return null;
+    });
+  if (name === 'rider_set_order_status')
+    return riderUpdate(args.p_order, (o) => {
+      if (args.p_step === 'picked_up') o.status = 'on_the_way';
+      else if (args.p_step === 'delivered') o.status = 'delivered';
+      return null;
+    });
   if (name === 'chef_highlights') return chefHighlights();
+  if (name === 'order_riders') return ok([]);
   if (name === 'popular_dishes') return popularDishes();
   if (name === 'dish_week_orders') return dishWeekOrders();
   if (name === 'redeem_reward') return redeemReward(args.p_reward_id);
@@ -809,6 +927,7 @@ const functions = {
       return ok({ reply: demoChatReply(messages[messages.length - 1]?.content ?? '', language) });
     }
     if (name === 'chef-applications') return ok({ emailed: false, reason: 'demo' });
+    if (name === 'rider-applications') return ok({ emailed: false, reason: 'demo' });
     return fail(`Unknown function ${name}`);
   },
 };

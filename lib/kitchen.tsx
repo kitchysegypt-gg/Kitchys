@@ -20,6 +20,10 @@ export type KitchenOrder = {
   scheduled_for: string | null;
   /** Set when the chef accepted a new order (scheduled orders are cooked later, on the day). */
   accepted_at: string | null;
+  /** Set once a Kitchy's rider has taken the order. */
+  rider_id: string | null;
+  /** The customer's phone, for the chef to call if needed. */
+  phone: string | null;
 };
 
 /** What a chef can do to an order: move it to a status, or accept it for later. */
@@ -95,7 +99,7 @@ type KitchenValue = ChefStatus & {
 
 const KitchenContext = createContext<KitchenValue | null>(null);
 
-const OPEN: OrderStatus[] = ['placed', 'cooking', 'on_the_way'];
+const OPEN: OrderStatus[] = ['placed', 'cooking', 'ready', 'on_the_way'];
 
 /** Everything the chef's kitchen screens share, loaded once for all its tabs. */
 export function KitchenProvider({ children }: { children: React.ReactNode }) {
@@ -114,7 +118,7 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
     if (!chefId) return;
     const { data, error } = await supabase
       .from('orders')
-      .select('id, items, subtotal, address, notes, status, created_at, scheduled_for, accepted_at')
+      .select('id, items, subtotal, address, notes, status, created_at, scheduled_for, accepted_at, rider_id, phone')
       .eq('chef_id', chefId)
       .order('created_at', { ascending: false })
       .limit(100);
@@ -283,8 +287,8 @@ export function useKitchen() {
 /** The next step a chef can take on an order. */
 export type NextStep = {
   action: ChefAction;
-  label: 'acceptAndCook' | 'acceptOrder' | 'startCooking' | 'sendOut' | 'markDelivered';
-  icon: 'flame-outline' | 'checkmark-circle-outline' | 'delivery' | 'checkmark-done-outline';
+  label: 'acceptAndCook' | 'acceptOrder' | 'startCooking' | 'sendOut' | 'markDelivered' | 'readyForPickup' | 'deliverMyself';
+  icon: 'flame-outline' | 'checkmark-circle-outline' | 'delivery' | 'checkmark-done-outline' | 'bag-check-outline';
   /** Cooking a scheduled order only unlocks on its delivery day. */
   lockedUntil?: Date;
 };
@@ -304,7 +308,10 @@ export function nextStep(order: KitchenOrder, now = new Date()): NextStep | null
       lockedUntil: day > dayStart(now) ? day : undefined,
     };
   }
-  if (order.status === 'cooking') return { action: 'on_the_way', label: 'sendOut', icon: 'delivery' };
+  if (order.status === 'cooking') return { action: 'ready', label: 'readyForPickup', icon: 'bag-check-outline' };
+  // Once a Kitchy's rider has the order, the rider moves it along.
+  if (order.rider_id) return null;
+  if (order.status === 'ready') return { action: 'on_the_way', label: 'deliverMyself', icon: 'delivery' };
   if (order.status === 'on_the_way') return { action: 'delivered', label: 'markDelivered', icon: 'checkmark-done-outline' };
   return null;
 }
@@ -316,7 +323,7 @@ export const splitSales = (sales: number) => {
   return { commission, earnings: sales - commission };
 };
 
-export const canDecline = (status: OrderStatus) => status === 'placed' || status === 'cooking';
+export const canDecline = (status: OrderStatus) => status === 'placed' || status === 'cooking' || status === 'ready';
 
 /** Leaves the kitchen and goes back to the customer app. */
 export const leaveKitchen = () => (router.canGoBack() ? router.back() : router.replace('/more'));
