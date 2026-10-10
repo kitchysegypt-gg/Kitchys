@@ -224,11 +224,14 @@ function ActiveCard({ order }: { order: RiderOrder }) {
         <Txt style={{ fontWeight: '800', fontSize: 20 }}>{formatPrice(order.cash)}</Txt>
       </View>
       <Txt variant="caption" muted style={{ marginTop: -6 }}>
-        {t('riderKeepLine', {
-          pay: formatPrice(order.pay),
-          tip: formatPrice(order.tip),
-          rest: formatPrice(Math.max(0, order.cash - order.pay)),
-        })}
+        {order.cash >= order.pay
+          ? t('riderKeepLine', {
+              pay: formatPrice(order.pay),
+              tip: formatPrice(order.tip),
+              rest: formatPrice(order.cash - order.pay),
+            })
+          : // Small order (mostly paid with credit): Kitchy's pays the rider the difference.
+            t('riderKitchysPaysLine', { pay: formatPrice(order.pay), owed: formatPrice(order.pay - order.cash) })}
       </Txt>
 
       <Stop

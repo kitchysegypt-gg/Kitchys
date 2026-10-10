@@ -116,4 +116,6 @@ The sign-in screen asks for a 6-digit code after sign-up (`verifyOtp` type `sign
 - Service fee EGP 20: Kitchy's (packaging).
 - Tip (`orders.tip`, chosen at checkout, 0–500): all to the rider. Credit never pays the tip.
 - The rider collects the cash total, keeps 30 + tip per order and hands the rest to Kitchy's
+  (on small credit-paid orders where cash < 30 + tip, Kitchy's pays the rider the difference;
+  discounts and credit are Kitchy's loss, the chef still gets 85% of the full food price)
   (`rider_stats`: `earnings`, `hand_over`).

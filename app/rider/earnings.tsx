@@ -89,8 +89,11 @@ export default function RiderEarningsScreen() {
           )}
           <View style={[styles.row, styles.handOver, { borderColor: colors.border }]}>
             <IconBadge name="business-outline" tone="orange" size={30} />
-            <Txt style={{ flex: 1, fontWeight: '700' }}>{t('riderHandOver')}</Txt>
-            <Txt style={{ fontWeight: '800', fontSize: 18 }}>{formatPrice(Number(stats?.hand_over ?? 0))}</Txt>
+            {/* Negative when credit-paid orders left less cash than the rider earned: Kitchy's owes them. */}
+            <Txt style={{ flex: 1, fontWeight: '700' }}>
+              {Number(stats?.hand_over ?? 0) < 0 ? t('riderKitchysOwes') : t('riderHandOver')}
+            </Txt>
+            <Txt style={{ fontWeight: '800', fontSize: 18 }}>{formatPrice(Math.abs(Number(stats?.hand_over ?? 0)))}</Txt>
           </View>
           <Txt variant="caption" muted>
             {t('riderCashNote')}
