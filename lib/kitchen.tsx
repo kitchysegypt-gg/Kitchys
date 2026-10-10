@@ -13,7 +13,6 @@ export type KitchenOrder = {
   id: string;
   items: { dishId: string; name: string; price: number; quantity: number }[];
   subtotal: number;
-  address: string;
   notes: string | null;
   status: OrderStatus;
   created_at: string;
@@ -114,13 +113,9 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
 
   const refreshOrders = useCallback(async () => {
     if (!chefId) return;
-    const { data, error } = await supabase
-      .from('orders')
-      .select('id, items, subtotal, address, notes, status, created_at, scheduled_for, accepted_at, rider_id')
-      .eq('chef_id', chefId)
-      .order('created_at', { ascending: false })
-      .limit(100);
-    if (error || !data) return;
+    // Through an RPC: kitchens never see the customer's address, location or phone.
+    const { data, error } = await supabase.rpc('kitchen_orders');
+    if (error || !Array.isArray(data)) return;
     const rows = (data as KitchenOrder[]).map((o) => ({ ...o, subtotal: Number(o.subtotal) }));
     // A ping when a new order comes in (not on the first load).
     if (knownIds.current && rows.some((o) => o.status === 'placed' && !knownIds.current!.has(o.id))) {
@@ -170,7 +165,8 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
     if (!chefId || !session || isDemo) return;
     const channel = supabase
       .channel(`kitchen-${chefId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders', filter: `chef_id=eq.${chefId}` }, () => {
+      // Orders themselves aren't readable by the kitchen; this row changes whenever one does.
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'kitchen_order_pings', filter: `chef_id=eq.${chefId}` }, () => {
         refreshOrders();
         // A new order can use up a deal's portions.
         refreshDeals();
@@ -285,8 +281,8 @@ export function useKitchen() {
 /** The next step a chef can take on an order. */
 export type NextStep = {
   action: ChefAction;
-  label: 'acceptAndCook' | 'acceptOrder' | 'startCooking' | 'sendOut' | 'markDelivered' | 'readyForPickup' | 'deliverMyself';
-  icon: 'flame-outline' | 'checkmark-circle-outline' | 'delivery' | 'checkmark-done-outline' | 'bag-check-outline';
+  label: 'acceptAndCook' | 'acceptOrder' | 'startCooking' | 'readyForPickup';
+  icon: 'flame-outline' | 'checkmark-circle-outline' | 'bag-check-outline';
   /** Cooking a scheduled order only unlocks on its delivery day. */
   lockedUntil?: Date;
 };
@@ -307,10 +303,7 @@ export function nextStep(order: KitchenOrder, now = new Date()): NextStep | null
     };
   }
   if (order.status === 'cooking') return { action: 'ready', label: 'readyForPickup', icon: 'bag-check-outline' };
-  // Once a Kitchy's rider has the order, the rider moves it along.
-  if (order.rider_id) return null;
-  if (order.status === 'ready') return { action: 'on_the_way', label: 'deliverMyself', icon: 'delivery' };
-  if (order.status === 'on_the_way') return { action: 'delivered', label: 'markDelivered', icon: 'checkmark-done-outline' };
+  // Kitchens only cook: from "ready", a Kitchy's rider picks it up and delivers it.
   return null;
 }
 

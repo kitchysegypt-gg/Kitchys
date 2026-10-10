@@ -580,9 +580,9 @@ export const CHEF_HELP: HelpTopic[] = [
         fr: 'Votre téléphone affiche « Nouvelle commande ! 🍲 » avec un son. L\'onglet {kitchenOrders} montre un chiffre rouge.',
       },
       {
-        en: 'Open the order and read: the dishes and how many, the delivery time, the customer\'s note and the address.',
-        ar: 'افتحي الطلب واقري: الأكلات والعدد، وميعاد التوصيل، وملاحظة الزبون، والعنوان.',
-        fr: 'Ouvrez la commande et lisez : les plats et quantités, l\'heure de livraison, la note du client et l\'adresse.',
+        en: 'Open the order and read: the dishes and how many, the delivery time and the customer\'s note.',
+        ar: 'افتحي الطلب واقري: الأكلات والعدد، وميعاد التوصيل، وملاحظة الزبون.',
+        fr: 'Ouvrez la commande et lisez : les plats et quantités, l\'heure de livraison et la note du client.',
       },
       {
         en: 'Answer quickly: customers wait for you to accept.',
@@ -607,14 +607,9 @@ export const CHEF_HELP: HelpTopic[] = [
         fr: 'Commande « dès que possible » : touchez {acceptAndCook}. Commande pour un autre jour : touchez {acceptOrder} maintenant, puis {startCooking} le jour de la livraison (le bouton s\'active ce jour-là). Le client est prévenu à chaque étape.',
       },
       {
-        en: 'When the food leaves your kitchen, tap {sendOut}.',
-        ar: 'لما الأكل يخرج من مطبخك، دوسي {sendOut}.',
-        fr: 'Quand le plat quitte votre cuisine, touchez {sendOut}.',
-      },
-      {
-        en: 'When it reaches the customer, tap {markDelivered}. The order moves to {pastOrders}.',
-        ar: 'لما يوصل للزبون، دوسي {markDelivered}. الطلب هيروح لـ {pastOrders}.',
-        fr: 'Quand il arrive chez le client, touchez {markDelivered}. La commande passe dans {pastOrders}.',
+        en: 'When the food is cooked and packed, tap {readyForPickup}. A Kitchy\'s rider picks it up and delivers it: you don\'t deliver. Once delivered, the order moves to {pastOrders}.',
+        ar: 'لما الأكل يستوي ويتغلّف، دوسي {readyForPickup}. طيار كيتشيز هيستلمه ويوصّله: إنتي مش بتوصّلي. أول ما يوصل، الطلب هيروح لـ {pastOrders}.',
+        fr: 'Quand le plat est prêt et emballé, touchez {readyForPickup}. Un livreur Kitchy\'s le récupère et le livre : vous ne livrez pas. Une fois livrée, la commande passe dans {pastOrders}.',
       },
       {
         en: 'Can\'t make it? Tap {declineOrder}. The customer is told, and any credit they used is returned.',

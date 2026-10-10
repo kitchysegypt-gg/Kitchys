@@ -145,13 +145,6 @@ function OrderCard({ order, rider }: { order: KitchenOrder; rider?: OrderRider }
         </View>
       ) : null}
 
-      <View style={styles.when}>
-        <IconBadge name="location-outline" tone="teal" size={26} />
-        <Txt variant="caption" muted style={{ flex: 1 }}>
-          {order.address}
-        </Txt>
-      </View>
-
       {rider ? (
         <View style={[styles.note, { backgroundColor: `${colors.primary}12` }]}>
           <IconBadge name="bicycle-outline" tone="orange" size={26} />
@@ -167,6 +160,13 @@ function OrderCard({ order, rider }: { order: KitchenOrder; rider?: OrderRider }
           <IconBadge name="time-outline" tone="amber" size={26} />
           <Txt variant="caption" style={{ flex: 1, fontWeight: '600' }}>
             {t('waitingForRider')}
+          </Txt>
+        </View>
+      ) : order.status === 'placed' || order.status === 'cooking' ? (
+        <View style={[styles.note, { backgroundColor: colors.surfaceAlt }]}>
+          <IconBadge name="bicycle-outline" tone="orange" size={26} />
+          <Txt variant="caption" style={{ flex: 1, fontWeight: '600' }}>
+            {t('riderWillPickUp')}
           </Txt>
         </View>
       ) : null}

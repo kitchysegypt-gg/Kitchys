@@ -582,9 +582,8 @@ async function setKitchenPaused(paused: boolean) {
 
 const NEXT_STATUS: Record<string, string[]> = {
   placed: ['cooking', 'cancelled'],
-  cooking: ['ready', 'on_the_way', 'cancelled'],
-  ready: ['on_the_way', 'cancelled'],
-  on_the_way: ['delivered'],
+  cooking: ['ready', 'cancelled'],
+  ready: ['cancelled'],
 };
 
 async function chefSetOrderStatus(orderId: string, status: string) {
@@ -605,8 +604,32 @@ async function chefSetOrderStatus(orderId: string, status: string) {
   }
   order.status = status;
   if (status === 'cooking') order.accepted_at ??= new Date().toISOString();
+  if (status === 'ready') order.ready_at = new Date().toISOString();
   await writeTable('orders', all);
   return ok(null);
+}
+
+/** The kitchen's orders, without the customer's address, location or phone (like the real RPC). */
+async function kitchenOrders() {
+  const chef = await myKitchen();
+  if (!chef) return ok([]);
+  const rows = (await readTable('orders'))
+    .filter((o) => o.chef_id === chef.id)
+    .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)))
+    .slice(0, 100);
+  return ok(
+    rows.map(({ id, items, subtotal, notes, status, created_at, scheduled_for, accepted_at, rider_id }) => ({
+      id,
+      items,
+      subtotal,
+      notes,
+      status,
+      created_at,
+      scheduled_for: scheduled_for ?? null,
+      accepted_at: accepted_at ?? null,
+      rider_id: rider_id ?? null,
+    }))
+  );
 }
 
 async function replyToReview(reviewId: string, reply: string) {
@@ -928,6 +951,7 @@ async function rpc(name: string, args: Row) {
   if (name === 'chef_highlights') return chefHighlights();
   if (name === 'order_riders') return orderRiders(args.p_orders ?? []);
   if (name === 'my_last_phone') return ok(null);
+  if (name === 'kitchen_orders') return kitchenOrders();
   if (name === 'popular_dishes') return popularDishes();
   if (name === 'dish_week_orders') return dishWeekOrders();
   if (name === 'redeem_reward') return redeemReward(args.p_reward_id);

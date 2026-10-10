@@ -79,11 +79,9 @@ export default function TrackOrderScreen() {
             ? 'trackReady'
             : 'trackWaitingRider'
           : order.status === 'on_the_way'
-            ? !order.rider_id
-              ? 'trackKitchenDelivering'
-              : live
-                ? 'trackNearby'
-                : 'trackOnTheWay'
+            ? live
+              ? 'trackNearby'
+              : 'trackOnTheWay'
             : order.status === 'delivered'
               ? 'trackDelivered'
               : 'trackCancelled';

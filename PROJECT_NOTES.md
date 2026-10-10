@@ -103,3 +103,7 @@ The sign-in screen asks for a 6-digit code after sign-up (`verifyOtp` type `sign
 - Chefs can't contact customers: the phone given at checkout is moved by a trigger into
   `order_contacts` (customer-only RLS); `orders.phone` is always empty. Riders get it through
   `rider_order_json`; checkout prefills it with `my_last_phone()`. No call button in the kitchen.
+- Kitchens only cook: `chef_set_order_status` allows placed → cooking → ready (or cancelled);
+  only riders move orders to on the way / delivered. Chefs read their orders through
+  `kitchen_orders()` (no address, location or phone) and get live updates from the
+  `kitchen_order_pings` table; they have no direct read access to `orders`.
