@@ -55,7 +55,16 @@ async function writeJSON(key: string, value: unknown) {
   }
 }
 
-const readTable = (table: string) => readJSON<Row[]>(TABLE_KEY(table), []);
+// Tables the demo starts with something in.
+const DEMO_SEEDS: Record<string, Row[]> = {
+  shop_items: [
+    { id: 'oven', name: { en: 'Electric oven 45 L', ar: 'فرن كهربا ٤٥ لتر', fr: 'Four électrique 45 L' }, description: { en: 'Bakes trays of béchamel pasta, roast chicken and sweets at once.', ar: 'يخبز صواني مكرونة بشاميل وفراخ وحلويات مرة واحدة.', fr: 'Cuit à la fois pâtes béchamel, poulet rôti et desserts.' }, emoji: 'fire', price: 9500, points: 23750, sort: 1 },
+    { id: 'air_fryer', name: { en: 'Air fryer 5.5 L', ar: 'إير فراير ٥٫٥ لتر', fr: 'Friteuse à air 5,5 L' }, description: { en: 'Crispy without the oil: chicken, potatoes, kofta.', ar: 'مقرمش من غير زيت: فراخ، بطاطس، كفتة.', fr: 'Croustillant sans huile : poulet, pommes de terre, kofta.' }, emoji: 'pot', price: 4000, points: 10000, sort: 2 },
+    { id: 'containers', name: { en: 'Food containers (50)', ar: 'علب أكل (٥٠)', fr: 'Boîtes alimentaires (50)' }, description: { en: 'Sturdy containers with lids for your orders.', ar: 'علب قوية بغطا لطلباتك.', fr: 'Boîtes solides avec couvercle pour vos commandes.' }, emoji: 'bags', price: 600, points: 1500, sort: 4 },
+  ],
+};
+
+const readTable = (table: string) => readJSON<Row[]>(TABLE_KEY(table), DEMO_SEEDS[table] ?? []);
 const writeTable = (table: string, rows: Row[]) => writeJSON(TABLE_KEY(table), rows);
 
 // ——— Auth ———
@@ -636,6 +645,92 @@ async function kitchenOrders() {
   );
 }
 
+// ---- Kitchy's Premium (demo) ----------------------------------------------------------
+async function myPremium() {
+  const chef = await myKitchen();
+  if (!chef) return fail('Only approved home chefs have a kitchen');
+  const prem = (await readTable('chef_premium')).find((p) => p.chef_id === chef.id);
+  const active = !!prem && new Date(prem.period_end).getTime() > Date.now();
+  const delivered = (await readTable('orders')).filter((o) => o.chef_id === chef.id && o.status === 'delivered');
+  const spent = (await readTable('shop_orders')).filter((o) => o.chef_id === chef.id && o.status !== 'cancelled');
+  const care = (await readTable('care_requests')).filter((c) => c.chef_id === chef.id);
+  const points =
+    delivered.reduce((n, o) => n + Math.floor(Number(o.subtotal) / 10), 0) - spent.reduce((n, o) => n + (o.points_spent ?? 0), 0);
+  return ok({
+    active,
+    price: 320,
+    period_end: active ? prem!.period_end : null,
+    cancel_at_period_end: !!prem?.cancel_at_period_end,
+    care_from: active ? new Date(new Date(prem!.first_started_at).getTime() + 30 * 86_400_000).toISOString() : null,
+    care_used: care.filter((c) => c.status !== 'cancelled').length,
+    care_limit: 2,
+    points,
+    points_multiplier: active ? 2 : 1,
+    care_requests: care,
+    shop_orders: spent,
+  });
+}
+
+async function premiumSubscribe() {
+  const chef = await myKitchen();
+  if (!chef) return fail('Only approved home chefs have a kitchen');
+  const rows = (await readTable('chef_premium')).filter((p) => p.chef_id !== chef.id);
+  const now = new Date();
+  const end = new Date(now);
+  end.setMonth(end.getMonth() + 1);
+  rows.push({ chef_id: chef.id, first_started_at: now.toISOString(), period_end: end.toISOString(), cancel_at_period_end: false });
+  await writeTable('chef_premium', rows);
+  return ok(null);
+}
+
+async function premiumCancel() {
+  const chef = await myKitchen();
+  const rows = await readTable('chef_premium');
+  const row = rows.find((p) => p.chef_id === chef?.id);
+  if (row) row.cancel_at_period_end = true;
+  await writeTable('chef_premium', rows);
+  return ok(null);
+}
+
+async function shopRedeem(itemId: string, method: string) {
+  const chef = await myKitchen();
+  if (!chef) return fail('Only approved home chefs have a kitchen');
+  const item = (await readTable('shop_items')).find((i) => i.id === itemId);
+  if (!item) return fail('This item is not in the shop any more');
+  const info = (await myPremium()).data as { points: number; active: boolean };
+  if (method === 'points' && info.points < item.points) return fail(`You need ${item.points} points for this`);
+  if (method === 'instalments' && !info.active) return fail("Paying monthly is for Kitchy's Premium kitchens");
+  const rows = await readTable('shop_orders');
+  const id = uuid();
+  rows.unshift({
+    id,
+    chef_id: chef.id,
+    item_id: itemId,
+    method,
+    points_spent: method === 'points' ? item.points : 0,
+    months: method === 'points' ? null : 6,
+    monthly: method === 'points' ? null : Math.ceil(item.price / 6),
+    status: 'requested',
+    created_at: new Date().toISOString(),
+  });
+  await writeTable('shop_orders', rows);
+  return ok(id);
+}
+
+async function careRequest(appliance: string, problem: string) {
+  const chef = await myKitchen();
+  if (!chef) return fail('Only approved home chefs have a kitchen');
+  const rows = await readTable('care_requests');
+  const id = uuid();
+  rows.unshift({ id, chef_id: chef.id, appliance, problem, status: 'open', created_at: new Date().toISOString() });
+  await writeTable('care_requests', rows);
+  return ok(id);
+}
+
+async function premiumChefIds() {
+  return ok((await readTable('chef_premium')).filter((p) => new Date(p.period_end).getTime() > Date.now()).map((p) => p.chef_id));
+}
+
 async function replyToReview(reviewId: string, reply: string) {
   const chef = await myKitchen();
   if (!chef) return fail('Only approved home chefs have a kitchen');
@@ -965,6 +1060,12 @@ async function rpc(name: string, args: Row) {
   if (name === 'order_riders') return orderRiders(args.p_orders ?? []);
   if (name === 'my_last_phone') return ok(null);
   if (name === 'kitchen_orders') return kitchenOrders();
+  if (name === 'my_premium') return myPremium();
+  if (name === 'premium_subscribe') return premiumSubscribe();
+  if (name === 'premium_cancel') return premiumCancel();
+  if (name === 'shop_redeem') return shopRedeem(args.p_item, args.p_method);
+  if (name === 'care_request') return careRequest(args.p_appliance, args.p_problem);
+  if (name === 'premium_chef_ids') return premiumChefIds();
   if (name === 'popular_dishes') return popularDishes();
   if (name === 'dish_week_orders') return dishWeekOrders();
   if (name === 'redeem_reward') return redeemReward(args.p_reward_id);
@@ -999,6 +1100,7 @@ const functions = {
     }
     if (name === 'chef-applications') return ok({ emailed: false, reason: 'demo' });
     if (name === 'rider-applications') return ok({ emailed: false, reason: 'demo' });
+    if (name === 'kitchen-requests') return ok({ emailed: false, reason: 'demo' });
     return fail(`Unknown function ${name}`);
   },
 };

@@ -31,6 +31,10 @@ export type KitchenStats = {
   today: { orders: number; sales: number; open: number };
   orders: number;
   sales: number;
+  /** Kitchy's commission at each order's own rate (12% while Premium, else 15%). */
+  commission?: number;
+  /** Taken out of earnings in the period: Kitchy's Premium and equipment paid monthly. */
+  deductions?: number;
   prev_orders: number;
   prev_sales: number;
   average_order: number;

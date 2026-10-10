@@ -137,6 +137,19 @@ export default function KitchenSettingsScreen() {
           />
         </Card>
 
+        <Pressable onPress={() => router.push('/kitchen/premium')} accessibilityRole="button">
+          <Card style={styles.row}>
+            <IconBadge name="diamond-outline" tone="amber" size={40} solid />
+            <View style={{ flex: 1 }}>
+              <Txt style={{ fontWeight: '700' }}>{t('premiumCardTitle')}</Txt>
+              <Txt variant="caption" muted>
+                {t('premiumCardBody')}
+              </Txt>
+            </View>
+            <Icon name="chevron-forward" size={20} color={colors.textMuted} />
+          </Card>
+        </Pressable>
+
         <LastDeliveryCard chefId={kitchen.id} />
 
         {savedSpot === null && (

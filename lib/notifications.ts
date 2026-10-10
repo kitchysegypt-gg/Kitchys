@@ -28,7 +28,7 @@ const WEEKLY_REMINDER_AFTER_MS = 7 * 24 * 60 * 60 * 1000;
 const FIRST_HOUR = 10;
 const LAST_HOUR = 20;
 /** Screens a notification may open. */
-const ALLOWED_URLS = ['/', '/cart', '/orders', '/kitchen/orders', '/rider'];
+const ALLOWED_URLS = ['/', '/cart', '/orders', '/kitchen/orders', '/kitchen/premium', '/rider'];
 
 const supported = Platform.OS !== 'web' && !isDemo;
 

@@ -4,10 +4,12 @@ import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, V
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Bar, BarChart } from '@/components/BarChart';
+import { Emoji3D } from '@/components/Emoji3D';
 import { Stars } from '@/components/media';
 import { Card, Chip, Icon, IconBadge, IconName, ScreenHeader, Txt } from '@/components/ui';
 import type { Language } from '@/lib/i18n';
 import { COMMISSION_RATE, KitchenStats, leaveKitchen, splitSales, useKitchen } from '@/lib/kitchen';
+import { usePremium } from '@/lib/premium';
 import { formatTime } from '@/lib/schedule';
 import type { IconTone } from '@/lib/theme';
 import { useSettings } from '@/lib/settings';
@@ -141,7 +143,9 @@ export default function KitchenDashboard() {
               />
             </View>
 
-            <EarningsCard sales={Number(stats.sales)} />
+            <EarningsCard sales={Number(stats.sales)} commission={stats.commission} deductions={Number(stats.deductions ?? 0)} />
+
+            <PremiumCard />
 
             <Card style={{ gap: 10 }}>
               <SectionTitle icon="trending-up-outline" tone="green" title={t('salesOverTime')} />
@@ -243,10 +247,36 @@ export default function KitchenDashboard() {
 
 /** A card heading with its coloured icon tile. */
 /** Sales, minus Kitchy's commission, equals what the chef earns. */
-function EarningsCard({ sales }: { sales: number }) {
+/** Kitchy's Premium: an invitation, or the chef's points once they're in. */
+function PremiumCard() {
+  const { t } = useSettings();
+  const { info } = usePremium();
+  if (!info) return null;
+  return (
+    <Pressable onPress={() => router.push('/kitchen/premium')} accessibilityRole="button">
+      <Card style={[styles.premiumCard, { backgroundColor: '#FFF4D6', borderColor: '#F2D48A' }]}>
+        <Emoji3D name="crown" size={40} />
+        <View style={{ flex: 1 }}>
+          <Txt style={{ fontWeight: '800', color: '#3D2A00' }}>
+            {t('premiumCardTitle')}
+            {info.active ? ' ⭐' : ''}
+          </Txt>
+          <Txt variant="caption" style={{ color: '#5C4510' }}>
+            {info.active ? t('premiumCardActive', { points: info.points.toLocaleString() }) : t('premiumCardBody')}
+          </Txt>
+        </View>
+        <Icon name="chevron-forward" size={20} color="#9A6700" />
+      </Card>
+    </Pressable>
+  );
+}
+
+function EarningsCard({ sales, commission: charged, deductions }: { sales: number; commission?: number; deductions: number }) {
   const { t, colors, formatPrice } = useSettings();
-  const { commission, earnings } = splitSales(sales);
-  const pct = Math.round(COMMISSION_RATE * 100);
+  // The database knows each order's rate (12% while Premium); older servers only send sales.
+  const commission = charged != null ? Number(charged) : splitSales(sales).commission;
+  const earnings = sales - commission - deductions;
+  const pct = sales > 0 && charged != null ? Math.round((commission / sales) * 100) : Math.round(COMMISSION_RATE * 100);
   return (
     <Card style={{ gap: 8 }}>
       <SectionTitle icon="wallet-outline" tone="green" title={t('earningsTitle')} />
@@ -258,6 +288,12 @@ function EarningsCard({ sales }: { sales: number }) {
         <Txt muted>{t('commissionLine', { pct })}</Txt>
         <Txt style={{ fontWeight: '700' }}>−{formatPrice(commission)}</Txt>
       </View>
+      {deductions > 0 && (
+        <View style={styles.moneyRow}>
+          <Txt muted>{t('premiumDeductions')}</Txt>
+          <Txt style={{ fontWeight: '700' }}>−{formatPrice(deductions)}</Txt>
+        </View>
+      )}
       <View style={[styles.moneyRow, styles.moneyTotal, { borderTopColor: colors.border }]}>
         <Txt style={{ fontWeight: '800' }}>{t('earningsTitle')}</Txt>
         <Txt style={{ fontWeight: '800', fontSize: 18, color: colors.success }}>{formatPrice(earnings)}</Txt>
@@ -386,6 +422,7 @@ function WeekdayChart({ stats }: { stats: KitchenStats }) {
 }
 
 const styles = StyleSheet.create({
+  premiumCard: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   moneyRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
   moneyTotal: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 8 },
   hello: { flexDirection: 'row', alignItems: 'center', gap: 10 },

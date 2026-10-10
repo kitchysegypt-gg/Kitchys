@@ -18,6 +18,8 @@ const BRAND = '#F4511E';
 type Stats = {
   orders: number;
   sales: number;
+  commission?: number;
+  deductions?: number;
   prev_orders: number;
   prev_sales: number;
   average_order: number;
@@ -38,7 +40,7 @@ const TEXT = {
     intro: "Here's how your kitchen did in the last 7 days.",
     orders: 'Orders',
     sales: 'Sales',
-    earnings: "Your earnings after Kitchy's 15%",
+    earnings: "Your earnings after Kitchy's commission",
     average: 'Average order',
     customers: 'Customers',
     vs: 'vs the week before',
@@ -64,7 +66,7 @@ const TEXT = {
     intro: 'ده أداء مطبخك في آخر ٧ أيام.',
     orders: 'الطلبات',
     sales: 'المبيعات',
-    earnings: 'أرباحك بعد عمولة كيتشيز ١٥٪',
+    earnings: 'أرباحك بعد عمولة كيتشيز',
     average: 'متوسط الطلب',
     customers: 'الزباين',
     vs: 'عن الأسبوع اللي قبله',
@@ -130,8 +132,9 @@ function buildEmail(name: string, s: Stats, lang: Lang) {
       <div style="font-size:22px;font-weight:800;color:#1B1D1F">${escape(value)}</div>
       <div style="font-size:13px;color:#7A7F86">${escape(label)}</div>${extra}</div></td>`;
 
-  // Kitchy's keeps 15% of food sales; delivery fees are not counted.
-  const earnings = Number(s.sales) - Math.round(Number(s.sales) * 0.15);
+  // Commission at each order's own rate (12% while Premium, 15% otherwise), minus Premium and monthly payments.
+  const commission = s.commission != null ? Number(s.commission) : Math.round(Number(s.sales) * 0.15);
+  const earnings = Number(s.sales) - commission - Number(s.deductions ?? 0);
 
   const html = `<!doctype html><html dir="${dir}"><body style="margin:0;background:#F4F6F5;font-family:Arial,Helvetica,sans-serif">
   <div style="max-width:560px;margin:0 auto;padding:24px 12px">

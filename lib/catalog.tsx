@@ -12,7 +12,7 @@ import { supabase } from './supabase';
 export const POPULAR_MIN_ORDERS = 5;
 
 /** Badges shown on chefs. Every chef on Kitchy's is a home cook approved by the team. */
-export type ChefTag = 'popular' | 'verified' | 'homemade';
+export type ChefTag = 'premium' | 'popular' | 'verified' | 'homemade';
 
 /** Chefs deliver within this distance of their kitchen (the database decides; this is for messages). */
 export const DELIVERY_RADIUS_KM = 15;
@@ -143,7 +143,7 @@ type CatalogValue = {
   deals: Dish[];
   /** False when the chef is too far from the customer's address. */
   isNear: (chefId: string) => boolean;
-  /** Popular (busy in the last 30 days), Verified and Homemade badges for a chef. */
+  /** Premium, Popular (busy in the last 30 days), Verified and Homemade badges for a chef. */
   chefTags: (chefId: string) => ChefTag[];
   /** The chef's last delivery time, in minutes after midnight (9 PM until they pick one). */
   lastDelivery: (chefId: string) => number;
@@ -177,6 +177,8 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   const [loaded, setLoaded] = useState(false);
   // Orders per chef in the last 30 days.
   const [popularity, setPopularity] = useState<Record<string, number>>({});
+  // Kitchens on Kitchy's Premium (they get the Premium badge).
+  const [premiumIds, setPremiumIds] = useState<Set<string>>(new Set());
   const [lastDeliveries, setLastDeliveries] = useState<Record<string, number>>({});
   const [pausedIds, setPausedIds] = useState<Set<string>>(new Set());
   const [dealRows, setDealRows] = useState<DealRow[]>([]);
@@ -210,7 +212,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
       setLoaded(false);
       return;
     }
-    const [chefsRes, dishesRes, ratingsRes, popularRes, hoursRes, orderedRes, dealsRes, highlightsRes, popularDishesRes, weekRes] = await Promise.all([
+    const [chefsRes, dishesRes, ratingsRes, popularRes, hoursRes, orderedRes, dealsRes, highlightsRes, popularDishesRes, weekRes, premiumRes] = await Promise.all([
       supabase.from('kitchen_chefs').select('*').order('created_at', { ascending: true }),
       supabase.from('kitchen_dishes').select('*').order('created_at', { ascending: true }),
       supabase.from('chef_ratings').select('*').order('chef_id', { ascending: true }),
@@ -225,7 +227,11 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
       supabase.rpc('chef_highlights'),
       supabase.rpc('popular_dishes'),
       supabase.rpc('dish_week_orders'),
+      supabase.rpc('premium_chef_ids'),
     ]);
+    if (!premiumRes.error && Array.isArray(premiumRes.data)) {
+      setPremiumIds(new Set((premiumRes.data as unknown[]).map(String)));
+    }
     if (!weekRes.error && Array.isArray(weekRes.data)) {
       setWeekCounts(Object.fromEntries((weekRes.data as { dish_id: string; orders: number }[]).map((r) => [r.dish_id, r.orders])));
     }
@@ -316,6 +322,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
       isPaused,
       portionsLeft: (dish) => (dish.dailyLimit ? Math.max(0, dish.dailyLimit - (ordered[dish.id] ?? 0)) : null),
       chefTags: (chefId) => [
+        ...(premiumIds.has(chefId) ? (['premium'] as const) : []),
         ...((popularity[chefId] ?? 0) >= POPULAR_MIN_ORDERS ? (['popular'] as const) : []),
         'verified',
         'homemade',
@@ -329,7 +336,7 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
       getDish: (id) => allDishes.find((d) => d.id === id) ?? dealDishes.find((d) => d.id === id),
       dishesByChef: (chefId) => allDishes.filter((d) => d.chefId === chefId),
     };
-  }, [kitchenChefs, kitchenDishes, ratings, loaded, refresh, nearIds, popularity, lastDeliveries, pausedIds, ordered, dealRows, highlights, popularIds, weekCounts]);
+  }, [kitchenChefs, kitchenDishes, ratings, loaded, refresh, nearIds, popularity, lastDeliveries, pausedIds, ordered, dealRows, highlights, popularIds, weekCounts, premiumIds]);
 
   return <CatalogContext.Provider value={value}>{children}</CatalogContext.Provider>;
 }

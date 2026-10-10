@@ -144,6 +144,7 @@ const styles = StyleSheet.create({
 const VERIFIED_BADGE = require('@/assets/icons/verified.png');
 
 const TAG_STYLE: Record<ChefTag, { icon: IconName; color: string; bg: string; darkBg: string; badge?: number }> = {
+  premium: { icon: 'diamond', color: '#9A6700', bg: '#FFF4D6', darkBg: '#3A2E12' },
   popular: { icon: 'flame', color: '#E8590C', bg: '#FFF0E6', darkBg: '#3A2416' },
   verified: { icon: 'shield-checkmark', color: '#1E6FD9', bg: '#E8F1FF', darkBg: '#16263D', badge: VERIFIED_BADGE },
   homemade: { icon: 'home', color: '#1E9E4F', bg: '#E6F7EC', darkBg: '#16301F' },

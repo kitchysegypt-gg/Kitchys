@@ -40,6 +40,7 @@ function KitchenTabs() {
 
   return (
     <Tabs
+      backBehavior="history"
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
@@ -66,6 +67,8 @@ function KitchenTabs() {
       <Tabs.Screen name="menu" options={{ title: t('kitchenMenu'), tabBarIcon: icon('restaurant-outline') }} />
       <Tabs.Screen name="reviews" options={{ title: t('kitchenReviews'), tabBarIcon: icon('star-outline') }} />
       <Tabs.Screen name="settings" options={{ title: t('kitchenSettings'), tabBarIcon: icon('options-outline') }} />
+      {/* Opened from the dashboard and settings, not a tab of its own. */}
+      <Tabs.Screen name="premium" options={{ href: null }} />
     </Tabs>
   );
 }
