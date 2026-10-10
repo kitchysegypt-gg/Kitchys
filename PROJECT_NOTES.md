@@ -91,3 +91,15 @@ The sign-in screen asks for a 6-digit code after sign-up (`verifyOtp` type `sign
   `orders.rider_id`, RPCs `rider_*`, `order_riders`.
 - Push notifications in the rider app need its own Firebase Android app (`com.kitchys.rider`):
   put its google-services file at `google-services.rider.json` and upload the FCM key for it in EAS.
+
+## Live tracking and private phones
+
+- Customers follow an order on `app/track/[id].tsx` (steps, ETA, rider card with call). The map
+  (`components/TrackingMap.tsx`, OpenStreetMap tiles, no API key) shows the rider only once they're
+  about 5 minutes away: `rider_update_location` sets `orders.live_at` and pushes "5 minutes away"
+  (opens `/track/<id>`). `order_riders` only returns the position to the customer when live; chefs
+  never get it. ETA = `ride_minutes()` (straight line × 1.35 at 22 km/h, + 1 min).
+- The rider app sends its position every 10 s / 25 m while carrying food (30 s / 75 m otherwise).
+- Chefs can't contact customers: the phone given at checkout is moved by a trigger into
+  `order_contacts` (customer-only RLS); `orders.phone` is always empty. Riders get it through
+  `rider_order_json`; checkout prefills it with `my_last_phone()`. No call button in the kitchen.

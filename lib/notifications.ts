@@ -91,7 +91,7 @@ async function pushToken(): Promise<string | null> {
 /** Opens the screen a tapped notification points to. */
 function openFrom(response: Notifications.NotificationResponse | null) {
   const url = response?.notification.request.content.data?.url;
-  if (typeof url === 'string' && (ALLOWED_URLS.includes(url) || /^\/dish\/[A-Za-z0-9_-]{1,64}$/.test(url))) {
+  if (typeof url === 'string' && (ALLOWED_URLS.includes(url) || /^\/(dish|track)\/[A-Za-z0-9_-]{1,64}$/.test(url))) {
     router.navigate(url as Href);
   }
 }

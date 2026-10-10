@@ -22,8 +22,6 @@ export type KitchenOrder = {
   accepted_at: string | null;
   /** Set once a Kitchy's rider has taken the order. */
   rider_id: string | null;
-  /** The customer's phone, for the chef to call if needed. */
-  phone: string | null;
 };
 
 /** What a chef can do to an order: move it to a status, or accept it for later. */
@@ -118,7 +116,7 @@ export function KitchenProvider({ children }: { children: React.ReactNode }) {
     if (!chefId) return;
     const { data, error } = await supabase
       .from('orders')
-      .select('id, items, subtotal, address, notes, status, created_at, scheduled_for, accepted_at, rider_id, phone')
+      .select('id, items, subtotal, address, notes, status, created_at, scheduled_for, accepted_at, rider_id')
       .eq('chef_id', chefId)
       .order('created_at', { ascending: false })
       .limit(100);

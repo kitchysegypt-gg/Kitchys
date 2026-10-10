@@ -38,10 +38,14 @@ export type Order = {
   referral_code: string | null;
   status: OrderStatus;
   created_at: string;
-  /** Phone the rider calls on arrival. */
+  /** Phone the rider calls on arrival. Sent with a new order, then kept away from the chef (always null when read back). */
   phone?: string | null;
   /** Set once a Kitchy's rider has taken the order. */
   rider_id?: string | null;
+  chef_id?: string | null;
+  ready_at?: string | null;
+  picked_up_at?: string | null;
+  delivered_at?: string | null;
 };
 
 export type Voucher = {
@@ -141,10 +145,23 @@ export function OrdersProvider({ children }: { children: React.ReactNode }) {
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'orders', filter: `user_id=eq.${userId}` },
         (payload) => {
-          const row = payload.new as { id: string; status: OrderStatus; accepted_at: string | null; rider_id: string | null };
+          const row = payload.new as Pick<
+            Order,
+            'id' | 'status' | 'accepted_at' | 'rider_id' | 'ready_at' | 'picked_up_at' | 'delivered_at'
+          >;
           setOrders((prev) =>
             prev.map((o) =>
-              o.id === row.id ? { ...o, status: row.status, accepted_at: row.accepted_at, rider_id: row.rider_id } : o
+              o.id === row.id
+                ? {
+                    ...o,
+                    status: row.status,
+                    accepted_at: row.accepted_at,
+                    rider_id: row.rider_id,
+                    ready_at: row.ready_at,
+                    picked_up_at: row.picked_up_at,
+                    delivered_at: row.delivered_at,
+                  }
+                : o
             )
           );
         }

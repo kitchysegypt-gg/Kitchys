@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Switch, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -22,7 +22,7 @@ import {
   slotDate,
 } from '@/lib/schedule';
 import { useSettings } from '@/lib/settings';
-import { DELIVERY_FEE, FREE_DELIVERY_ORDERS, SERVICE_FEE } from '@/lib/supabase';
+import { DELIVERY_FEE, FREE_DELIVERY_ORDERS, SERVICE_FEE, supabase } from '@/lib/supabase';
 
 /**
  * Checkout, after the cart: delivery time, address and note, payment, rewards and balance,
@@ -43,11 +43,20 @@ export default function CheckoutScreen() {
   const [earned, setEarned] = useState(0);
   const [notes, setNotes] = useState('');
   // The rider calls this number on arrival; prefilled from the last order.
-  const [phone, setPhone] = useState(() => orders.find((o) => o.phone)?.phone ?? '');
+  const [typedPhone, setPhone] = useState<string | null>(null);
+  const [lastPhone, setLastPhone] = useState('');
+  const phone = typedPhone ?? lastPhone;
   const [referralCode, setReferralCode] = useState('');
   const [useCredit, setUseCredit] = useState(false);
   const [busy, setBusy] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  // Phones aren't stored on orders (chefs can't see them), so ask for the last one used.
+  useEffect(() => {
+    supabase.rpc('my_last_phone').then(({ data }) => {
+      if (typeof data === 'string') setLastPhone(data);
+    });
+  }, []);
 
   const baseDeliveryFee = freeDeliveriesLeft > 0 ? 0 : DELIVERY_FEE;
   const voucher = availableVouchers.find((v) => v.id === voucherId);

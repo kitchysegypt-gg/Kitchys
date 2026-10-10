@@ -5,7 +5,7 @@ import { Button, Card, EmptyState, Icon, IconName, Screen, Txt } from '@/compone
 import { showAlert, showConfirm } from '@/lib/alert';
 import { formatSlot } from '@/lib/schedule';
 import { useCatalog } from '@/lib/catalog';
-import { mapsLink, useOrderRiders } from '@/lib/orderRiders';
+import { useOrderRiders } from '@/lib/orderRiders';
 import { OrderStatus, useOrders } from '@/lib/orders';
 import { useSettings } from '@/lib/settings';
 
@@ -119,14 +119,6 @@ export default function OrdersScreen() {
                       ? t('riderBringing', { name: riders[item.id].name })
                       : t('riderAssigned', { name: riders[item.id].name })}
                   </Txt>
-                  {item.status === 'on_the_way' && riders[item.id].latitude != null && (
-                    <Pressable
-                      onPress={() => Linking.openURL(mapsLink(riders[item.id].latitude!, riders[item.id].longitude!))}
-                      hitSlop={8}
-                      accessibilityLabel={t('trackRider')}>
-                      <Icon name="navigate-circle" size={30} color={colors.primary} />
-                    </Pressable>
-                  )}
                   <Pressable
                     onPress={() => Linking.openURL(`tel:${riders[item.id].phone}`)}
                     hitSlop={8}
@@ -156,6 +148,14 @@ export default function OrdersScreen() {
                     {item.address ?? t('openInMaps')}
                   </Txt>
                 </Pressable>
+              )}
+              {['placed', 'cooking', 'ready', 'on_the_way'].includes(item.status) && (
+                <Button
+                  small
+                  icon="navigate-outline"
+                  title={t('trackOrder')}
+                  onPress={() => router.push(`/track/${item.id}`)}
+                />
               )}
               {item.status === 'placed' && (
                 <Button

@@ -2,7 +2,10 @@ import { useEffect, useState } from 'react';
 
 import { supabase } from './supabase';
 
-/** The rider bringing an order. Location only while the order is on the way. */
+/**
+ * The rider bringing an order. The position only comes once the order is live: on the
+ * way and the rider about 5 minutes from the customer (customers only, never chefs).
+ */
 export type OrderRider = {
   order_id: string;
   name: string;
@@ -11,13 +14,17 @@ export type OrderRider = {
   latitude: number | null;
   longitude: number | null;
   located_at: string | null;
+  /** Minutes until the rider reaches the customer, while on the way. */
+  eta_minutes: number | null;
+  /** True once the customer can follow the rider on the map. */
+  live: boolean;
 };
 
 /**
  * Who is delivering these orders (customers see their own, chefs their kitchen's).
- * Re-checked every 30 seconds so the rider's position stays fresh.
+ * Re-checked every 30 seconds (or `everyMs`) so the rider's position stays fresh.
  */
-export function useOrderRiders(orderIds: string[]) {
+export function useOrderRiders(orderIds: string[], everyMs = 30_000) {
   const [riders, setRiders] = useState<Record<string, OrderRider>>({});
   const key = [...orderIds].sort().join(',');
 
@@ -34,12 +41,12 @@ export function useOrderRiders(orderIds: string[]) {
       setRiders(Object.fromEntries((data as OrderRider[]).map((r) => [r.order_id, r])));
     };
     load();
-    const timer = setInterval(load, 30_000);
+    const timer = setInterval(load, everyMs);
     return () => {
       alive = false;
       clearInterval(timer);
     };
-  }, [key]);
+  }, [key, everyMs]);
 
   return riders;
 }

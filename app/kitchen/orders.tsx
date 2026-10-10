@@ -150,11 +150,6 @@ function OrderCard({ order, rider }: { order: KitchenOrder; rider?: OrderRider }
         <Txt variant="caption" muted style={{ flex: 1 }}>
           {order.address}
         </Txt>
-        {order.phone && order.status !== 'delivered' && order.status !== 'cancelled' ? (
-          <Pressable onPress={() => Linking.openURL(`tel:${order.phone}`)} hitSlop={8} accessibilityLabel={t('callCustomer')}>
-            <IconBadge name="call-outline" tone="green" size={30} />
-          </Pressable>
-        ) : null}
       </View>
 
       {rider ? (

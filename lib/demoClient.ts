@@ -820,6 +820,39 @@ async function riderOrderJson(o: Row, full: boolean) {
   };
 }
 
+/**
+ * The demo rider rides towards the customer: about 9 minutes away when picked up, one
+ * minute closer every 20 seconds, live on the map from 5 minutes.
+ */
+async function orderRiders(ids: string[]) {
+  const riders = await readTable('riders');
+  const rows = (await readTable('orders')).filter(
+    (o) => ids.includes(o.id) && o.rider_id && ['cooking', 'ready', 'on_the_way'].includes(o.status)
+  );
+  return ok(
+    rows.map((o) => {
+      const rider = riders.find((r) => r.id === o.rider_id);
+      const home = { lat: Number(o.delivery_lat ?? 30.05), lng: Number(o.delivery_lng ?? 31.24) };
+      const since = o.picked_up_at ? (Date.now() - new Date(o.picked_up_at).getTime()) / 20_000 : 0;
+      const eta = Math.max(1, Math.round(9 - since));
+      const live = o.status === 'on_the_way' && eta <= 5;
+      // 1 minute ≈ 0.0028° (about 300 m), coming from the north-west.
+      const away = (eta - 1) * 0.0028;
+      return {
+        order_id: o.id,
+        name: rider?.name ?? 'Mahmoud',
+        phone: rider?.phone ?? '01000000000',
+        vehicle: rider?.vehicle ?? 'motorbike',
+        latitude: live ? home.lat + away * 0.8 : null,
+        longitude: live ? home.lng - away * 0.6 : null,
+        located_at: live ? new Date().toISOString() : null,
+        eta_minutes: o.status === 'on_the_way' ? eta : null,
+        live,
+      };
+    })
+  );
+}
+
 async function riderOrders(mine: boolean) {
   const rider = await myRider();
   if (!rider) return ok([]);
@@ -888,12 +921,13 @@ async function rpc(name: string, args: Row) {
     });
   if (name === 'rider_set_order_status')
     return riderUpdate(args.p_order, (o) => {
-      if (args.p_step === 'picked_up') o.status = 'on_the_way';
+      if (args.p_step === 'picked_up') Object.assign(o, { status: 'on_the_way', picked_up_at: new Date().toISOString() });
       else if (args.p_step === 'delivered') o.status = 'delivered';
       return null;
     });
   if (name === 'chef_highlights') return chefHighlights();
-  if (name === 'order_riders') return ok([]);
+  if (name === 'order_riders') return orderRiders(args.p_orders ?? []);
+  if (name === 'my_last_phone') return ok(null);
   if (name === 'popular_dishes') return popularDishes();
   if (name === 'dish_week_orders') return dishWeekOrders();
   if (name === 'redeem_reward') return redeemReward(args.p_reward_id);

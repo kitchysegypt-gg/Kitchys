@@ -125,6 +125,8 @@ export function RiderProvider({ children }: { children: React.ReactNode }) {
   }, [loadOrders, status]);
 
   // While online, share the rider's position (nearby pickups, and customers see them coming).
+  // More often while carrying food, so the customer's live map moves smoothly.
+  const delivering = mine.some((o) => o.status === 'on_the_way');
   useEffect(() => {
     if (!online || Platform.OS === 'web' || isDemo) return;
     let sub: Location.LocationSubscription | null = null;
@@ -134,7 +136,9 @@ export function RiderProvider({ children }: { children: React.ReactNode }) {
       setLocationAllowed(granted);
       if (!granted || cancelled) return;
       sub = await Location.watchPositionAsync(
-        { accuracy: Location.Accuracy.Balanced, timeInterval: 30_000, distanceInterval: 75 },
+        delivering
+          ? { accuracy: Location.Accuracy.High, timeInterval: 10_000, distanceInterval: 25 }
+          : { accuracy: Location.Accuracy.Balanced, timeInterval: 30_000, distanceInterval: 75 },
         (pos) => {
           supabase.rpc('rider_update_location', { p_lat: pos.coords.latitude, p_lng: pos.coords.longitude });
         }
@@ -145,7 +149,7 @@ export function RiderProvider({ children }: { children: React.ReactNode }) {
       cancelled = true;
       sub?.remove();
     };
-  }, [online]);
+  }, [online, delivering]);
 
   const apply = useCallback(
     async (form: { name: string; phone: string; vehicle: Vehicle; area: string }) => {
