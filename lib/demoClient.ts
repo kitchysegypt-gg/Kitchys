@@ -16,6 +16,7 @@ import { applyReward, getReward, pointsFor, rankFor } from './loyalty';
 const SESSION_KEY = 'kitchys.demo.session';
 const TABLE_KEY = (table: string) => `kitchys.demo.db.${table}`;
 const DELIVERY_FEE = 30;
+const SERVICE_FEE = 20;
 const FREE_DELIVERY_ORDERS = 3;
 
 type Row = Record<string, any>;
@@ -179,7 +180,8 @@ async function insertOrder(values: Row): Promise<Result> {
     voucher.order_id = id;
     await writeTable('reward_vouchers', vouchers);
   }
-  let total = subtotal - discount + deliveryFee;
+  const serviceFee = SERVICE_FEE;
+  let total = subtotal - discount + deliveryFee + serviceFee;
   const creditUsed = values.use_credit ? Math.max(0, Math.min(await walletBalance(me()), total)) : 0;
   total -= creditUsed;
   const row: Row = {
@@ -189,6 +191,7 @@ async function insertOrder(values: Row): Promise<Result> {
     subtotal,
     discount,
     delivery_fee: deliveryFee,
+    service_fee: serviceFee,
     total,
     credit_used: creditUsed,
     referral_code: referralCode,

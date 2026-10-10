@@ -33,4 +33,6 @@ if (Platform.OS !== 'web') {
 }
 
 export const DELIVERY_FEE = 30;
+/** Every order pays this for packaging (also set by the database). */
+export const SERVICE_FEE = 20;
 export const FREE_DELIVERY_ORDERS = 3;

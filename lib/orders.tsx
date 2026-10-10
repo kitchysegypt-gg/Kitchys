@@ -19,6 +19,8 @@ export type Order = {
   subtotal: number;
   discount: number;
   delivery_fee: number;
+  /** Packaging fee (EGP 20; 0 on older orders). */
+  service_fee: number;
   total: number;
   points_earned: number;
   voucher_id: string | null;
@@ -84,6 +86,7 @@ function normalize(row: any): Order {
     subtotal: Number(row.subtotal),
     discount: Number(row.discount ?? 0),
     delivery_fee: Number(row.delivery_fee),
+    service_fee: Number(row.service_fee ?? 0),
     total: Number(row.total),
     points_earned: Number(row.points_earned ?? 0),
     credit_used: Number(row.credit_used ?? 0),

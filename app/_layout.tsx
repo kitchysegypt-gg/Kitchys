@@ -94,6 +94,7 @@ function RootNavigator() {
             <Stack.Screen name="chef/[id]" />
             <Stack.Screen name="dish/[id]" options={{ presentation: 'modal' }} />
             <Stack.Screen name="guide" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="checkout" />
             <Stack.Screen name="location" />
             <Stack.Screen name="apply" />
             <Stack.Screen name="kitchen" />
