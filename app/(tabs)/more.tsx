@@ -6,6 +6,7 @@ import { Button, Card, Icon, ListGroup, ListRow, PressableScale, Screen, Txt } f
 import { useAuth } from '@/lib/auth';
 import { useCatalog } from '@/lib/catalog';
 import { useChefStatus } from '@/lib/chef';
+import { useMembership } from '@/lib/membership';
 import { useOrders } from '@/lib/orders';
 import { useSettings } from '@/lib/settings';
 import { isDemo, supabase } from '@/lib/supabase';
@@ -14,6 +15,7 @@ export default function MoreScreen() {
   const { t, colors, location } = useSettings();
   const { session } = useAuth();
   const { points, rank } = useOrders();
+  const { isMember } = useMembership();
   const chefStatus = useChefStatus();
   const { refresh: refreshCatalog } = useCatalog();
 
@@ -78,6 +80,12 @@ export default function MoreScreen() {
         </View>
 
         <ListGroup title={t('explore')}>
+          <ListRow
+            icon="diamond-outline"
+            label={t('premiumName')}
+            detail={isMember ? t('memberActive') : t('memberMoreDetail')}
+            onPress={() => router.push('/premium')}
+          />
           <ListRow
             icon="gift-outline"
             label={t('referFriend')}

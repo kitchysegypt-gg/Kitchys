@@ -134,3 +134,15 @@ The sign-in screen asks for a 6-digit code after sign-up (`verifyOtp` type `sign
 - The chef shop and chef points were removed from the app (Kitchy's provides containers itself).
   Their tables (`shop_items`, `shop_orders`, `chef_points`) are still in the database, unused;
   `20261011100000_remove_chef_shop.sql` switches the shop off but has not been applied yet.
+
+## Kitchy's Premium (customers)
+
+- EGP 149/month (`customer_premium`, `customer_premium_subscribe` / `_cancel`, `my_customer_premium`).
+  No card payments yet: the month's fee (`pending_fee`) is added to the member's next order
+  (`orders.membership_fee`, set by `apply_order_pricing`); a cancelled order gives it back.
+  Nightly `renew_customer_premium()` renews paid months; a month without any order isn't charged and
+  the membership ends.
+- Perks: free delivery on every order (the rider is still paid EGP 30) and Tonight's dinner (home
+  card + the 5 PM push are members only; others see a locked card).
+- Screens: `app/premium.tsx` (banner cropped from the ad), More > Kitchy's Premium, and the full ad
+  in the home carousel (`promo_banners` row with show_when `not_member`, image `builtin:premium`).

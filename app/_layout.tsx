@@ -12,6 +12,7 @@ import { IntroAnimation } from '@/components/IntroAnimation';
 import { AuthProvider, useAuth } from '@/lib/auth';
 import { CartProvider } from '@/lib/cart';
 import { CatalogProvider } from '@/lib/catalog';
+import { MembershipProvider } from '@/lib/membership';
 import { FONT_FILES } from '@/lib/fonts';
 import { NotificationsBridge } from '@/lib/notifications';
 import { OrdersProvider } from '@/lib/orders';
@@ -33,12 +34,14 @@ export default function RootLayout() {
         <AuthProvider>
           <CatalogProvider>
             <OrdersProvider>
-              <CartProvider>
-                <SoundProvider>
-                  <RootNavigator />
-                  <AlertHost />
-                </SoundProvider>
-              </CartProvider>
+              <MembershipProvider>
+                <CartProvider>
+                  <SoundProvider>
+                    <RootNavigator />
+                    <AlertHost />
+                  </SoundProvider>
+                </CartProvider>
+              </MembershipProvider>
             </OrdersProvider>
           </CatalogProvider>
         </AuthProvider>
@@ -102,6 +105,7 @@ function RootNavigator() {
             <Stack.Screen name="guide" options={{ presentation: 'modal' }} />
             <Stack.Screen name="checkout" />
             <Stack.Screen name="track/[id]" />
+            <Stack.Screen name="premium" />
             <Stack.Screen name="location" />
             <Stack.Screen name="apply" />
             <Stack.Screen name="kitchen" />

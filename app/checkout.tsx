@@ -10,6 +10,7 @@ import { useCart } from '@/lib/cart';
 import { DELIVERY_RADIUS_KM, useCatalog } from '@/lib/catalog';
 import { FONT } from '@/lib/fonts';
 import { applyReward, getReward, pointsFor } from '@/lib/loyalty';
+import { useMembership } from '@/lib/membership';
 import { useOrders } from '@/lib/orders';
 import {
   AFTER_CLOSED_FIRST_MINUTES,
@@ -33,6 +34,9 @@ export default function CheckoutScreen() {
   const { lines, subtotal, clear } = useCart();
   const { getChef, isNear, lastDelivery } = useCatalog();
   const { freeDeliveriesLeft, placeOrder, availableVouchers, orderCount, orders, credit } = useOrders();
+  const { isMember, membership, refresh: refreshMembership } = useMembership();
+  // This month's Premium fee rides on the member's first order of the month.
+  const membershipFee = isMember ? (membership?.pending_fee ?? 0) : 0;
   // Prefilled from the saved map location until the customer types their own.
   const [typedAddress, setAddress] = useState<string | null>(null);
   const address = typedAddress ?? (location ? [location.address, location.details].filter(Boolean).join(', ') : '');
@@ -59,10 +63,11 @@ export default function CheckoutScreen() {
     });
   }, []);
 
-  const baseDeliveryFee = freeDeliveriesLeft > 0 ? 0 : DELIVERY_FEE;
+  // Premium members never pay delivery.
+  const baseDeliveryFee = isMember || freeDeliveriesLeft > 0 ? 0 : DELIVERY_FEE;
   const voucher = availableVouchers.find((v) => v.id === voucherId);
   const { discount, deliveryFee } = applyReward(voucher && getReward(voucher.reward_id), subtotal, baseDeliveryFee);
-  const beforeCredit = subtotal - discount + deliveryFee + SERVICE_FEE;
+  const beforeCredit = subtotal - discount + deliveryFee + SERVICE_FEE + membershipFee;
   // Credit pays for food and fees, never the rider's tip.
   const creditUsed = useCredit ? Math.min(credit, beforeCredit) : 0;
   const total = beforeCredit - creditUsed + tip;
@@ -118,6 +123,7 @@ export default function CheckoutScreen() {
       });
       clear();
       setEarned(order.points_earned);
+      refreshMembership();
       setSuccess(true);
     } catch (e: any) {
       showAlert(t('error'), e?.message ?? String(e));
@@ -288,7 +294,10 @@ export default function CheckoutScreen() {
               valueColor={deliveryFee === 0 ? colors.success : undefined}
               strike={deliveryFee === 0 ? formatPrice(DELIVERY_FEE) : undefined}
               onInfo={() =>
-                showAlert(t('delivery'), t('deliveryInfo', { n: FREE_DELIVERY_ORDERS, amount: DELIVERY_FEE }))
+                showAlert(
+                  t('delivery'),
+                  isMember ? t('deliveryInfoPremium') : t('deliveryInfo', { n: FREE_DELIVERY_ORDERS, amount: DELIVERY_FEE })
+                )
               }
             />
             <SummaryRow
@@ -297,6 +306,13 @@ export default function CheckoutScreen() {
               onInfo={() => showAlert(t('serviceFee'), t('serviceFeeInfo', { amount: SERVICE_FEE }))}
             />
             {tip > 0 && <SummaryRow label={t('tipLine')} value={formatPrice(tip)} />}
+            {membershipFee > 0 && (
+              <SummaryRow
+                label={t('membershipFeeLine')}
+                value={formatPrice(membershipFee)}
+                onInfo={() => showAlert(t('membershipFeeLine'), t('membershipFeeInfo', { price: formatPrice(membershipFee) }))}
+              />
+            )}
             {creditUsed > 0 && (
               <SummaryRow label={t('creditLine')} value={`− ${formatPrice(creditUsed)}`} valueColor={colors.success} />
             )}

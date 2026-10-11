@@ -153,7 +153,10 @@ async function insertOrder(values: Row): Promise<Result> {
     chefId = found.chefId;
   }
   const previous = mine.filter((o) => o.status !== 'cancelled').length;
-  let deliveryFee = previous < FREE_DELIVERY_ORDERS ? 0 : DELIVERY_FEE;
+  const membership = await myMembership();
+  // Premium members never pay delivery; the month's fee rides on their next order.
+  let deliveryFee = membership.active || previous < FREE_DELIVERY_ORDERS ? 0 : DELIVERY_FEE;
+  const membershipFee = membership.pending_fee;
   let discount = 0;
   const id = uuid();
 
@@ -183,7 +186,7 @@ async function insertOrder(values: Row): Promise<Result> {
   }
   const serviceFee = SERVICE_FEE;
   const tip = Math.max(0, Math.min(Math.round(Number(values.tip ?? 0)), 500));
-  let total = subtotal - discount + deliveryFee + serviceFee + tip;
+  let total = subtotal - discount + deliveryFee + serviceFee + tip + membershipFee;
   // Credit doesn't pay the rider's tip.
   const creditUsed = values.use_credit ? Math.max(0, Math.min(await walletBalance(me()), total - tip)) : 0;
   total -= creditUsed;
@@ -196,6 +199,7 @@ async function insertOrder(values: Row): Promise<Result> {
     delivery_fee: deliveryFee,
     service_fee: serviceFee,
     tip,
+    membership_fee: membershipFee,
     total,
     credit_used: creditUsed,
     referral_code: referralCode,
@@ -206,6 +210,12 @@ async function insertOrder(values: Row): Promise<Result> {
     created_at: new Date().toISOString(),
   };
   await writeTable('orders', [row, ...all]);
+  if (membershipFee > 0) {
+    const members = await readTable('customer_premium');
+    const mine = members.find((p) => p.user_id === me());
+    if (mine) mine.pending_fee = 0;
+    await writeTable('customer_premium', members);
+  }
 
   const wallet = await readTable('wallet_entries');
   const now = new Date().toISOString();
@@ -636,6 +646,36 @@ async function kitchenOrders() {
   );
 }
 
+// ---- Kitchy's Premium for customers (demo) -----------------------------------------
+async function myMembership() {
+  const row = (await readTable('customer_premium')).find((p) => p.user_id === me());
+  const active = !!row && new Date(row.period_end).getTime() > Date.now();
+  return {
+    active,
+    price: 149,
+    period_end: active ? row!.period_end : null,
+    cancel_at_period_end: !!row?.cancel_at_period_end,
+    pending_fee: active ? Number(row!.pending_fee ?? 0) : 0,
+  };
+}
+
+async function membershipSubscribe() {
+  const rows = (await readTable('customer_premium')).filter((p) => p.user_id !== me());
+  const end = new Date();
+  end.setMonth(end.getMonth() + 1);
+  rows.push({ user_id: me(), period_end: end.toISOString(), cancel_at_period_end: false, pending_fee: 149 });
+  await writeTable('customer_premium', rows);
+  return ok(null);
+}
+
+async function membershipCancel() {
+  const rows = await readTable('customer_premium');
+  const row = rows.find((p) => p.user_id === me());
+  if (row) row.cancel_at_period_end = true;
+  await writeTable('customer_premium', rows);
+  return ok(null);
+}
+
 // ---- Kitchy's Premium (demo) ----------------------------------------------------------
 async function myPremium() {
   const chef = await myKitchen();
@@ -1020,6 +1060,9 @@ async function rpc(name: string, args: Row) {
   if (name === 'my_last_phone') return ok(null);
   if (name === 'kitchen_orders') return kitchenOrders();
   if (name === 'my_premium') return myPremium();
+  if (name === 'my_customer_premium') return ok(await myMembership());
+  if (name === 'customer_premium_subscribe') return membershipSubscribe();
+  if (name === 'customer_premium_cancel') return membershipCancel();
   if (name === 'premium_subscribe') return premiumSubscribe();
   if (name === 'premium_cancel') return premiumCancel();
   if (name === 'care_request') return careRequest(args.p_appliance, args.p_problem);

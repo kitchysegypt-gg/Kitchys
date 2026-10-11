@@ -23,6 +23,8 @@ export type Order = {
   service_fee: number;
   /** Tip for the rider (all of it goes to them). */
   tip?: number;
+  /** Kitchy's Premium month added to this order (the member's first order of the month). */
+  membership_fee?: number;
   total: number;
   points_earned: number;
   voucher_id: string | null;

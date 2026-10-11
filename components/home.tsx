@@ -5,6 +5,7 @@ import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 're
 
 import { CATEGORIES, Category, Chef } from '@/data/menu';
 import { useCatalog } from '@/lib/catalog';
+import { useMembership } from '@/lib/membership';
 import { useOrders } from '@/lib/orders';
 import { useSettings } from '@/lib/settings';
 import { DELIVERY_FEE, supabase } from '@/lib/supabase';
@@ -18,6 +19,7 @@ const PROMO_BANNERS = {
   points: require('@/assets/promos/points.jpg'),
   refer: require('@/assets/promos/refer.jpg'),
   becomeChef: require('@/assets/promos/become-chef.jpg'),
+  premium: require('@/assets/promos/premium.jpg'),
 };
 const BANNER_RATIO = 1200 / 676;
 
@@ -78,6 +80,7 @@ const BUILTIN_BANNERS: Record<string, number> = {
   points: PROMO_BANNERS.points,
   refer: PROMO_BANNERS.refer,
   'become-chef': PROMO_BANNERS.becomeChef,
+  premium: PROMO_BANNERS.premium,
 };
 
 /** Where a built-in banner goes when its row's link is 'none'. */
@@ -87,6 +90,7 @@ const BUILTIN_TARGETS: Record<string, Href> = {
 
 /** Used until the banner list loads, and if it can't be loaded. */
 const DEFAULT_BANNERS: BannerRow[] = [
+  { id: 'premium', title: "Kitchy's Premium", image: 'builtin:premium', link: 'premium', show_when: 'not_member' },
   { id: 'free-delivery', title: 'Free delivery', image: 'builtin:free-delivery', link: 'chefs', show_when: 'free_delivery' },
   { id: 'points', title: 'Win points', image: 'builtin:points', link: 'rewards', show_when: 'always' },
   { id: 'refer', title: 'Refer a friend', image: 'builtin:refer', link: 'refer', show_when: 'always' },
@@ -101,6 +105,7 @@ const BANNER_LINKS: Record<string, Href | null> = {
   orders: '/orders',
   cart: '/cart',
   chat: '/chat',
+  premium: '/premium',
 };
 
 /** How long each banner stays before sliding to the next one. */
@@ -113,6 +118,7 @@ const AUTO_SLIDE_MS = 7000;
 export function PromoCarousel() {
   const { colors } = useSettings();
   const { freeDeliveriesLeft } = useOrders();
+  const { isMember } = useMembership();
   const { width: screen } = useWindowDimensions();
   const width = Math.min(screen, 560) - 32;
   const step = width + 12;
@@ -138,6 +144,8 @@ export function PromoCarousel() {
 
   const banners = rows
     .filter((b) => b.show_when !== 'free_delivery' || freeDeliveriesLeft > 0)
+    // The Premium ad is only for customers who aren't members yet.
+    .filter((b) => b.show_when !== 'not_member' || !isMember)
     .flatMap((b) => {
       const source = b.image.startsWith('builtin:') ? BUILTIN_BANNERS[b.image.slice(8)] : { uri: b.image };
       return source ? [{ ...b, source }] : [];

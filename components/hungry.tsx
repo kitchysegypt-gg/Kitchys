@@ -8,6 +8,7 @@ import { Dish } from '@/data/menu';
 import { useAuth } from '@/lib/auth';
 import { useCatalog } from '@/lib/catalog';
 import type { TranslationKey } from '@/lib/i18n';
+import { useMembership } from '@/lib/membership';
 import { isKitchenOpen } from '@/lib/schedule';
 import { useSettings } from '@/lib/settings';
 import { softShadow } from '@/lib/theme';
@@ -63,6 +64,7 @@ export function Greeting() {
 export function TonightHero() {
   const { t, l, colors, formatPrice } = useSettings();
   const { popular, dishes, getChef, weekOrders } = useCatalog();
+  const { isMember, membership } = useMembership();
   const addToCart = useAddToCart();
   const [added, setAdded] = useState(false);
   // The dish changes once a day.
@@ -75,6 +77,32 @@ export function TonightHero() {
   }, [popular, dishes, day]);
 
   if (!dish?.photo) return null;
+  // Tonight's dinner is for Kitchy's Premium members; everyone else sees it locked.
+  if (!isMember) {
+    return (
+      <PressableScale onPress={() => router.push('/premium')} style={[styles.heroShadow, softShadow(colors.shadow)]}>
+        <View style={styles.hero}>
+          <Image source={{ uri: dish.photo }} style={StyleSheet.absoluteFill} contentFit="cover" blurRadius={18} />
+          <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.45)' }]} />
+          <View style={[styles.heroPill, { backgroundColor: colors.primary }]}>
+            <Icon name="lock-closed" size={12} color={colors.onPrimary} />
+            <Txt style={{ color: colors.onPrimary, fontSize: 12, fontWeight: '800' }}>{t('tonightsDinner')}</Txt>
+          </View>
+          <View style={styles.heroBottom}>
+            <View style={{ flex: 1, gap: 2 }}>
+              <Txt style={styles.heroTitle}>{t('tonightLockedTitle')}</Txt>
+              <Txt style={styles.heroMeta}>
+                {t('tonightLockedBody', { price: formatPrice(membership?.price ?? 149) })}
+              </Txt>
+            </View>
+            <View style={[styles.heroButton, { backgroundColor: colors.primary }]}>
+              <Txt style={{ color: colors.onPrimary, fontWeight: '800' }}>{t('getPremium')}</Txt>
+            </View>
+          </View>
+        </View>
+      </PressableScale>
+    );
+  }
   const chef = getChef(dish.chefId);
   const orders = weekOrders(dish);
 
