@@ -142,16 +142,30 @@ export function RiderProvider({ children }: { children: React.ReactNode }) {
     if (!online || Platform.OS === 'web' || isDemo) return;
     let sub: Location.LocationSubscription | null = null;
     let cancelled = false;
+    // A Supabase call only goes out once it's awaited (or .then is called), so always await it.
+    const send = async (pos: Location.LocationObject) => {
+      const { error } = await supabase.rpc('rider_update_location', {
+        p_lat: pos.coords.latitude,
+        p_lng: pos.coords.longitude,
+      });
+      if (error) console.warn('Could not share the rider location', error.message);
+    };
     (async () => {
       const { granted } = await Location.requestForegroundPermissionsAsync();
       setLocationAllowed(granted);
       if (!granted || cancelled) return;
+      // Share where the rider is right away, without waiting for them to move.
+      Location.getCurrentPositionAsync({
+        accuracy: delivering ? Location.Accuracy.High : Location.Accuracy.Balanced,
+      })
+        .then((pos) => (cancelled ? null : send(pos)))
+        .catch(() => null);
       sub = await Location.watchPositionAsync(
         delivering
           ? { accuracy: Location.Accuracy.High, timeInterval: 10_000, distanceInterval: 25 }
           : { accuracy: Location.Accuracy.Balanced, timeInterval: 30_000, distanceInterval: 75 },
         (pos) => {
-          supabase.rpc('rider_update_location', { p_lat: pos.coords.latitude, p_lng: pos.coords.longitude });
+          send(pos).catch(() => null);
         }
       );
       if (cancelled) sub.remove();
