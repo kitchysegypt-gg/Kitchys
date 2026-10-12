@@ -5,6 +5,15 @@ import { Platform } from 'react-native';
 import { useAuth } from './auth';
 import { forgetThisPhone } from './notifications';
 import type { OrderStatus } from './orders';
+import {
+  backgroundTrackingAvailable,
+  hasBackgroundPermission,
+  requestBackgroundPermissions,
+  setRiderNotificationWords,
+  startBackgroundTracking,
+  stopBackgroundTracking,
+} from './riderBackground';
+import { useSettings } from './settings';
 import { useSounds } from './sound';
 import { isDemo, supabase } from './supabase';
 
@@ -43,6 +52,40 @@ export type RiderOrder = {
   trip_km: number | null;
 };
 
+/** What a new rider sends: details, national ID (number + photos), selfie and vehicle. */
+export type RiderApplicationForm = {
+  name: string;
+  phone: string;
+  vehicle: Vehicle;
+  area: string;
+  nationalId: string;
+  plate: string;
+  idFront: string | null;
+  idBack: string | null;
+  selfie: string | null;
+  vehiclePhoto: string | null;
+};
+
+/**
+ * Uploads an ID or vehicle photo to the private rider-documents bucket (the rider's own
+ * folder) and returns its path. Only the rider and the Kitchy's team can open it.
+ */
+async function uploadRiderDocument(uri: string | null, label: string): Promise<string | null> {
+  if (!uri) return null;
+  const { data: auth } = await supabase.auth.getUser();
+  const userId = auth.user?.id;
+  if (!userId) throw new Error('Sign in first');
+  if (isDemo) return `${userId}/${label}-demo.jpg`;
+  const response = await fetch(uri);
+  const body = await response.arrayBuffer();
+  const type = response.headers.get('content-type')?.split(';')[0] || 'image/jpeg';
+  const ext = type === 'image/png' ? 'png' : type === 'image/webp' ? 'webp' : 'jpg';
+  const path = `${userId}/${label}-${Date.now()}.${ext}`;
+  const { error } = await supabase.storage.from('rider-documents').upload(path, body, { contentType: type });
+  if (error) throw error;
+  return path;
+}
+
 export type RiderStats = {
   deliveries: number;
   cash: number;
@@ -70,8 +113,13 @@ type RiderValue = {
   active: RiderOrder[];
   /** False when the rider said no to sharing their location. */
   locationAllowed: boolean;
+  /** True when location and pickup alerts keep going with the screen off. */
+  backgroundOn: boolean;
+  /** This install can work in the background (rider app v1.2+). */
+  backgroundSupported: boolean;
+  enableBackground: () => Promise<boolean>;
   refresh: () => Promise<void>;
-  apply: (form: { name: string; phone: string; vehicle: Vehicle; area: string }) => Promise<void>;
+  apply: (form: RiderApplicationForm) => Promise<void>;
   setOnline: (online: boolean) => Promise<void>;
   claim: (orderId: string) => Promise<void>;
   release: (orderId: string) => Promise<void>;
@@ -90,6 +138,10 @@ export function RiderProvider({ children }: { children: React.ReactNode }) {
   const [available, setAvailable] = useState<RiderOrder[]>([]);
   const [mine, setMine] = useState<RiderOrder[]>([]);
   const [locationAllowed, setLocationAllowed] = useState(true);
+  const [backgroundOn, setBackgroundOn] = useState(false);
+  // Bumped after the rider answers the "all the time" question, to restart tracking.
+  const [backgroundAsked, setBackgroundAsked] = useState(0);
+  const { t } = useSettings();
   // Ready orders already seen, so a new one makes a sound (not on the first load).
   const seenReady = useRef<Set<string> | null>(null);
   const online = !!rider?.online;
@@ -136,10 +188,16 @@ export function RiderProvider({ children }: { children: React.ReactNode }) {
   }, [loadOrders, status]);
 
   // While online, share the rider's position (nearby pickups, and customers see them coming).
-  // More often while carrying food, so the customer's live map moves smoothly.
+  // More often while carrying food, so the customer's live map moves smoothly. With "Allow all
+  // the time", a background service keeps going with the screen off and notifies about pickups;
+  // otherwise it only works while the app is open.
   const delivering = mine.some((o) => o.status === 'on_the_way');
   useEffect(() => {
-    if (!online || Platform.OS === 'web' || isDemo) return;
+    if (Platform.OS === 'web' || isDemo) return;
+    if (!online) {
+      stopBackgroundTracking();
+      return;
+    }
     let sub: Location.LocationSubscription | null = null;
     let cancelled = false;
     // A Supabase call only goes out once it's awaited (or .then is called), so always await it.
@@ -160,6 +218,13 @@ export function RiderProvider({ children }: { children: React.ReactNode }) {
       })
         .then((pos) => (cancelled ? null : send(pos)))
         .catch(() => null);
+      const background = backgroundTrackingAvailable() && (await hasBackgroundPermission().catch(() => false));
+      if (cancelled) return;
+      setBackgroundOn(background);
+      if (background) {
+        await startBackgroundTracking(delivering).catch(() => setBackgroundOn(false));
+        return;
+      }
       sub = await Location.watchPositionAsync(
         delivering
           ? { accuracy: Location.Accuracy.High, timeInterval: 10_000, distanceInterval: 25 }
@@ -174,15 +239,51 @@ export function RiderProvider({ children }: { children: React.ReactNode }) {
       cancelled = true;
       sub?.remove();
     };
-  }, [online, delivering]);
+  }, [online, delivering, backgroundAsked]);
+
+  // Notification wording in the rider's language (the background task has no screen).
+  useEffect(() => {
+    setRiderNotificationWords({
+      serviceTitle: t('riderServiceTitle'),
+      serviceBody: t('riderServiceBody'),
+      newPickupTitle: t('riderNotifNewTitle'),
+      newPickupBody: t('riderNotifNewBody'),
+      readyTitle: t('riderNotifReadyTitle'),
+      readyBody: t('riderNotifReadyBody'),
+      cancelledTitle: t('riderNotifCancelledTitle'),
+      cancelledBody: t('riderNotifCancelledBody'),
+      channel: t('riderNotifChannel'),
+    });
+  }, [t]);
+
+  /** Asks for "Allow all the time" and notifications, then restarts tracking with them. */
+  const enableBackground = useCallback(async () => {
+    const result = await requestBackgroundPermissions();
+    setLocationAllowed(result.location);
+    setBackgroundAsked((n) => n + 1);
+    return result.background;
+  }, []);
 
   const apply = useCallback(
-    async (form: { name: string; phone: string; vehicle: Vehicle; area: string }) => {
+    async (form: RiderApplicationForm) => {
+      const bike = form.vehicle !== 'bicycle';
+      const [idFront, idBack, selfie, vehiclePhoto] = await Promise.all([
+        uploadRiderDocument(form.idFront, 'id-front'),
+        uploadRiderDocument(form.idBack, 'id-back'),
+        uploadRiderDocument(form.selfie, 'selfie'),
+        bike ? uploadRiderDocument(form.vehiclePhoto, 'vehicle') : Promise.resolve(null),
+      ]);
       const { data, error } = await supabase.rpc('submit_rider_application', {
         p_name: form.name,
         p_phone: form.phone,
         p_vehicle: form.vehicle,
         p_area: form.area,
+        p_national_id: form.nationalId,
+        p_plate_number: bike ? form.plate : null,
+        p_id_front: idFront,
+        p_id_back: idBack,
+        p_selfie: selfie,
+        p_vehicle_photo: vehiclePhoto,
       });
       if (error) throw error;
       // Emails the team an Approve / Reject link. A failed email doesn't undo the application.
@@ -225,6 +326,9 @@ export function RiderProvider({ children }: { children: React.ReactNode }) {
       mine,
       active: mine.filter((o) => o.status !== 'delivered'),
       locationAllowed,
+      backgroundOn,
+      backgroundSupported: backgroundTrackingAvailable(),
+      enableBackground,
       refresh,
       apply,
       setOnline,
@@ -233,7 +337,7 @@ export function RiderProvider({ children }: { children: React.ReactNode }) {
       setStep: (id, step) => call('rider_set_order_status', { p_order: id, p_step: step }),
       loadStats,
     }),
-    [status, rider, online, available, mine, locationAllowed, refresh, apply, setOnline, call, loadStats]
+    [status, rider, online, available, mine, locationAllowed, backgroundOn, enableBackground, refresh, apply, setOnline, call, loadStats]
   );
 
   return <RiderContext.Provider value={value}>{children}</RiderContext.Provider>;
@@ -241,6 +345,7 @@ export function RiderProvider({ children }: { children: React.ReactNode }) {
 
 /** Goes offline, stops notifications on this phone and signs out. */
 export async function riderSignOut() {
+  await stopBackgroundTracking().catch(() => null);
   await supabase.rpc('rider_set_online', { p_online: false }).then(() => null, () => null);
   await forgetThisPhone().catch(() => {});
   await supabase.auth.signOut();

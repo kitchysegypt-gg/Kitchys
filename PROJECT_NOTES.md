@@ -146,3 +146,16 @@ The sign-in screen asks for a 6-digit code after sign-up (`verifyOtp` type `sign
   card + the 5 PM push are members only; others see a locked card).
 - Screens: `app/premium.tsx` (banner cropped from the ad), More > Kitchy's Premium, and the full ad
   in the home carousel (`promo_banners` row with show_when `not_member`, image `builtin:premium`).
+
+## Rider app: background location, alerts, verification
+
+- From rider APK 1.2 (expo-task-manager): with location "Allow all the time", a foreground service
+  (`lib/riderBackground.ts`, task `kitchys-rider-location`) keeps sending the position while online,
+  even with the screen off, and raises local notifications for new pickups, a claimed order becoming
+  ready, and cancellations (no Firebase needed). Older installs fall back to foreground tracking.
+  The module is loaded lazily so the customer app (same runtime 1.1.0) never needs it.
+- Real push to the rider app when it's closed still needs `google-services.rider.json`
+  (Firebase Android app `com.kitchys.rider`) and FCM V1 credentials for that package in EAS.
+- New riders send their national ID number, ID front/back, a selfie holding the ID, a vehicle photo
+  and the plate number (not for bicycles). Photos go to the private `rider-documents` bucket; the
+  application email has 14-day signed links. Approval copies the plate to `riders.plate_number`.

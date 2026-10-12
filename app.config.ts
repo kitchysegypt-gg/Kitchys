@@ -40,6 +40,11 @@ export default ({ config }: ConfigContext): ExpoConfig => {
             {
               locationWhenInUsePermission:
                 "Kitchy's Rider uses your location to show nearby pickups and to let customers see their delivery coming.",
+              locationAlwaysAndWhenInUsePermission:
+                "Kitchy's Rider keeps sharing your location while you're online, even with the screen off, so customers can follow their delivery.",
+              // Keeps sharing the location (and checking for pickups) with the screen off.
+              isAndroidBackgroundLocationEnabled: true,
+              isAndroidForegroundServiceEnabled: true,
             },
           ]
         : plugin

@@ -12,7 +12,8 @@ import { useSettings } from '@/lib/settings';
 /** Rider > Deliveries: go online, your active deliveries step by step, and orders to take. */
 export default function RiderDeliveriesScreen() {
   const { t, colors, formatPrice } = useSettings();
-  const { online, setOnline, available, active, mine, refresh, locationAllowed } = useRider();
+  const { online, setOnline, available, active, mine, refresh, locationAllowed, backgroundOn, backgroundSupported, enableBackground } =
+    useRider();
   const [refreshing, setRefreshing] = useState(false);
   const [switching, setSwitching] = useState(false);
   const doneToday = mine.filter((o) => o.status === 'delivered');
@@ -58,6 +59,49 @@ export default function RiderDeliveriesScreen() {
             accessibilityLabel={online ? t('riderOnline') : t('riderOffline')}
           />
         </Card>
+
+        {online && locationAllowed && backgroundOn && (
+          <View style={[styles.note, { backgroundColor: `${colors.success}14` }]}>
+            <Icon name="checkmark-circle-outline" size={20} color={colors.success} />
+            <Txt variant="caption" style={{ flex: 1, fontWeight: '600' }}>
+              {t('riderBgOn')}
+            </Txt>
+          </View>
+        )}
+
+        {online && locationAllowed && !backgroundOn && backgroundSupported && (
+          <Card style={{ gap: 10, borderColor: colors.primary, borderWidth: 1 }}>
+            <View style={styles.line}>
+              <IconBadge name="location-outline" tone="orange" size={32} />
+              <Txt style={{ flex: 1, fontWeight: '800' }}>{t('riderBgTitle')}</Txt>
+            </View>
+            <Txt variant="caption" muted>
+              {t('riderBgBody')}
+            </Txt>
+            <Button
+              title={t('riderBgButton')}
+              icon="navigate-outline"
+              onPress={() =>
+                showConfirm(t('riderBgExplainTitle'), t('riderBgExplainBody'), {
+                  label: t('riderBgButton'),
+                  cancelLabel: t('cancel'),
+                  onConfirm: () => {
+                    enableBackground().catch((e) => showAlert(t('error'), e?.message ?? String(e)));
+                  },
+                })
+              }
+            />
+          </Card>
+        )}
+
+        {online && locationAllowed && !backgroundSupported && (
+          <View style={[styles.note, { backgroundColor: colors.surfaceAlt }]}>
+            <Icon name="information-circle-outline" size={20} color={colors.primary} />
+            <Txt variant="caption" style={{ flex: 1, fontWeight: '600' }}>
+              {t('riderBgOldApp')}
+            </Txt>
+          </View>
+        )}
 
         {online && !locationAllowed && (
           <View style={[styles.note, { backgroundColor: `${colors.danger}12` }]}>

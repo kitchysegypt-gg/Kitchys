@@ -99,15 +99,42 @@ async function handleNotify(req: Request, functionUrl: string) {
   const button = (href: string, label: string, color: string) =>
     `<a href="${href}" style="display:inline-block;padding:12px 22px;margin:4px;border-radius:12px;background:${color};color:#fff;text-decoration:none;font-weight:bold">${label}</a>`;
 
+  // ID and vehicle photos are private: the email gets links that work for 14 days.
+  const signed = async (path: string | null) => {
+    if (!path) return null;
+    const { data } = await admin.storage.from('rider-documents').createSignedUrl(path, 14 * 24 * 3600);
+    return data?.signedUrl ?? null;
+  };
+  const photos = (
+    await Promise.all(
+      [
+        ['ID (front)', app.id_front_path],
+        ['ID (back)', app.id_back_path],
+        ['Selfie with ID', app.selfie_path],
+        ['Vehicle', app.vehicle_photo_path],
+      ].map(async ([label, path]) => [label, await signed(path)] as const)
+    )
+  ).filter(([, url]) => url);
+  const photoHtml = photos
+    .map(
+      ([label, url]) =>
+        `<p style="margin:12px 0 4px"><b>${escapeHtml(label)}</b> (<a href="${url}">open</a>)</p><img src="${url}" alt="${escapeHtml(label)}" style="max-width:100%;border-radius:12px;border:1px solid #eee">`
+    )
+    .join('');
+
   const html = `<div style="font-family:system-ui,sans-serif;max-width:560px">
-<h2 style="color:#F4511E">New rider application 🛵</h2>
+<h2 style="color:#F4511E">New rider application</h2>
 <p><b>${escapeHtml(app.full_name)}</b> wants to deliver for Kitchy's.</p>
 <table cellpadding="4">
 <tr><td>Email</td><td>${escapeHtml(app.email)}</td></tr>
 <tr><td>Phone</td><td>${escapeHtml(app.phone)}</td></tr>
 <tr><td>Vehicle</td><td>${escapeHtml(VEHICLES[app.vehicle] ?? app.vehicle)}</td></tr>
 <tr><td>Area</td><td>${escapeHtml(app.area)}</td></tr>
+<tr><td>National ID</td><td>${escapeHtml(app.national_id ?? 'not sent')}</td></tr>
+<tr><td>Plate number</td><td>${escapeHtml(app.plate_number ?? (app.vehicle === 'bicycle' ? 'bicycle, no plate' : 'not sent'))}</td></tr>
 </table>
+<p>Check the ID photos match the selfie and the name, and the plate is readable on the vehicle photo.</p>
+${photoHtml}
 <p>Approving lets them go online in Kitchy's Rider and take deliveries right away.</p>
 <p>${button(await link('approve'), 'Approve', '#2E9E5B')} ${button(await link('reject'), 'Reject', '#D93025')}</p>
 </div>`;

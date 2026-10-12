@@ -13,6 +13,8 @@ import { AuthProvider, useAuth } from '@/lib/auth';
 import { CartProvider } from '@/lib/cart';
 import { CatalogProvider } from '@/lib/catalog';
 import { MembershipProvider } from '@/lib/membership';
+// Registers the rider app's background location task at start-up (does nothing in the customer app).
+import '@/lib/riderBackground';
 import { FONT_FILES } from '@/lib/fonts';
 import { NotificationsBridge } from '@/lib/notifications';
 import { OrdersProvider } from '@/lib/orders';

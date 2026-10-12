@@ -3,12 +3,13 @@ import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, View
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Logo } from '@/components/Logo';
+import { PhotoPicker } from '@/components/PhotoPicker';
 import { showAlert } from '@/lib/alert';
 import { useAuth } from '@/lib/auth';
 import { FONT } from '@/lib/fonts';
 import { Vehicle, riderSignOut, useRider } from '@/lib/rider';
 import { useSettings } from '@/lib/settings';
-import { Button, Card, Chip, EmptyState, Txt } from './ui';
+import { Button, Card, Chip, EmptyState, Icon, Txt } from './ui';
 
 const VEHICLES: Vehicle[] = ['motorbike', 'scooter', 'bicycle', 'car'];
 
@@ -22,7 +23,15 @@ export function RiderApply() {
   const [phone, setPhone] = useState('');
   const [area, setArea] = useState('');
   const [vehicle, setVehicle] = useState<Vehicle>('motorbike');
+  const [nationalId, setNationalId] = useState('');
+  const [plate, setPlate] = useState('');
+  const [idFront, setIdFront] = useState<string | null>(null);
+  const [idBack, setIdBack] = useState<string | null>(null);
+  const [selfie, setSelfie] = useState<string | null>(null);
+  const [vehiclePhoto, setVehiclePhoto] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // Bicycles have no plate.
+  const motor = vehicle !== 'bicycle';
 
   const input = [
     styles.input,
@@ -33,9 +42,26 @@ export function RiderApply() {
     if (name.trim().length < 2 || phone.replace(/\D/g, '').length < 8 || area.trim().length < 2) {
       return showAlert(t('riderApplyTitle'), t('riderFillAll'));
     }
+    if (nationalId.replace(/\D/g, '').length !== 14 || !idFront || !idBack || !selfie) {
+      return showAlert(t('riderVerifyTitle'), t('riderNeedId'));
+    }
+    if (motor && (!vehiclePhoto || plate.trim().length < 3)) {
+      return showAlert(t('riderVehicleSection'), t('riderNeedVehicle'));
+    }
     setBusy(true);
     try {
-      await apply({ name: name.trim(), phone: phone.trim(), vehicle, area: area.trim() });
+      await apply({
+        name: name.trim(),
+        phone: phone.trim(),
+        vehicle,
+        area: area.trim(),
+        nationalId: nationalId.replace(/\D/g, ''),
+        plate: plate.trim(),
+        idFront,
+        idBack,
+        selfie,
+        vehiclePhoto,
+      });
       setEditing(false);
     } catch (e: any) {
       showAlert(t('error'), e?.message ?? String(e));
@@ -80,6 +106,42 @@ export function RiderApply() {
                   <Chip key={v} label={t(`vehicle_${v}`)} active={vehicle === v} onPress={() => setVehicle(v)} />
                 ))}
               </View>
+              {motor && (
+                <>
+                  <TextInput
+                    value={plate}
+                    onChangeText={setPlate}
+                    placeholder={t('riderPlatePlaceholder')}
+                    placeholderTextColor={colors.textMuted}
+                    autoCapitalize="characters"
+                    maxLength={15}
+                    style={input}
+                  />
+                  <PhotoPicker value={vehiclePhoto} onChange={setVehiclePhoto} label={t('riderVehiclePhoto')} />
+                </>
+              )}
+
+              <Txt variant="heading" style={{ marginTop: 6 }}>
+                {t('riderVerifyTitle')}
+              </Txt>
+              <View style={[styles.note, { backgroundColor: colors.surfaceAlt }]}>
+                <Icon name="lock-closed-outline" size={18} color={colors.primary} />
+                <Txt variant="caption" style={{ flex: 1 }}>
+                  {t('riderDocsPrivate')}
+                </Txt>
+              </View>
+              <TextInput
+                value={nationalId}
+                onChangeText={(v) => setNationalId(v.replace(/\D/g, '').slice(0, 14))}
+                placeholder={t('riderNationalId')}
+                placeholderTextColor={colors.textMuted}
+                keyboardType="number-pad"
+                maxLength={14}
+                style={input}
+              />
+              <PhotoPicker value={idFront} onChange={setIdFront} label={t('riderIdFront')} aspect={[16, 10]} />
+              <PhotoPicker value={idBack} onChange={setIdBack} label={t('riderIdBack')} aspect={[16, 10]} />
+              <PhotoPicker value={selfie} onChange={setSelfie} label={t('riderSelfie')} aspect={[3, 4]} />
               <Button title={t('riderApplySubmit')} icon="bicycle" onPress={submit} loading={busy} />
             </Card>
           ) : status === 'pending' ? (
@@ -102,4 +164,5 @@ export function RiderApply() {
 const styles = StyleSheet.create({
   input: { borderRadius: 14, borderWidth: 1, padding: 12, fontSize: 15, fontFamily: FONT.regular },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  note: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 10, borderRadius: 12 },
 });
