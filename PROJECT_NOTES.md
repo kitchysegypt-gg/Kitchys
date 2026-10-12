@@ -160,3 +160,20 @@ The sign-in screen asks for a 6-digit code after sign-up (`verifyOtp` type `sign
 - New riders send their national ID number, ID front/back, a selfie holding the ID, a vehicle photo
   and the plate number (not for bicycles). Photos go to the private `rider-documents` bucket; the
   application email has 14-day signed links. Approval copies the plate to `riders.plate_number`.
+
+## n8n automations (kitchys.app.n8n.cloud)
+
+All read from the app through one RPC, `n8n_report(p_kind)` (`POST /rest/v1/rpc/n8n_report`,
+body `{"p_kind": "daily" | "alerts" | "weekly" | "social"}`). n8n sends the shared secret in an
+`x-n8n-secret` header from the credential "Kitchy's report secret"; the database compares it with
+the Vault secret `n8n_secret` (Supabase dashboard > Vault). Emails go to the owner via Gmail.
+Schedules use Cairo time.
+
+- Daily business report: 23:30, orders, money split, team, reviews, plus a short AI summary.
+- Live ops alerts: every 10 minutes, only emails when an order is ready with no rider (10+ min),
+  not accepted by the kitchen (15+ min), a low review arrives, a repair waits 48 h, or an
+  application waits 24 h. Each problem is reported once.
+- Weekly payouts and kitchen health: Sunday 09:00, what to pay each chef and what each rider hands over.
+- Weekly social post drafts: Thursday 12:00, Egyptian Arabic and English captions for the top
+  dishes, emailed for approval (never posted automatically).
+- Automation failure alerts: emails the owner when any of the above fails.
