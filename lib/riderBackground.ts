@@ -3,6 +3,7 @@ import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
 import { AppState, Platform } from 'react-native';
 
+import { hasPushToken } from './notifications';
 import type { RiderOrder } from './rider';
 import { isDemo, supabase } from './supabase';
 import { IS_RIDER } from './variant';
@@ -80,7 +81,8 @@ async function checkOrders() {
     SEEN_KEY,
     JSON.stringify({ ready: ready.map((o) => o.id), mine: Object.fromEntries(active.map((o) => [o.id, o.status])) })
   );
-  if (!before || AppState.currentState === 'active') return;
+  // The server already sends these as push notifications when this phone can receive them.
+  if (!before || AppState.currentState === 'active' || hasPushToken()) return;
 
   const cash = (n: number) => `EGP ${Math.round(n)}`;
   for (const o of ready.filter((o) => !before.ready.includes(o.id))) {

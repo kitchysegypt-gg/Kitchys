@@ -46,6 +46,9 @@ if (supported) {
 /** The token registered for this phone, so signing out can remove it. */
 let registeredToken: string | null = null;
 
+/** True once this phone gets push notifications from the server (Firebase is set up). */
+export const hasPushToken = () => !!registeredToken;
+
 /** Call before signing out so the next person on this phone doesn't get your reminders. */
 export async function forgetThisPhone() {
   if (!supported) return;

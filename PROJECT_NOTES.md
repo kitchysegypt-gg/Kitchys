@@ -154,8 +154,9 @@ The sign-in screen asks for a 6-digit code after sign-up (`verifyOtp` type `sign
   even with the screen off, and raises local notifications for new pickups, a claimed order becoming
   ready, and cancellations (no Firebase needed). Older installs fall back to foreground tracking.
   The module is loaded lazily so the customer app (same runtime 1.1.0) never needs it.
-- Real push to the rider app when it's closed still needs `google-services.rider.json`
-  (Firebase Android app `com.kitchys.rider`) and FCM V1 credentials for that package in EAS.
+- Push to the rider app: `google-services.rider.json` (Firebase Android app `com.kitchys.rider`) and
+  the FCM V1 key in EAS for both packages (key id 31c7d5a7…, uploaded Oct 2026). Local alerts from
+  the background task only fire when the phone has no push token, so riders don't get doubles.
 - New riders send their national ID number, ID front/back, a selfie holding the ID, a vehicle photo
   and the plate number (not for bicycles). Photos go to the private `rider-documents` bucket; the
   application email has 14-day signed links. Approval copies the plate to `riders.plate_number`.
