@@ -120,7 +120,8 @@ export default function HomeScreen() {
                       keyExtractor={(d) => d.id}
                       renderItem={({ item }) => <DishCard dish={item} />}
                       showsHorizontalScrollIndicator={false}
-                      contentContainerStyle={{ paddingHorizontal: 16, gap: 12, paddingVertical: 8 }}
+                      style={styles.row}
+                      contentContainerStyle={styles.rowContent}
                     />
                   </>
                 )}
@@ -129,7 +130,8 @@ export default function HomeScreen() {
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{ paddingHorizontal: 16, gap: 12, paddingVertical: 8 }}>
+                  style={styles.row}
+                  contentContainerStyle={styles.rowContent}>
                   {chefs.map((c) => (
                     <KitchenCard key={c.id} chef={c} />
                   ))}
@@ -145,7 +147,8 @@ export default function HomeScreen() {
                       keyExtractor={(d) => d.id}
                       renderItem={({ item }) => <DishCard dish={item} />}
                       showsHorizontalScrollIndicator={false}
-                      contentContainerStyle={{ paddingHorizontal: 16, gap: 12, paddingVertical: 8 }}
+                      style={styles.row}
+                      contentContainerStyle={styles.rowContent}
                     />
                   </>
                 )}
@@ -226,6 +229,8 @@ function KitchenStatus() {
   );
 }
 
+const SHADOW_ROOM = 22;
+
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingTop: 10, paddingBottom: 4 },
   addressRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
@@ -245,6 +250,10 @@ const styles = StyleSheet.create({
   searchInput: { flex: 1, paddingVertical: 13, fontSize: 15, fontFamily: FONT.regular },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginTop: 26, marginBottom: 12 },
   seeAll: { flexDirection: 'row', alignItems: 'center', gap: 2 },
+  // Android cuts a scroll row's content at its edges, so the card shadow needs room below the
+  // cards or it ends in a hard grey line; the negative margin keeps the spacing the same.
+  row: { marginBottom: -SHADOW_ROOM },
+  rowContent: { paddingHorizontal: 16, gap: 12, paddingTop: 8, paddingBottom: 8 + SHADOW_ROOM },
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 12, paddingHorizontal: 16 },
   gridItem: { width: '48.5%' },
 });
