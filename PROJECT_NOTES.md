@@ -124,7 +124,8 @@ The sign-in screen asks for a 6-digit code after sign-up (`verifyOtp` type `sign
 
 - EGP 320/month taken from earnings (`premium_subscribe` / `premium_cancel`, renewed nightly by the
   `chef-billing` cron). Charges are rows in `chef_charges`.
-- 12% commission on orders placed while Premium (`orders.commission_rate`, set on insert).
+- Commission is 15% for every kitchen, Premium or not. Premium no longer lowers it (orders placed
+  before that change keep the 12% they were placed with in `orders.commission_rate`).
 - Kitchy's Care (`care_requests`): Premium only, opens 30 days after joining, 2 visits per 12 months.
   The edge function `kitchen-requests` emails the team (new subscriber, repair request with a signed
   "Repair done" link); the chef gets a push when it's done.

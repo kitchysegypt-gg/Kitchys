@@ -132,7 +132,7 @@ function buildEmail(name: string, s: Stats, lang: Lang) {
       <div style="font-size:22px;font-weight:800;color:#1B1D1F">${escape(value)}</div>
       <div style="font-size:13px;color:#7A7F86">${escape(label)}</div>${extra}</div></td>`;
 
-  // Commission at each order's own rate (12% while Premium, 15% otherwise), minus Premium and monthly payments.
+  // Commission at each order's own rate (15%; older Premium orders kept 12%), minus Premium and monthly payments.
   const commission = s.commission != null ? Number(s.commission) : Math.round(Number(s.sales) * 0.15);
   const earnings = Number(s.sales) - commission - Number(s.deductions ?? 0);
 

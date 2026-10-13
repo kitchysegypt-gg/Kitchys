@@ -269,7 +269,7 @@ function PremiumCard() {
 
 function EarningsCard({ sales, commission: charged, deductions }: { sales: number; commission?: number; deductions: number }) {
   const { t, colors, formatPrice } = useSettings();
-  // The database knows each order's rate (12% while Premium); older servers only send sales.
+  // The database knows each order's rate (15%; older orders may differ); older servers only send sales.
   const commission = charged != null ? Number(charged) : splitSales(sales).commission;
   const earnings = sales - commission - deductions;
   const pct = sales > 0 && charged != null ? Math.round((commission / sales) * 100) : Math.round(COMMISSION_RATE * 100);

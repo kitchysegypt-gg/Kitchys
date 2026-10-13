@@ -3,9 +3,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { uploadKitchenPhoto } from './chef';
 import { supabase } from './supabase';
 
-/** Kitchy's Premium for chefs: EGP 320 a month, taken from their earnings. */
-export const PREMIUM_COMMISSION_RATE = 0.12;
-
 export type Appliance = 'oven' | 'stove' | 'air_fryer' | 'fridge' | 'mixer' | 'other';
 export const APPLIANCES: Appliance[] = ['oven', 'stove', 'air_fryer', 'fridge', 'mixer', 'other'];
 

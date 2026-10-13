@@ -9,7 +9,7 @@ import type { TranslationKey } from '@/lib/i18n';
 import { APPLIANCES, Appliance, PremiumInfo, usePremium } from '@/lib/premium';
 import { useSettings } from '@/lib/settings';
 
-/** Kitchen > Premium: Kitchy's Premium (12% commission, Kitchy's Care, badge) and Kitchy's Care requests. */
+/** Kitchen > Premium: Kitchy's Premium (Kitchy's Care, badge) and Kitchy's Care requests. */
 export default function KitchenPremiumScreen() {
   const { t, colors } = useSettings();
   const premium = usePremium();
@@ -63,7 +63,6 @@ function PlanCard({ info, subscribe, cancel }: { info: PremiumInfo; subscribe: (
   const price = formatPrice(info.price);
 
   const benefits: { icon: IconName; text: string }[] = [
-    { icon: 'trending-down-outline', text: t('premiumBenefitCommission') },
     { icon: 'construct-outline', text: t('premiumBenefitCare') },
     { icon: 'ribbon-outline', text: t('premiumBenefitBadge') },
   ];
@@ -123,9 +122,6 @@ function PlanCard({ info, subscribe, cancel }: { info: PremiumInfo; subscribe: (
         </View>
       ) : (
         <View style={{ gap: 8 }}>
-          <Txt variant="caption" muted>
-            {t('premiumSaveExample')}
-          </Txt>
           <Button title={t('premiumJoin', { price })} onPress={join} loading={busy} />
         </View>
       )}
