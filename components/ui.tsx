@@ -28,19 +28,101 @@ import { Emoji3D } from './Emoji3D';
 /** Kitchy's own filled icons (tinted like any other icon). */
 const KITCHY_ICONS = {
   'k-home': require('@/assets/icons/home.png'),
-  'k-chefs': require('@/assets/icons/chefs.png'),
+  'k-search': require('@/assets/icons/search.png'),
+  'k-more': require('@/assets/icons/browse.png'),
   'k-cart': require('@/assets/icons/cart.png'),
-  'k-orders': require('@/assets/icons/orders.png'),
-  'k-more': require('@/assets/icons/more.png'),
-  'k-chat': require('@/assets/icons/chat.png'),
+  'k-profile': require('@/assets/icons/profile.png'),
   'k-settings': require('@/assets/icons/settings.png'),
+  'k-food': require('@/assets/icons/food.png'),
+  'k-chefs': require('@/assets/icons/chefs.png'),
+  'k-favorites': require('@/assets/icons/favorites.png'),
+  'k-notifications': require('@/assets/icons/notifications.png'),
+  'k-address': require('@/assets/icons/address.png'),
+  'k-payments': require('@/assets/icons/payments.png'),
+  'k-dinner': require('@/assets/icons/dinner.png'),
+  'k-vegan': require('@/assets/icons/vegan.png'),
+  'k-premium': require('@/assets/icons/premium.png'),
+  'k-top-rated': require('@/assets/icons/top-rated.png'),
+  'k-offers': require('@/assets/icons/offers.png'),
+  'k-rewards': require('@/assets/icons/rewards.png'),
+  'k-delivery': require('@/assets/icons/delivery.png'),
+  'k-secure': require('@/assets/icons/secure.png'),
+  'k-support': require('@/assets/icons/support.png'),
+  'k-orders': require('@/assets/icons/orders.png'),
+  'k-history': require('@/assets/icons/history.png'),
+  'k-logout': require('@/assets/icons/logout.png'),
+  'k-healthy': require('@/assets/icons/healthy.png'),
+  'k-become-chef': require('@/assets/icons/become-chef.png'),
+  'k-refer': require('@/assets/icons/refer.png'),
+  'k-discounts': require('@/assets/icons/discounts.png'),
+  'k-chat': require('@/assets/icons/help.png'),
+  'k-light-mode': require('@/assets/icons/light-mode.png'),
 };
 export type KitchyIconName = keyof typeof KITCHY_ICONS;
 
-/** Any Ionicons name, "delivery" (the Kitchy's delivery scooter), or one of Kitchy's own icons. */
-export type IconName = React.ComponentProps<typeof Ionicons>['name'] | 'delivery' | KitchyIconName;
+/**
+ * Ionicons names drawn with Kitchy's own icon instead, so the whole app uses one set.
+ * Stars stay Ionicons: ratings need the outline and half star.
+ */
+const ICON_ALIASES: Partial<Record<string, KitchyIconName>> = {
+  home: 'k-home',
+  'home-outline': 'k-home',
+  search: 'k-search',
+  'search-outline': 'k-search',
+  menu: 'k-more',
+  'menu-outline': 'k-more',
+  cart: 'k-cart',
+  'cart-outline': 'k-cart',
+  person: 'k-profile',
+  'person-outline': 'k-profile',
+  'person-circle-outline': 'k-profile',
+  settings: 'k-settings',
+  'settings-outline': 'k-settings',
+  restaurant: 'k-food',
+  'restaurant-outline': 'k-food',
+  heart: 'k-favorites',
+  'heart-outline': 'k-favorites',
+  notifications: 'k-notifications',
+  'notifications-outline': 'k-notifications',
+  location: 'k-address',
+  'location-outline': 'k-address',
+  card: 'k-payments',
+  'card-outline': 'k-payments',
+  flame: 'k-dinner',
+  'flame-outline': 'k-dinner',
+  leaf: 'k-vegan',
+  'leaf-outline': 'k-vegan',
+  diamond: 'k-premium',
+  'diamond-outline': 'k-premium',
+  pricetag: 'k-offers',
+  'pricetag-outline': 'k-offers',
+  pricetags: 'k-offers',
+  'pricetags-outline': 'k-offers',
+  gift: 'k-rewards',
+  'gift-outline': 'k-rewards',
+  delivery: 'k-delivery',
+  'shield-checkmark': 'k-secure',
+  'shield-checkmark-outline': 'k-secure',
+  headset: 'k-support',
+  'headset-outline': 'k-support',
+  receipt: 'k-orders',
+  'receipt-outline': 'k-orders',
+  'log-out': 'k-logout',
+  'log-out-outline': 'k-logout',
+  nutrition: 'k-healthy',
+  'nutrition-outline': 'k-healthy',
+  people: 'k-refer',
+  'people-outline': 'k-refer',
+  ticket: 'k-discounts',
+  'ticket-outline': 'k-discounts',
+  'chatbubble-ellipses': 'k-chat',
+  'chatbubble-ellipses-outline': 'k-chat',
+  sunny: 'k-light-mode',
+  'sunny-outline': 'k-light-mode',
+};
 
-const DELIVERY_ICON = require('@/assets/images/delivery.png');
+/** Any Ionicons name, "delivery" (the Kitchy's delivery truck), or one of Kitchy's own icons. */
+export type IconName = React.ComponentProps<typeof Ionicons>['name'] | 'delivery' | KitchyIconName;
 
 /** Outline icon from Ionicons, tinted with the theme's text colour by default. */
 export function Icon({
@@ -55,24 +137,14 @@ export function Icon({
   style?: StyleProp<TextStyle>;
 }) {
   const { colors } = useSettings();
-  if (name === 'delivery') {
-    // The scooter is wider than tall, so give it a little extra room.
-    const box = Math.round(size * 1.25);
+  const kitchy = name in KITCHY_ICONS ? (name as KitchyIconName) : ICON_ALIASES[name];
+  if (kitchy) {
+    // The truck is wider than tall, so give it a little extra room.
+    const box = kitchy === 'k-delivery' ? Math.round(size * 1.25) : size;
     return (
       <Image
-        source={DELIVERY_ICON}
-        style={{ width: box, height: box, marginHorizontal: -(box - size) / 2 }}
-        tintColor={(color as string | undefined) ?? colors.text}
-        contentFit="contain"
-        accessibilityIgnoresInvertColors
-      />
-    );
-  }
-  if (name in KITCHY_ICONS) {
-    return (
-      <Image
-        source={KITCHY_ICONS[name as KitchyIconName]}
-        style={{ width: size, height: size }}
+        source={KITCHY_ICONS[kitchy]}
+        style={[{ width: box, height: box }, box !== size && { marginHorizontal: -(box - size) / 2 }]}
         tintColor={(color as string | undefined) ?? colors.text}
         contentFit="contain"
         accessibilityIgnoresInvertColors

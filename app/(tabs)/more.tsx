@@ -87,7 +87,7 @@ export default function MoreScreen() {
             onPress={() => router.push('/premium')}
           />
           <ListRow
-            icon="gift-outline"
+            icon="k-refer"
             label={t('referFriend')}
             detail={t('referTagline')}
             onPress={() => router.push('/refer')}
@@ -100,7 +100,7 @@ export default function MoreScreen() {
             onPress={() => router.push('/location')}
           />
           {chefStatus.kitchen ? (
-            <ListRow icon="restaurant-outline" label={t('myKitchen')} onPress={() => router.push('/kitchen')} />
+            <ListRow icon="k-become-chef" label={t('myKitchen')} onPress={() => router.push('/kitchen')} />
           ) : chefStatus.application?.status === 'pending' ? (
             <>
               <ListRow icon="hourglass-outline" label={t('applicationPending')} />
@@ -111,7 +111,7 @@ export default function MoreScreen() {
               )}
             </>
           ) : (
-            <ListRow icon="restaurant-outline" label={t('becomeChef')} onPress={() => router.push('/apply')} />
+            <ListRow icon="k-become-chef" label={t('becomeChef')} onPress={() => router.push('/apply')} />
           )}
         </ListGroup>
 
