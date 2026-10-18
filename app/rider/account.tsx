@@ -3,8 +3,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Logo } from '@/components/Logo';
 import { Button, Card, Chip, Icon, Txt } from '@/components/ui';
+import { useDeleteAccount } from '@/lib/account';
 import type { Language } from '@/lib/i18n';
 import { riderSignOut, useRider } from '@/lib/rider';
+import { stopBackgroundTracking } from '@/lib/riderBackground';
 import { useSettings } from '@/lib/settings';
 
 const LANGUAGES: { id: Language; label: string }[] = [
@@ -17,6 +19,9 @@ const LANGUAGES: { id: Language; label: string }[] = [
 export default function RiderAccountScreen() {
   const { t, colors, language, setLanguage } = useSettings();
   const { rider } = useRider();
+  const { start: deleteAccount, busy: deleting } = useDeleteAccount(() => {
+    stopBackgroundTracking().catch(() => null);
+  });
 
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.background }}>
@@ -47,6 +52,7 @@ export default function RiderAccountScreen() {
         </Card>
 
         <Button title={t('signOut')} variant="ghost" icon="log-out-outline" onPress={riderSignOut} />
+        <Button title={t('deleteAccount')} variant="ghost" icon="trash-outline" onPress={deleteAccount} loading={deleting} />
       </ScrollView>
     </SafeAreaView>
   );

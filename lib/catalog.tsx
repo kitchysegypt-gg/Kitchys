@@ -6,7 +6,7 @@ import type { EmojiName } from './emoji';
 import type { Localized } from './i18n';
 import { CLOSE_MINUTES } from './schedule';
 import { useSettings } from './settings';
-import { supabase } from './supabase';
+import { isDemo, supabase } from './supabase';
 
 /** A chef is "Popular" with at least this many orders in the last 30 days. */
 export const POPULAR_MIN_ORDERS = 5;
@@ -32,6 +32,10 @@ export type ChefHighlight = { orders: number; topDish: string | null };
 
 /** "Popular dishes" only shows once at least this many dishes have orders. */
 const POPULAR_MIN_DISHES = 3;
+
+/** The built-in sample chefs and dishes are only for the demo; the real app shows real kitchens. */
+const SAMPLE_CHEFS = isDemo ? CHEFS : [];
+const SAMPLE_DISHES = isDemo ? DISHES : [];
 
 export type KitchenChefRow = {
   id: string;
@@ -63,6 +67,9 @@ export type KitchenDishRow = {
   portion_grams?: number | null;
   /** Most portions the chef will cook per day; null means no limit. */
   daily_limit?: number | null;
+  /** New and changed dishes wait for the Kitchy's team before customers see them. */
+  approval?: 'pending' | 'approved' | 'rejected';
+  approval_note?: string | null;
 };
 
 const same = (text: string): Localized => ({ en: text, ar: text, fr: text });
@@ -274,8 +281,12 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
     }
     if (!chefsRes.error && chefsRes.data) setKitchenChefs((chefsRes.data as KitchenChefRow[]).map(kitchenChefToChef));
     if (!dishesRes.error && dishesRes.data) {
-      // Customers only see dishes a chef has left switched on.
-      setKitchenDishes((dishesRes.data as KitchenDishRow[]).filter((d) => d.available).map(kitchenDishToDish));
+      // Customers only see dishes a chef has left switched on and the Kitchy's team approved.
+      setKitchenDishes(
+        (dishesRes.data as KitchenDishRow[])
+          .filter((d) => d.available && (d.approval ?? 'approved') === 'approved')
+          .map(kitchenDishToDish)
+      );
     }
     if (!ratingsRes.error && ratingsRes.data) {
       setRatings(Object.fromEntries((ratingsRes.data as ChefRating[]).map((r) => [r.chef_id, r])));
@@ -289,8 +300,8 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
   }, [refresh]);
 
   const value = useMemo<CatalogValue>(() => {
-    const allChefs = [...CHEFS, ...kitchenChefs];
-    const allDishes = [...DISHES, ...kitchenDishes.filter((d) => kitchenChefs.some((c) => c.id === d.chefId))];
+    const allChefs = [...SAMPLE_CHEFS, ...kitchenChefs];
+    const allDishes = [...SAMPLE_DISHES, ...kitchenDishes.filter((d) => kitchenChefs.some((c) => c.id === d.chefId))];
     const now = Date.now();
     const dealDishes = dealRows.flatMap((row): Dish[] => {
       const base = allDishes.find((d) => d.id === row.dish_id);

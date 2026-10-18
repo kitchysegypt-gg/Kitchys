@@ -4,7 +4,7 @@ import { Animated, Pressable, ScrollView, StyleSheet, View, useWindowDimensions 
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAnimatedValue } from '@/lib/useAnimatedValue';
-import { AllergenList, QuantityStepper, useAddToCart } from '@/components/menu';
+import { AllergenList, FavoriteButton, QuantityStepper, useAddToCart } from '@/components/menu';
 import { Button, Card, EmptyState, Icon, IconName, Screen, Txt } from '@/components/ui';
 import { ChefAvatar, DishGallery, RatingBadge } from '@/components/media';
 import { formatPortion } from '@/data/menu';
@@ -61,6 +61,7 @@ export default function DishScreen() {
               <Icon name="close" size={22} color="#1B1B1F" />
             </Pressable>
           </SafeAreaView>
+          <FavoriteButton dishId={dish.deal?.dishId ?? dish.id} style={styles.heart} />
         </View>
 
         <View style={{ padding: 20, gap: 16 }}>
@@ -161,6 +162,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 const styles = StyleSheet.create({
   photoHero: { height: 320, overflow: 'hidden' },
   photoClose: { position: 'absolute', top: 0, right: 0 },
+  heart: { position: 'absolute', bottom: 12, end: 16, width: 42, height: 42, borderRadius: 21 },
   close: {
     alignSelf: 'flex-end',
     marginEnd: 16,

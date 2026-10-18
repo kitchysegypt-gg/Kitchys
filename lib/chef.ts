@@ -200,9 +200,14 @@ export async function submitApplication(form: {
   return { id: data.id as string, emailed: Boolean(notify?.emailed) };
 }
 
+/** New and changed dishes wait for the Kitchy's team; this emails them (a failed email is fine). */
+function askForDishReview(dishId: string) {
+  supabase.functions.invoke('kitchen-requests', { body: { kind: 'dish', id: dishId } }).catch(() => null);
+}
+
 export async function addKitchenDish(chefId: string, draft: DishDraft) {
   const d = await dishPayload(draft);
-  const { error } = await supabase.from('kitchen_dishes').insert({
+  const { data, error } = await supabase.from('kitchen_dishes').insert({
     chef_id: chefId,
     name: d.name,
     description: d.description,
@@ -216,8 +221,9 @@ export async function addKitchenDish(chefId: string, draft: DishDraft) {
     vegetarian: d.vegetarian,
     photo_urls: d.photoUrls,
     portion_grams: d.portionGrams,
-  });
+  }).select('id').single();
   if (error) throw error;
+  if (data?.id) askForDishReview(String(data.id));
 }
 
 export async function setDishAvailable(dishId: string, available: boolean) {
@@ -249,6 +255,7 @@ export async function setDishPhotos(dishId: string, photos: string[]) {
   const photo_urls = await uploadDishPhotos(photos);
   const { error } = await supabase.from('kitchen_dishes').update({ photo_urls }).eq('id', dishId);
   if (error) throw error;
+  askForDishReview(dishId);
 }
 
 /** Approved chefs: their kitchen location (private; only they can read it). */

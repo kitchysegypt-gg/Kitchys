@@ -1,8 +1,10 @@
 import { router } from 'expo-router';
 import { FlatList, Linking, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 
+import { useOrderAgain } from '@/components/menu';
 import { Button, Card, EmptyState, Icon, IconName, Screen, Txt } from '@/components/ui';
 import { showAlert, showConfirm } from '@/lib/alert';
+import { canReportProblem, useOrderProblems } from '@/lib/problems';
 import { formatSlot } from '@/lib/schedule';
 import { useCatalog } from '@/lib/catalog';
 import { useOrderRiders } from '@/lib/orderRiders';
@@ -25,6 +27,8 @@ export default function OrdersScreen() {
   const riders = useOrderRiders(
     orders.filter((o) => o.rider_id && ['cooking', 'ready', 'on_the_way'].includes(o.status)).map((o) => o.id)
   );
+  const orderAgain = useOrderAgain();
+  const problems = useOrderProblems(orders.length);
 
   return (
     <Screen>
@@ -188,6 +192,27 @@ export default function OrdersScreen() {
                   title={t('rateOrder')}
                   onPress={() => router.push(`/review/${item.id}`)}
                 />
+              )}
+              {(item.status === 'delivered' || item.status === 'cancelled') && (
+                <Button small variant="secondary" icon="refresh" title={t('orderAgain')} onPress={() => orderAgain(item.items)} />
+              )}
+              {problems[item.id] ? (
+                <View style={styles.row}>
+                  <Icon name="chatbubble-ellipses-outline" size={16} color={colors.textMuted} />
+                  <Txt variant="caption" muted style={{ flexShrink: 1 }}>
+                    {t(`problemStatus_${problems[item.id]}`)}
+                  </Txt>
+                </View>
+              ) : (
+                canReportProblem(item) && (
+                  <Button
+                    small
+                    variant="ghost"
+                    icon="alert-circle-outline"
+                    title={t('reportProblem')}
+                    onPress={() => router.push(`/problem/${item.id}`)}
+                  />
+                )
               )}
             </Card>
           );

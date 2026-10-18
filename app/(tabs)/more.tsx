@@ -3,9 +3,11 @@ import { router } from 'expo-router';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { Button, Card, Icon, ListGroup, ListRow, PressableScale, Screen, Txt } from '@/components/ui';
+import { useIsAdmin } from '@/lib/admin';
 import { useAuth } from '@/lib/auth';
 import { useCatalog } from '@/lib/catalog';
 import { useChefStatus } from '@/lib/chef';
+import { useFavorites } from '@/lib/favorites';
 import { useMembership } from '@/lib/membership';
 import { useOrders } from '@/lib/orders';
 import { useSettings } from '@/lib/settings';
@@ -18,6 +20,8 @@ export default function MoreScreen() {
   const { isMember } = useMembership();
   const chefStatus = useChefStatus();
   const { refresh: refreshCatalog } = useCatalog();
+  const favorites = useFavorites();
+  const isAdmin = useIsAdmin();
 
   const name = (session?.user.user_metadata?.full_name as string | undefined) || session?.user.email || '';
   const initials = name
@@ -79,7 +83,19 @@ export default function MoreScreen() {
           </PressableScale>
         </View>
 
+        {isAdmin && (
+          <ListGroup title={t('adminTitle')}>
+            <ListRow icon="k-secure" label={t('adminTitle')} detail={t('adminRowDetail')} onPress={() => router.push('/admin')} />
+          </ListGroup>
+        )}
+
         <ListGroup title={t('explore')}>
+          <ListRow
+            icon="heart"
+            label={t('favoritesTitle')}
+            detail={favorites.ids.size ? t('favoritesCount', { n: favorites.ids.size }) : undefined}
+            onPress={() => router.push('/favorites')}
+          />
           <ListRow
             icon="diamond-outline"
             label={t('premiumName')}

@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { Platform, ScrollView, Switch, View } from 'react-native';
 
 import { Icon, ListGroup, ListRow, Screen, ScreenHeader, Txt } from '@/components/ui';
+import { useDeleteAccount } from '@/lib/account';
 import { useCart } from '@/lib/cart';
 import { LANGUAGES } from '@/lib/i18n';
 import { forgetThisPhone } from '@/lib/notifications';
@@ -21,6 +22,7 @@ export default function SettingsScreen() {
     setNotificationsEnabled,
   } = useSettings();
   const { clear } = useCart();
+  const { start: deleteAccount, busy: deleting } = useDeleteAccount(clear);
 
   const signOut = async () => {
     clear();
@@ -84,6 +86,17 @@ export default function SettingsScreen() {
             />
           )}
           <ListRow icon="log-out-outline" label={t('signOut')} onPress={signOut} color={colors.danger} right={<View />} />
+        </ListGroup>
+
+        <ListGroup>
+          <ListRow
+            icon="trash-outline"
+            label={t('deleteAccount')}
+            detail={t('deleteAccountDetail')}
+            onPress={deleting ? undefined : deleteAccount}
+            color={colors.danger}
+            right={<View />}
+          />
         </ListGroup>
 
         <Txt variant="caption" muted center>

@@ -123,9 +123,19 @@ export default function KitchenMenuScreen() {
                       {formatPrice(Number(d.price))}
                       {d.portion_grams ? ` · ${formatPortion(d.portion_grams)}` : ''}
                     </Txt>
-                    <Txt variant="caption" muted>
-                      {d.available ? t('available') : t('hidden')}
-                    </Txt>
+                    {d.approval === 'pending' ? (
+                      <Txt variant="caption" style={{ color: colors.primary, fontWeight: '600' }}>
+                        {t('dishPending')}
+                      </Txt>
+                    ) : d.approval === 'rejected' ? (
+                      <Txt variant="caption" style={{ color: colors.danger, fontWeight: '600' }}>
+                        {d.approval_note ? `${t('dishRejected')}: ${d.approval_note}` : t('dishRejected')}
+                      </Txt>
+                    ) : (
+                      <Txt variant="caption" muted>
+                        {d.available ? t('available') : t('hidden')}
+                      </Txt>
+                    )}
                   </View>
                   <Switch
                     value={d.available}

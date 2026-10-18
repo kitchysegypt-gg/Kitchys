@@ -1,11 +1,13 @@
 import { router } from 'expo-router';
-import { Animated, Pressable, StyleSheet, View } from 'react-native';
+import { Animated, Pressable, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 
 import { useAnimatedValue } from '@/lib/useAnimatedValue';
 import { Allergen, Chef, Dish, formatPortion } from '@/data/menu';
 import { showAlert, showConfirm } from '@/lib/alert';
+import { useAuth } from '@/lib/auth';
 import { DELIVERY_RADIUS_KM, useCatalog } from '@/lib/catalog';
 import { useCart } from '@/lib/cart';
+import { useFavorites } from '@/lib/favorites';
 import { useOrders } from '@/lib/orders';
 import { useSettings } from '@/lib/settings';
 import { DELIVERY_FEE, FREE_DELIVERY_ORDERS } from '@/lib/supabase';
@@ -58,6 +60,44 @@ export function useAddToCart() {
   };
 }
 
+/**
+ * "Order again": puts the dishes of a past order back in the cart, skipping any the chef no
+ * longer offers, then opens the cart.
+ */
+export function useOrderAgain() {
+  const { add, clear, lines } = useCart();
+  const { getChef, getDish, isNear, isPaused } = useCatalog();
+  const { t, l } = useSettings();
+  return (items: { dishId: string; quantity: number }[]) => {
+    // Today's deal portions end; reorder the normal dish instead.
+    const found = items.flatMap((item) => {
+      const dish = getDish(item.dishId);
+      const base = dish?.deal ? getDish(dish.deal.dishId) : dish;
+      return base ? [{ dish: base, quantity: item.quantity }] : [];
+    });
+    if (found.length === 0) return showAlert(t('orderAgainGoneTitle'), t('orderAgainGoneBody'));
+    const chefId = found[0].dish.chefId;
+    const chef = getChef(chefId);
+    const chefName = chef ? l(chef.name) : '';
+    if (!isNear(chefId)) {
+      return showAlert(t('tooFarTitle'), t('tooFarBody', { chef: chefName, km: DELIVERY_RADIUS_KM }));
+    }
+    if (isPaused(chefId)) return showAlert(t('kitchenPaused'), t('kitchenPausedCustomer', { chef: chefName }));
+    const fill = () => {
+      clear();
+      found.forEach(({ dish, quantity }) => add(dish, quantity));
+      router.navigate('/cart');
+      if (found.length < items.length) showAlert(t('orderAgainSomeGoneTitle'), t('orderAgainSomeGoneBody'));
+    };
+    if (lines.length === 0) return fill();
+    showConfirm(t('orderAgainReplaceTitle'), t('orderAgainReplaceBody'), {
+      label: t('orderAgain'),
+      cancelLabel: t('cancel'),
+      onConfirm: fill,
+    });
+  };
+}
+
 /** Round "+" button that pops when tapped. */
 export function QuickAddButton({ dish }: { dish: Dish }) {
   const { colors } = useSettings();
@@ -75,6 +115,26 @@ export function QuickAddButton({ dish }: { dish: Dish }) {
       <Animated.View style={[styles.quickAdd, { backgroundColor: colors.primary, transform: [{ scale: pop }] }]}>
         <Icon name="add" size={22} color={colors.onPrimary} />
       </Animated.View>
+    </Pressable>
+  );
+}
+
+/** Heart that saves a meal to the customer's favourites. */
+export function FavoriteButton({ dishId, style }: { dishId: string; style?: StyleProp<ViewStyle> }) {
+  const { t, colors } = useSettings();
+  const { session } = useAuth();
+  const { isFavorite, toggle } = useFavorites();
+  if (!session) return null;
+  const on = isFavorite(dishId);
+  return (
+    <Pressable
+      onPress={() => toggle(dishId).catch(() => showAlert(t('error'), t('favoriteFailed')))}
+      hitSlop={8}
+      accessibilityRole="button"
+      accessibilityState={{ selected: on }}
+      accessibilityLabel={on ? t('favoriteRemove') : t('favoriteAdd')}
+      style={[styles.heart, style]}>
+      <Icon name="heart" size={18} color={on ? '#E53935' : colors.textMuted} />
     </Pressable>
   );
 }
@@ -101,9 +161,11 @@ export function DishCard({ dish, wide }: { dish: Dish; wide?: boolean }) {
             )}
             {!dish.deal && orders >= 2 && (
               <View style={styles.weekBadge}>
-                <Txt style={{ color: '#1B1D1F', fontSize: 11, fontWeight: '800' }}>🔥 {t('orderedWeekShort', { n: orders })}</Txt>
+                <Icon name="flame" size={12} color="#E53935" />
+                <Txt style={{ color: '#1B1D1F', fontSize: 11, fontWeight: '800' }}>{t('orderedWeekShort', { n: orders })}</Txt>
               </View>
             )}
+            <FavoriteButton dishId={dish.deal?.dishId ?? dish.id} style={styles.cardHeart} />
             {(dish.spicy || dish.vegetarian) && (
               <View style={styles.badges}>
                 {dish.spicy && <Icon name="flame" size={14} color="#E53935" />}
@@ -279,10 +341,22 @@ export function QuantityStepper({ value, onChange }: { value: number; onChange: 
 export { Button };
 
 const styles = StyleSheet.create({
+  cardHeart: { position: 'absolute', bottom: 8, end: 8 },
+  heart: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.95)',
+  },
   weekBadge: {
     position: 'absolute',
     top: 8,
     start: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
     paddingVertical: 3,
     paddingHorizontal: 8,
     borderRadius: 10,

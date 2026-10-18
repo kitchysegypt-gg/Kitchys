@@ -12,6 +12,7 @@ import { IntroAnimation } from '@/components/IntroAnimation';
 import { AuthProvider, useAuth } from '@/lib/auth';
 import { CartProvider } from '@/lib/cart';
 import { CatalogProvider } from '@/lib/catalog';
+import { FavoritesProvider } from '@/lib/favorites';
 import { MembershipProvider } from '@/lib/membership';
 // Registers the rider app's background location task at start-up (does nothing in the customer app).
 import '@/lib/riderBackground';
@@ -38,10 +39,12 @@ export default function RootLayout() {
             <OrdersProvider>
               <MembershipProvider>
                 <CartProvider>
-                  <SoundProvider>
-                    <RootNavigator />
-                    <AlertHost />
-                  </SoundProvider>
+                  <FavoritesProvider>
+                    <SoundProvider>
+                      <RootNavigator />
+                      <AlertHost />
+                    </SoundProvider>
+                  </FavoritesProvider>
                 </CartProvider>
               </MembershipProvider>
             </OrdersProvider>
@@ -116,6 +119,9 @@ function RootNavigator() {
             <Stack.Screen name="settings" />
             <Stack.Screen name="refer" />
             <Stack.Screen name="review/[orderId]" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="favorites" />
+            <Stack.Screen name="problem/[orderId]" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="admin" />
           </Stack.Protected>
 
           {/* The full guide is open to everyone, also before signing in. Listed last so it is

@@ -178,3 +178,25 @@ Schedules use Cairo time.
 - Weekly social post drafts: Thursday 12:00, Egyptian Arabic and English captions for the top
   dishes, emailed for approval (never posted automatically).
 - Automation failure alerts: emails the owner when any of the above fails.
+
+## Admin, dish approval, favourites, order problems, delete account (Oct 2026)
+
+- Admin: `public.admins` + `is_admin()` (also true for the confirmed kitchysegypt@gmail.com).
+  App: More > Admin (`app/admin.tsx`) shows today's orders, dishes to approve, order problems.
+- Dish approval: `kitchen_dishes.approval` pending/approved/rejected. A trigger sets new dishes and
+  edits to name/text/price/photos/category back to pending (on/off and daily limit don't). Customers
+  only see approved dishes (RLS + catalog filter), and `apply_order_pricing` only prices approved
+  ones. The chef app emails the team (`kitchen-requests` kind `dish`) with Approve/Reject links;
+  `admin_review_dish` does it in the app. The chef gets a push.
+- Favourite meals: `favorite_dishes` (heart on dish cards and the dish page; More > Favourite meals).
+- Order again: past orders refill the cart with dishes still on the menu (`useOrderAgain`).
+- Problem with my order: `order_problems` + private `order-problems` bucket; `report_order_problem`
+  (delivered within 3 days, or "late" while on the way), team email (`kitchen-requests` kind
+  `problem`), `admin_resolve_problem` refunds as Kitchy's credit (wallet `refund`) and pushes.
+- Delete my account: edge function `delete-account`. Refuses while an order/kitchen/delivery is in
+  progress. Removes personal data, kitchen, rider, applications and their photos, then locks the
+  login (email replaced, banned). Past orders stay as anonymous records for payouts.
+- Built-in sample chefs/dishes (data/menu.ts) only show in demo mode now.
+- Test data clean-up: `supabase/migrations/20261017090000_remove_test_data.sql`. The photo fixes
+  were applied; the delete statements need to be run in the SQL editor (the AI database tool stops
+  at deletes).
