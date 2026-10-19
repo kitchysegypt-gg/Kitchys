@@ -856,6 +856,14 @@ const en = {
   weekPlanDoneBody: "{n} dinners are booked. You can follow each one in Orders.",
   weekPlanPartTitle: "Some days were not booked",
   weekPlanPartBody: "The other days are booked. These were not:\n{list}",
+  soldOutTonightTitle: "Sold out tonight",
+  closedTonightTitle: "Kitchens are done for tonight",
+  bookTomorrowBody: "Book tomorrow's dinner now, before the chefs' portions run out.",
+  bookTomorrowButton: "Book for tomorrow",
+  bookingTomorrowTitle: "Booking tomorrow's dinner",
+  bookingTomorrowBody: "Pick your dishes. You'll choose the time at checkout.",
+  soldOutAskBody: "{dish} is sold out tonight. Book it for tomorrow's dinner instead?",
+  soldOutPickLater: "This order has a dish that is sold out tonight. Pick a time tomorrow or later.",
 };
 
 export type TranslationKey = keyof typeof en;
@@ -1692,6 +1700,14 @@ const ar: Record<TranslationKey, string> = {
   weekPlanDoneBody: "{n} عشا اتحجزوا. تقدر تتابع كل واحد في الطلبات.",
   weekPlanPartTitle: "في أيام متحجزتش",
   weekPlanPartBody: "باقي الأيام اتحجزت. دول متحجزوش:\n{list}",
+  soldOutTonightTitle: "الأكل خلص النهارده",
+  closedTonightTitle: "المطابخ قفلت النهارده",
+  bookTomorrowBody: "احجز عشا بكره من دلوقتي، قبل ما الأطباق تخلص.",
+  bookTomorrowButton: "احجز لبكره",
+  bookingTomorrowTitle: "بتحجز عشا بكره",
+  bookingTomorrowBody: "اختار الأكل، وهتحدد الميعاد في إتمام الطلب.",
+  soldOutAskBody: "{dish} خلصت النهارده. تحب تحجزها لعشا بكره؟",
+  soldOutPickLater: "في الطلب أكلة خلصت النهارده. اختار ميعاد بكره أو بعده.",
 };
 
 const fr: Record<TranslationKey, string> = {
@@ -2534,6 +2550,14 @@ const fr: Record<TranslationKey, string> = {
   weekPlanDoneBody: "{n} dîners sont réservés. Suivez chacun dans Commandes.",
   weekPlanPartTitle: "Certains jours n'ont pas été réservés",
   weekPlanPartBody: "Les autres jours sont réservés. Ceux-ci non :\n{list}",
+  soldOutTonightTitle: "Épuisé ce soir",
+  closedTonightTitle: "Les cuisines ont fermé pour ce soir",
+  bookTomorrowBody: "Réservez dès maintenant le dîner de demain, avant que les portions ne partent.",
+  bookTomorrowButton: "Réserver pour demain",
+  bookingTomorrowTitle: "Réservation du dîner de demain",
+  bookingTomorrowBody: "Choisissez vos plats. Vous choisirez l’heure au paiement.",
+  soldOutAskBody: "{dish} est épuisé ce soir. Le réserver pour le dîner de demain ?",
+  soldOutPickLater: "Cette commande contient un plat épuisé ce soir. Choisissez une heure demain ou plus tard.",
 };
 
 export const translations: Record<Language, Record<TranslationKey, string>> = { en, ar, fr };

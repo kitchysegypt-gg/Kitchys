@@ -5,12 +5,14 @@ import { Animated, FlatList, Pressable, ScrollView, StyleSheet, TextInput, View 
 import { CategoryBubbles, KitchenCard, PromoCarousel } from '@/components/home';
 import { Greeting, TonightHero } from '@/components/hungry';
 import { DishCard } from '@/components/menu';
-import { Button, EmptyState, Icon, Screen, Txt } from '@/components/ui';
+import { Button, Card, EmptyState, Icon, IconBadge, Screen, Txt } from '@/components/ui';
 import { Category } from '@/data/menu';
+import { useCart } from '@/lib/cart';
 import { DELIVERY_RADIUS_KM, useCatalog } from '@/lib/catalog';
 import { FONT } from '@/lib/fonts';
 import { useSettings } from '@/lib/settings';
 import { formatTime, isKitchenOpen, nextOpening } from '@/lib/schedule';
+import { useTonight } from '@/lib/tonight';
 import { useAnimatedValue } from '@/lib/useAnimatedValue';
 
 export default function HomeScreen() {
@@ -32,6 +34,7 @@ export default function HomeScreen() {
   }, [category, query, dishes, getChef]);
 
   const browsing = query.trim() !== '' || category !== 'all';
+  const tonight = useTonight();
   const noneNear = !!location && chefs.length === 0;
 
   return (
@@ -82,7 +85,8 @@ export default function HomeScreen() {
           </EmptyState>
         ) : (
           <>
-            {!browsing && <TonightHero />}
+            {!browsing && tonight.done && <BookTomorrowCard reason={tonight.reason} />}
+            {!browsing && !tonight.done && <TonightHero />}
             {!browsing && (
               <View style={{ marginTop: 16 }}>
                 <PromoCarousel />
@@ -186,6 +190,33 @@ export default function HomeScreen() {
   }
 }
 
+/**
+ * Every dish near the customer is sold out or its kitchen is done for today: offer tomorrow's
+ * dinner instead of an empty evening. After the tap, checkout starts on tomorrow.
+ */
+function BookTomorrowCard({ reason }: { reason: 'closed' | 'soldOut' | null }) {
+  const { t } = useSettings();
+  const { bookTomorrow, setBookTomorrow } = useCart();
+  return (
+    <Card style={styles.tomorrow}>
+      <View style={styles.tomorrowHead}>
+        <IconBadge name={bookTomorrow ? 'checkmark-circle-outline' : 'calendar-outline'} tone={bookTomorrow ? 'green' : 'orange'} size={42} />
+        <View style={{ flex: 1, gap: 2 }}>
+          <Txt style={{ fontWeight: '800', fontSize: 16 }}>
+            {bookTomorrow ? t('bookingTomorrowTitle') : reason === 'closed' ? t('closedTonightTitle') : t('soldOutTonightTitle')}
+          </Txt>
+          <Txt variant="caption" muted>
+            {bookTomorrow ? t('bookingTomorrowBody') : t('bookTomorrowBody')}
+          </Txt>
+        </View>
+      </View>
+      {!bookTomorrow && (
+        <Button title={t('bookTomorrowButton')} icon="calendar-outline" onPress={() => setBookTomorrow(true)} />
+      )}
+    </Card>
+  );
+}
+
 /** "● Kitchens open · 45–60 min" under the address, with a softly pulsing live dot. */
 function KitchenStatus() {
   const { t, colors, language } = useSettings();
@@ -256,4 +287,6 @@ const styles = StyleSheet.create({
   rowContent: { paddingHorizontal: 16, gap: 12, paddingTop: 8, paddingBottom: 8 + SHADOW_ROOM },
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 12, paddingHorizontal: 16 },
   gridItem: { width: '48.5%' },
+  tomorrow: { marginHorizontal: 16, marginTop: 14, gap: 12 },
+  tomorrowHead: { flexDirection: 'row', alignItems: 'center', gap: 12 },
 });

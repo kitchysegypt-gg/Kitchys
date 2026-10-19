@@ -18,6 +18,9 @@ type CartContextValue = {
   add: (dish: Dish, quantity?: number) => void;
   setQuantity: (dishId: string, quantity: number) => void;
   clear: () => void;
+  /** Set from "Book for tomorrow": checkout starts on tomorrow's dinner instead of tonight. */
+  bookTomorrow: boolean;
+  setBookTomorrow: (on: boolean) => void;
 };
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -27,6 +30,7 @@ const SAVE_DELAY_MS = 1500;
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [lines, setLines] = useState<CartLine[]>([]);
+  const [bookTomorrow, setBookTomorrow] = useState(false);
   const { session } = useAuth();
   const { loaded: catalogLoaded, getDish } = useCatalog();
   const { l } = useSettings();
@@ -105,7 +109,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     );
   }, []);
 
-  const clear = useCallback(() => setLines([]), []);
+  const clear = useCallback(() => {
+    setLines([]);
+    setBookTomorrow(false);
+  }, []);
 
   const value = useMemo(
     () => ({
@@ -113,10 +120,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       add,
       setQuantity,
       clear,
+      bookTomorrow,
+      setBookTomorrow,
       count: lines.reduce((n, line) => n + line.quantity, 0),
       subtotal: lines.reduce((sum, line) => sum + line.quantity * line.dish.price, 0),
     }),
-    [lines, add, setQuantity, clear]
+    [lines, add, setQuantity, clear, bookTomorrow]
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

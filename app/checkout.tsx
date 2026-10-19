@@ -14,7 +14,9 @@ import { useMembership } from '@/lib/membership';
 import { useOrders } from '@/lib/orders';
 import {
   AFTER_CLOSED_FIRST_MINUTES,
+  DEFAULT_MINUTES,
   OPEN_MINUTES,
+  clampToHours,
   formatTime,
   isBeforeAfterClosedStart,
   isKitchenOpen,
@@ -24,6 +26,7 @@ import {
 } from '@/lib/schedule';
 import { useSettings } from '@/lib/settings';
 import { DELIVERY_FEE, FREE_DELIVERY_ORDERS, SERVICE_FEE, TIP_OPTIONS, supabase } from '@/lib/supabase';
+import { useTonight } from '@/lib/tonight';
 
 /**
  * Checkout, after the cart: delivery time, address and note, payment, rewards and balance,
@@ -31,7 +34,8 @@ import { DELIVERY_FEE, FREE_DELIVERY_ORDERS, SERVICE_FEE, TIP_OPTIONS, supabase 
  */
 export default function CheckoutScreen() {
   const { t, l, colors, formatPrice, isRTL, location, language } = useSettings();
-  const { lines, subtotal, clear } = useCart();
+  const { lines, subtotal, clear, bookTomorrow } = useCart();
+  const { soldOutTonight } = useTonight();
   const { getChef, isNear, lastDelivery } = useCatalog();
   const { freeDeliveriesLeft, placeOrder, availableVouchers, orderCount, orders, credit } = useOrders();
   const { isMember, membership, refresh: refreshMembership } = useMembership();
@@ -41,9 +45,14 @@ export default function CheckoutScreen() {
   const [typedAddress, setAddress] = useState<string | null>(null);
   const address = typedAddress ?? (location ? [location.address, location.details].filter(Boolean).join(', ') : '');
   const [voucherId, setVoucherId] = useState<string | null>(null);
-  const [schedule, setSchedule] = useState<ScheduleValue>({ mode: 'asap' });
   // Orders come from one chef, so checkout follows that chef's last delivery time.
   const close = lastDelivery(lines[0]?.dish.chefId ?? '');
+  // "Book for tomorrow" (or a dish sold out tonight) starts on tomorrow's dinner time.
+  const [schedule, setSchedule] = useState<ScheduleValue>(() =>
+    bookTomorrow || lines.some((line) => soldOutTonight(line.dish))
+      ? { mode: 'later', day: 1, minutes: clampToHours(DEFAULT_MINUTES, 1, close) }
+      : { mode: 'asap' }
+  );
   const [earned, setEarned] = useState(0);
   const [notes, setNotes] = useState('');
   // The rider calls this number on arrival; prefilled from the last order.
@@ -89,6 +98,10 @@ export default function CheckoutScreen() {
       return showAlert(t('tooFarTitle'), t('tooFarBody', { chef: chef ? l(chef.name) : '', km: DELIVERY_RADIUS_KM }));
     }
     const scheduledFor = schedule.mode === 'later' ? slotDate(schedule.day, schedule.minutes) : null;
+    const today = schedule.mode === 'asap' || schedule.day === 0;
+    if (today && lines.some((line) => soldOutTonight(line.dish))) {
+      return showAlert(t('soldOutTonightTitle'), t('soldOutPickLater'));
+    }
     const hours = { from: formatTime(OPEN_MINUTES, language), to: formatTime(close, language) };
     if (!scheduledFor && !isKitchenOpen(new Date(), close)) {
       return showAlert(t('deliveryTime'), t('kitchenHours', hours));

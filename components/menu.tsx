@@ -12,6 +12,7 @@ import { useFavorites } from '@/lib/favorites';
 import { useOrders } from '@/lib/orders';
 import { useSettings } from '@/lib/settings';
 import { DELIVERY_FEE, FREE_DELIVERY_ORDERS } from '@/lib/supabase';
+import { useTonight } from '@/lib/tonight';
 import { ChefAvatar, ChefName, ChefTags, DishGallery, RatingBadge } from './media';
 import { Button, Card, Icon, PressableScale, Txt } from './ui';
 
@@ -21,10 +22,11 @@ import { Button, Card, Icon, PressableScale, Txt } from './ui';
  * new cart. `onAdded` runs once the dish is actually in the cart.
  */
 export function useAddToCart() {
-  const { add, clear, lines } = useCart();
+  const { add, clear, lines, bookTomorrow, setBookTomorrow } = useCart();
   const { getChef, isNear, isPaused } = useCatalog();
   const { t, l } = useSettings();
   const { clashes } = useMyAllergies();
+  const { soldOutTonight } = useTonight();
   // A dish with one of the customer's allergies asks once before going in the cart.
   return (dish: Dish, quantity = 1, onAdded?: () => void) => {
     const mine = clashes(dish);
@@ -60,6 +62,18 @@ export function useAddToCart() {
       add(dish, quantity);
       onAdded?.();
     };
+    // Sold out tonight: offer tomorrow's dinner instead (the daily limit is per delivery day).
+    if (soldOutTonight(dish) && !bookTomorrow) {
+      showConfirm(t('soldOutTonightTitle'), t('soldOutAskBody', { dish: l(dish.name) }), {
+        label: t('bookTomorrowButton'),
+        cancelLabel: t('cancel'),
+        onConfirm: () => {
+          setBookTomorrow(true);
+          addChecked(dish, quantity, onAdded);
+        },
+      });
+      return;
+    }
     const otherChef = lines.find((line) => line.dish.chefId !== dish.chefId)?.dish.chefId;
     if (!otherChef) return addNow();
     showConfirm(t('newCartTitle'), t('newCartBody', { chef: chefName(otherChef) }), {
@@ -158,6 +172,7 @@ export function DishCard({ dish, wide }: { dish: Dish; wide?: boolean }) {
   const chef = getChef(dish.chefId);
   const orders = weekOrders(dish);
   const mine = useMyAllergies().clashes(dish);
+  const soldOut = useTonight().soldOutTonight(dish);
   return (
     <PressableScale onPress={() => router.push(`/dish/${dish.id}`)} style={wide ? undefined : { width: 170 }}>
       <Card style={{ padding: 0 }}>
@@ -196,6 +211,11 @@ export function DishCard({ dish, wide }: { dish: Dish; wide?: boolean }) {
                 .filter(Boolean)
                 .join(' · ')}
             </Txt>
+            {soldOut && (
+              <Txt variant="caption" numberOfLines={1} style={{ color: colors.danger, fontWeight: '700' }}>
+                {t('soldOutToday')}
+              </Txt>
+            )}
             {mine.length > 0 && (
               <View style={styles.allergyLine}>
                 <Icon name="warning" size={12} color={colors.danger} />
