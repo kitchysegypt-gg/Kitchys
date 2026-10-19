@@ -42,6 +42,8 @@ export type Chef = {
   color: string;
   /** Photo link uploaded by a home chef. */
   photo?: string;
+  /** Set when the kitchen takes big orders for gatherings: smallest order and days of notice. */
+  bigOrders?: { minPortions: number; noticeDays: number };
 };
 
 export type Dish = {

@@ -88,6 +88,20 @@ export default function ChefScreen() {
               {l(chef.bio)}
             </Txt>
           )}
+          {chef.bigOrders && isNear(chef.id) && (
+            <Pressable onPress={() => router.push(`/big-order/${chef.id}`)} accessibilityRole="button">
+              <Card style={styles.bigOrder}>
+                <IconBadge name="people-outline" tone="orange" size={42} />
+                <View style={{ flex: 1 }}>
+                  <Txt style={{ fontWeight: '700' }}>{t('bigOrderButton')}</Txt>
+                  <Txt variant="caption" muted>
+                    {t('bigOrderButtonBody', { n: chef.bigOrders.minPortions, days: chef.bigOrders.noticeDays })}
+                  </Txt>
+                </View>
+                <Icon name={isRTL ? 'chevron-back' : 'chevron-forward'} size={20} color={colors.textMuted} />
+              </Card>
+            </Pressable>
+          )}
           <Txt variant="heading" style={styles.sectionTitle}>
             {t('menu')}
           </Txt>
@@ -168,6 +182,7 @@ const PART_TONES = { food: 'orange', delivery: 'teal', packaging: 'amber', value
 const styles = StyleSheet.create({
   reply: { gap: 4, padding: 10, borderRadius: 12, borderStartWidth: 3 },
   farNotice: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 14 },
+  bigOrder: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   hero: {
     alignItems: 'center',
     gap: 6,

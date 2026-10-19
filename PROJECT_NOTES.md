@@ -200,3 +200,18 @@ Schedules use Cairo time.
 - Test data clean-up: `supabase/migrations/20261017090000_remove_test_data.sql`. The photo fixes
   were applied; the delete statements need to be run in the SQL editor (the AI database tool stops
   at deletes).
+
+## Allergy profile, big orders, weekly dinner plan (Oct 2026)
+
+- **Allergy profile**: Settings > My allergies (`app/allergies.tsx`, `lib/allergies.ts`). Saved in the
+  account's `user_metadata.allergies`. Nothing is hidden (people order for others); dishes that
+  contain one show a warning on the card and dish page, and adding one to the cart asks first.
+- **Big orders** (`supabase/migrations/20261018090000_big_orders.sql`): only kitchens that switch it on in
+  Kitchen > Settings (`set_big_orders`: smallest order 5-200 portions, 1-7 days notice). Customers
+  book from the chef page (`app/big-order/[chefId].tsx`): portions per dish, guests, a day at least
+  the notice ahead. Full menu price, same 15% commission, cash on delivery. `check_order_limits`
+  checks the notice and minimum and skips daily dish limits for big orders (and normal limits
+  don't count them). Chefs and customers see a "Big order · N guests" line on the order.
+- **Weekly dinner plan** (`app/week-plan.tsx`, More > Weekly dinner plan): pick a dinner for any of the
+  next 7 days (favourites first), one delivery time, then one tap places one scheduled order per
+  day. The plan is kept on the phone by weekday for "Same as last week". No discount.

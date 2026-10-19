@@ -122,6 +122,9 @@ function RootNavigator() {
             <Stack.Screen name="favorites" />
             <Stack.Screen name="problem/[orderId]" options={{ presentation: 'modal' }} />
             <Stack.Screen name="admin" />
+            <Stack.Screen name="allergies" />
+            <Stack.Screen name="big-order/[chefId]" />
+            <Stack.Screen name="week-plan" />
           </Stack.Protected>
 
           {/* The full guide is open to everyone, also before signing in. Listed last so it is

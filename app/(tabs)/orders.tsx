@@ -139,6 +139,14 @@ export default function OrdersScreen() {
                   </Txt>
                 </View>
               )}
+              {item.big_order && (
+                <View style={styles.row}>
+                  <Icon name="people-outline" size={16} />
+                  <Txt variant="caption" style={{ fontWeight: '600' }}>
+                    {item.guests ? t('bigOrderBadgeGuests', { n: item.guests }) : t('bigOrderBadge')}
+                  </Txt>
+                </View>
+              )}
               {item.delivery_lat != null && item.delivery_lng != null && (
                 <Pressable
                   onPress={() =>

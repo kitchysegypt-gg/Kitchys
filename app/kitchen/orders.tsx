@@ -118,6 +118,15 @@ function OrderCard({ order, rider }: { order: KitchenOrder; rider?: OrderRider }
         </Txt>
       </View>
 
+      {order.big_order && (
+        <View style={styles.when}>
+          <IconBadge name="people-outline" tone="pink" size={30} />
+          <Txt style={{ fontWeight: '700', flex: 1 }}>
+            {order.guests ? t('bigOrderBadgeGuests', { n: order.guests }) : t('bigOrderBadge')}
+          </Txt>
+        </View>
+      )}
+
       <View style={{ gap: 4 }}>
         {order.items.map((item) => (
           <View key={item.dishId} style={styles.itemRow}>

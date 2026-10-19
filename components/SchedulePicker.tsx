@@ -36,6 +36,7 @@ export function SchedulePicker({
   onChange,
   close = CLOSE_MINUTES,
   asapOnly = false,
+  minDay = 0,
 }: {
   value: ScheduleValue;
   onChange: (v: ScheduleValue) => void;
@@ -43,15 +44,17 @@ export function SchedulePicker({
   close?: number;
   /** Today's deals are already cooked: they can only be delivered as soon as possible. */
   asapOnly?: boolean;
+  /** Big orders: the first day that can be picked (days from today); no "as soon as possible". */
+  minDay?: number;
 }) {
   const { t, colors, language } = useSettings();
-  const open = isKitchenOpen(new Date(), close);
+  const open = isKitchenOpen(new Date(), close) && minDay === 0;
 
   /** A day's suggested time: 7 PM, moved inside what that day allows. */
   const timeFor = (day: number, minutes = DEFAULT_MINUTES) => clampToHours(minutes, day, close);
 
   const pickLater = () => {
-    const day = [0, 1, 2].find((d) => dayHasSlots(d, close)) ?? 1;
+    const day = [0, 1, 2, 3, 4, 5, 6, 7].map((d) => d + minDay).find((d) => dayHasSlots(d, close)) ?? minDay + 1;
     onChange({ mode: 'later', day, minutes: timeFor(day) });
   };
 
@@ -108,6 +111,8 @@ export function SchedulePicker({
       <Txt variant="caption" muted>
         {asapOnly
           ? t('dealAsapOnly')
+          : minDay > 0
+          ? t('bigOrderNotice', { n: minDay })
           : open
           ? t('kitchenHours', { from: formatTime(OPEN_MINUTES, language), to: formatTime(close, language) })
           : t('closedSchedule', {
@@ -121,7 +126,7 @@ export function SchedulePicker({
         <>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
             {Array.from({ length: SCHEDULE_DAYS }, (_, day) => day)
-              .filter((day) => dayHasSlots(day, close))
+              .filter((day) => day >= minDay && dayHasSlots(day, close))
               .map((day) => (
                 <Chip
                   key={day}

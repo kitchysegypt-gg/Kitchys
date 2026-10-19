@@ -14,6 +14,7 @@ import { DELIVERY_RADIUS_KM, kitchenChefToChef, useCatalog } from '@/lib/catalog
 import { fetchKitchenLocation, setKitchenLocation, setKitchenPhoto } from '@/lib/chef';
 import { leaveKitchen, useKitchen } from '@/lib/kitchen';
 import { useSettings } from '@/lib/settings';
+import { supabase } from '@/lib/supabase';
 
 /** Kitchen > Settings: photo, taking orders on/off, location and last delivery time. */
 export default function KitchenSettingsScreen() {
@@ -152,6 +153,16 @@ export default function KitchenSettingsScreen() {
 
         <LastDeliveryCard chefId={kitchen.id} />
 
+        <BigOrdersCard
+          on={!!kitchen.big_orders}
+          min={kitchen.big_min_portions ?? 10}
+          days={kitchen.big_notice_days ?? 2}
+          onSaved={async () => {
+            await reload();
+            await refresh();
+          }}
+        />
+
         {savedSpot === null && (
           <View style={[styles.notice, { backgroundColor: colors.surfaceAlt }]}>
             <Icon name="warning-outline" size={20} color={colors.danger} />
@@ -176,6 +187,87 @@ export default function KitchenSettingsScreen() {
         />
         <Button title={t('backToCustomerApp')} icon="arrow-back" variant="secondary" onPress={leaveKitchen} />
       </ScrollView>
+    </View>
+  );
+}
+
+/** Big orders for family gatherings: off by default, the chef sets the smallest order and how many days ahead. */
+function BigOrdersCard({ on, min, days, onSaved }: { on: boolean; min: number; days: number; onSaved: () => Promise<void> }) {
+  const { t, colors } = useSettings();
+  const [draft, setDraft] = useState({ on, min, days });
+  const [busy, setBusy] = useState(false);
+  const changed = draft.on !== on || draft.min !== min || draft.days !== days;
+
+  const save = async (next = draft) => {
+    setBusy(true);
+    try {
+      const { error } = await supabase.rpc('set_big_orders', { p_on: next.on, p_min: next.min, p_days: next.days });
+      if (error) throw error;
+      await onSaved();
+    } catch (e: any) {
+      setDraft({ on, min, days });
+      showAlert(t('error'), e?.message ?? String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Card style={{ gap: 12 }}>
+      <View style={styles.row}>
+        <IconBadge name="people-outline" tone="orange" size={40} solid />
+        <View style={{ flex: 1 }}>
+          <Txt style={{ fontWeight: '700' }}>{t('bigOrdersKitchen')}</Txt>
+          <Txt variant="caption" muted>
+            {t('bigOrdersKitchenBody')}
+          </Txt>
+        </View>
+        <Switch
+          value={draft.on}
+          disabled={busy}
+          onValueChange={(next) => {
+            const value = { ...draft, on: next };
+            setDraft(value);
+            // Turning it on or off saves at once; the numbers wait for the Save button.
+            save(value);
+          }}
+          trackColor={{ true: colors.success }}
+          accessibilityLabel={t('bigOrdersKitchen')}
+        />
+      </View>
+      {draft.on && (
+        <>
+          <NumberRow
+            label={t('bigOrdersMinLabel')}
+            value={draft.min}
+            onChange={(n) => setDraft((d) => ({ ...d, min: Math.max(5, Math.min(200, n)) }))}
+            step={5}
+          />
+          <NumberRow
+            label={t('bigOrdersDaysLabel')}
+            value={draft.days}
+            onChange={(n) => setDraft((d) => ({ ...d, days: Math.max(1, Math.min(7, n)) }))}
+            step={1}
+          />
+          {changed && <Button title={t('bigOrdersSave')} icon="checkmark" onPress={() => save()} loading={busy} />}
+        </>
+      )}
+    </Card>
+  );
+}
+
+function NumberRow({ label, value, onChange, step }: { label: string; value: number; onChange: (n: number) => void; step: number }) {
+  const { colors } = useSettings();
+  return (
+    <View style={styles.row}>
+      <Txt style={{ flex: 1, fontWeight: '600' }}>{label}</Txt>
+      <Pressable onPress={() => onChange(value - step)} hitSlop={8} accessibilityLabel="-">
+        <Icon name="remove-circle" size={32} color={colors.primary} />
+      </Pressable>
+      <Txt style={{ minWidth: 34, textAlign: 'center', fontWeight: '800', fontSize: 17 }}>{value}</Txt>
+      <Pressable onPress={() => onChange(value + step)} hitSlop={8} accessibilityLabel="+">
+        <Icon name="add-circle" size={32} color={colors.primary} />
+      </Pressable>
     </View>
   );
 }

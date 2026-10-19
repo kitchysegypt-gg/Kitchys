@@ -45,6 +45,9 @@ export type KitchenChefRow = {
   specialty: string;
   bio: string;
   photo_url?: string | null;
+  big_orders?: boolean;
+  big_min_portions?: number;
+  big_notice_days?: number;
 };
 
 export type KitchenDishRow = {
@@ -103,6 +106,9 @@ export function kitchenChefToChef(row: KitchenChefRow): Chef {
     color: CHEF_COLORS[h % CHEF_COLORS.length],
     kitchen: true,
     photo: row.photo_url ?? undefined,
+    bigOrders: row.big_orders
+      ? { minPortions: row.big_min_portions ?? 10, noticeDays: row.big_notice_days ?? 2 }
+      : undefined,
   };
 }
 

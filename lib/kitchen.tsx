@@ -21,6 +21,9 @@ export type KitchenOrder = {
   accepted_at: string | null;
   /** Set once a Kitchy's rider has taken the order. */
   rider_id: string | null;
+  /** A big order for a gathering, booked days ahead. */
+  big_order?: boolean;
+  guests?: number | null;
 };
 
 /** What a chef can do to an order: move it to a status, or accept it for later. */

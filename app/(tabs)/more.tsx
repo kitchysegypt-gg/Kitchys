@@ -97,6 +97,12 @@ export default function MoreScreen() {
             onPress={() => router.push('/favorites')}
           />
           <ListRow
+            icon="calendar-outline"
+            label={t('weekPlanTitle')}
+            detail={t('weekPlanRowDetail')}
+            onPress={() => router.push('/week-plan')}
+          />
+          <ListRow
             icon="diamond-outline"
             label={t('premiumName')}
             detail={isMember ? t('memberActive') : t('memberMoreDetail')}

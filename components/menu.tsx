@@ -4,6 +4,7 @@ import { Animated, Pressable, StyleProp, StyleSheet, View, ViewStyle } from 'rea
 import { useAnimatedValue } from '@/lib/useAnimatedValue';
 import { Allergen, Chef, Dish, formatPortion } from '@/data/menu';
 import { showAlert, showConfirm } from '@/lib/alert';
+import { useMyAllergies } from '@/lib/allergies';
 import { useAuth } from '@/lib/auth';
 import { DELIVERY_RADIUS_KM, useCatalog } from '@/lib/catalog';
 import { useCart } from '@/lib/cart';
@@ -23,7 +24,19 @@ export function useAddToCart() {
   const { add, clear, lines } = useCart();
   const { getChef, isNear, isPaused } = useCatalog();
   const { t, l } = useSettings();
+  const { clashes } = useMyAllergies();
+  // A dish with one of the customer's allergies asks once before going in the cart.
   return (dish: Dish, quantity = 1, onAdded?: () => void) => {
+    const mine = clashes(dish);
+    if (mine.length === 0) return addChecked(dish, quantity, onAdded);
+    showConfirm(t('allergyAskTitle'), t('allergyAskBody', { list: mine.map((a) => t(`al_${a}`)).join(', ') }), {
+      label: t('allergyAddAnyway'),
+      cancelLabel: t('cancel'),
+      onConfirm: () => addChecked(dish, quantity, onAdded),
+    });
+  };
+
+  function addChecked(dish: Dish, quantity = 1, onAdded?: () => void) {
     const chefName = (chefId: string) => {
       const chef = getChef(chefId);
       return chef ? l(chef.name) : '';
@@ -144,6 +157,7 @@ export function DishCard({ dish, wide }: { dish: Dish; wide?: boolean }) {
   const { getChef, weekOrders } = useCatalog();
   const chef = getChef(dish.chefId);
   const orders = weekOrders(dish);
+  const mine = useMyAllergies().clashes(dish);
   return (
     <PressableScale onPress={() => router.push(`/dish/${dish.id}`)} style={wide ? undefined : { width: 170 }}>
       <Card style={{ padding: 0 }}>
@@ -182,6 +196,14 @@ export function DishCard({ dish, wide }: { dish: Dish; wide?: boolean }) {
                 .filter(Boolean)
                 .join(' · ')}
             </Txt>
+            {mine.length > 0 && (
+              <View style={styles.allergyLine}>
+                <Icon name="warning" size={12} color={colors.danger} />
+                <Txt variant="caption" numberOfLines={1} style={{ color: colors.danger, fontWeight: '700', flexShrink: 1 }}>
+                  {t('allergyContains', { list: mine.map((a) => t(`al_${a}`)).join(', ') })}
+                </Txt>
+              </View>
+            )}
             <View style={styles.priceRow}>
               <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 6, flexShrink: 1 }}>
                 <Txt style={{ fontWeight: '800', color: colors.primary, fontSize: 15 }}>{formatPrice(dish.price)}</Txt>
@@ -342,6 +364,7 @@ export { Button };
 
 const styles = StyleSheet.create({
   cardHeart: { position: 'absolute', bottom: 8, end: 8 },
+  allergyLine: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
   heart: {
     width: 32,
     height: 32,

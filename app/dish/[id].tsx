@@ -8,6 +8,7 @@ import { AllergenList, FavoriteButton, QuantityStepper, useAddToCart } from '@/c
 import { Button, Card, EmptyState, Icon, IconName, Screen, Txt } from '@/components/ui';
 import { ChefAvatar, DishGallery, RatingBadge } from '@/components/media';
 import { formatPortion } from '@/data/menu';
+import { useMyAllergies } from '@/lib/allergies';
 import { useCatalog } from '@/lib/catalog';
 import { useSettings } from '@/lib/settings';
 
@@ -25,6 +26,8 @@ export default function DishScreen() {
   const dish = getDish(id);
   const chef = dish && getChef(dish.chefId);
   const left = dish ? portionsLeft(dish) : null;
+  const { clashes } = useMyAllergies();
+  const mine = dish ? clashes(dish) : [];
 
   if (!dish || !chef)
     return (
@@ -78,12 +81,12 @@ export default function DishScreen() {
             </Txt>
             {weekOrders(dish) >= 2 && (
               <Txt variant="caption" style={{ marginTop: 4, fontWeight: '700' }}>
-                🔥 {t('orderedThisWeek', { n: weekOrders(dish) })}
+                {t('orderedThisWeek', { n: weekOrders(dish) })}
               </Txt>
             )}
             {dish.deal && (
               <Txt variant="caption" style={{ marginTop: 4, fontWeight: '700', color: colors.primary }}>
-                🔥 {t('dealDetail', { n: dish.deal.left })}
+                {t('dealDetail', { n: dish.deal.left })}
               </Txt>
             )}
             {left !== null && left <= 5 && (
@@ -92,6 +95,15 @@ export default function DishScreen() {
               </Txt>
             )}
           </View>
+
+          {mine.length > 0 && (
+            <View style={[styles.allergyWarn, { backgroundColor: `${colors.danger}12`, borderColor: `${colors.danger}55` }]}>
+              <Icon name="warning" size={22} color={colors.danger} />
+              <Txt style={{ flex: 1, fontWeight: '700', color: colors.danger }}>
+                {t('allergyWarnDish', { list: mine.map((a) => t(`al_${a}`)).join(', ') })}
+              </Txt>
+            </View>
+          )}
 
           <View style={styles.facts}>
             {facts.map((f) => (
@@ -162,6 +174,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 const styles = StyleSheet.create({
   photoHero: { height: 320, overflow: 'hidden' },
   photoClose: { position: 'absolute', top: 0, right: 0 },
+  allergyWarn: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 14, borderWidth: 1 },
   heart: { position: 'absolute', bottom: 12, end: 16, width: 42, height: 42, borderRadius: 21 },
   close: {
     alignSelf: 'flex-end',

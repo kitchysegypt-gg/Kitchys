@@ -50,6 +50,9 @@ export type Order = {
   ready_at?: string | null;
   picked_up_at?: string | null;
   delivered_at?: string | null;
+  /** A big order for a gathering (booked days ahead from a kitchen that takes them). */
+  big_order?: boolean;
+  guests?: number | null;
 };
 
 export type Voucher = {
@@ -62,7 +65,9 @@ export type Voucher = {
 };
 
 type NewOrder = Pick<Order, 'items' | 'subtotal' | 'address' | 'notes'> &
-  Partial<Pick<Order, 'voucher_id' | 'delivery_lat' | 'delivery_lng' | 'scheduled_for' | 'referral_code' | 'phone' | 'tip'>> & {
+  Partial<
+    Pick<Order, 'voucher_id' | 'delivery_lat' | 'delivery_lng' | 'scheduled_for' | 'referral_code' | 'phone' | 'tip' | 'big_order' | 'guests'>
+  > & {
     /** Take the customer's credit off this order. */
     use_credit?: boolean;
   };
