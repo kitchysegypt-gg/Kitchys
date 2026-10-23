@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 import type { Dish } from '@/data/menu';
 import { useCatalog } from './catalog';
-import { dayHasSlots } from './schedule';
+import { dayHasSlots, isKitchenOpen } from './schedule';
 
 /**
  * Whether tonight's dinner can still be ordered. A dish is out for tonight when its kitchen has
@@ -28,4 +28,14 @@ export function useTonight() {
   const reason: 'closed' | 'soldOut' | null = !done ? null : all.some((d) => openTonight(d.chefId)) ? 'soldOut' : 'closed';
 
   return { done, reason, soldOutTonight, canTonight };
+}
+
+/**
+ * True while at least one kitchen near the customer (and taking orders) is open, using each
+ * chef's own last delivery time. Home's "Open / Closed" line and greeting follow this, so they
+ * agree with what checkout offers.
+ */
+export function useKitchensOpen(now: Date) {
+  const { chefs, lastDelivery } = useCatalog();
+  return chefs.length ? chefs.some((c) => isKitchenOpen(now, lastDelivery(c.id))) : isKitchenOpen(now);
 }

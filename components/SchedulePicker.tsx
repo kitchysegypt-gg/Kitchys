@@ -96,7 +96,8 @@ export function SchedulePicker({
         </Txt>
       </View>
       <View style={styles.row}>
-        {(open || asapOnly) && (
+        {/* Never "as soon as possible" while the kitchen is closed, not even for a deal. */}
+        {open && (
           <Chip
             label={t('asap')}
             icon="delivery"
@@ -110,7 +111,9 @@ export function SchedulePicker({
       </View>
       <Txt variant="caption" muted>
         {asapOnly
-          ? t('dealAsapOnly')
+          ? open
+            ? t('dealAsapOnly')
+            : t('kitchenHours', { from: formatTime(OPEN_MINUTES, language), to: formatTime(close, language) })
           : minDay > 0
           ? t('bigOrderNotice', { n: minDay })
           : open

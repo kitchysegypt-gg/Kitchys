@@ -8,12 +8,11 @@ import { DishCard } from '@/components/menu';
 import { Button, Card, EmptyState, Icon, IconBadge, Screen, Txt } from '@/components/ui';
 import { Category } from '@/data/menu';
 import { useAddresses } from '@/lib/addresses';
-import { useCart } from '@/lib/cart';
 import { DELIVERY_RADIUS_KM, useCatalog } from '@/lib/catalog';
 import { FONT } from '@/lib/fonts';
 import { useSettings } from '@/lib/settings';
-import { formatTime, isKitchenOpen, nextOpening } from '@/lib/schedule';
-import { useTonight } from '@/lib/tonight';
+import { formatTime, nextOpening } from '@/lib/schedule';
+import { useKitchensOpen, useTonight } from '@/lib/tonight';
 import { useAnimatedValue } from '@/lib/useAnimatedValue';
 
 export default function HomeScreen() {
@@ -87,8 +86,8 @@ export default function HomeScreen() {
           </EmptyState>
         ) : (
           <>
-            {!browsing && tonight.done && <BookTomorrowCard reason={tonight.reason} />}
-            {!browsing && !tonight.done && <TonightHero />}
+            {/* Closed for the night: the greeting already says so. Sold out: say that instead of Tonight's dinner. */}
+            {!browsing && tonight.reason === 'soldOut' ? <SoldOutNotice /> : !browsing && <TonightHero />}
             {!browsing && (
               <View style={{ marginTop: 16 }}>
                 <PromoCarousel />
@@ -192,29 +191,20 @@ export default function HomeScreen() {
   }
 }
 
-/**
- * Every dish near the customer is sold out or its kitchen is done for today: offer tomorrow's
- * dinner instead of an empty evening. After the tap, checkout starts on tomorrow.
- */
-function BookTomorrowCard({ reason }: { reason: 'closed' | 'soldOut' | null }) {
+/** Every dinner near the customer is sold out tonight: a plain notice, no button. */
+function SoldOutNotice() {
   const { t } = useSettings();
-  const { bookTomorrow, setBookTomorrow } = useCart();
   return (
     <Card style={styles.tomorrow}>
       <View style={styles.tomorrowHead}>
-        <IconBadge name={bookTomorrow ? 'checkmark-circle-outline' : 'calendar-outline'} tone={bookTomorrow ? 'green' : 'orange'} size={42} />
+        <IconBadge name="information-circle-outline" tone="orange" size={42} />
         <View style={{ flex: 1, gap: 2 }}>
-          <Txt style={{ fontWeight: '800', fontSize: 16 }}>
-            {bookTomorrow ? t('bookingTomorrowTitle') : reason === 'closed' ? t('closedTonightTitle') : t('soldOutTonightTitle')}
-          </Txt>
+          <Txt style={{ fontWeight: '800', fontSize: 16 }}>{t('soldOutTonightTitle')}</Txt>
           <Txt variant="caption" muted>
-            {bookTomorrow ? t('bookingTomorrowBody') : t('bookTomorrowBody')}
+            {t('soldOutNoticeBody')}
           </Txt>
         </View>
       </View>
-      {!bookTomorrow && (
-        <Button title={t('bookTomorrowButton')} icon="calendar-outline" onPress={() => setBookTomorrow(true)} />
-      )}
     </Card>
   );
 }
@@ -234,7 +224,7 @@ function KitchenStatus() {
     loop.start();
     return () => loop.stop();
   }, [pulse]);
-  const open = isKitchenOpen(now);
+  const open = useKitchensOpen(now);
   const dot = open ? colors.success : colors.danger;
   const opening = nextOpening(now);
   const opensText = t(opening.day === 0 ? 'opensAt' : 'opensTomorrow', { time: formatTime(opening.minutes, language) });

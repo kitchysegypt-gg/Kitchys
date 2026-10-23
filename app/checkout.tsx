@@ -34,7 +34,7 @@ import { useTonight } from '@/lib/tonight';
  */
 export default function CheckoutScreen() {
   const { t, l, colors, formatPrice, isRTL, location, language } = useSettings();
-  const { lines, subtotal, clear, bookTomorrow } = useCart();
+  const { lines, subtotal, clear } = useCart();
   const { soldOutTonight } = useTonight();
   const { getChef, isNear, lastDelivery } = useCatalog();
   const { freeDeliveriesLeft, placeOrder, availableVouchers, orderCount, orders, credit } = useOrders();
@@ -47,9 +47,9 @@ export default function CheckoutScreen() {
   const [voucherId, setVoucherId] = useState<string | null>(null);
   // Orders come from one chef, so checkout follows that chef's last delivery time.
   const close = lastDelivery(lines[0]?.dish.chefId ?? '');
-  // "Book for tomorrow" (or a dish sold out tonight) starts on tomorrow's dinner time.
+  // A dish sold out tonight starts on tomorrow's dinner time.
   const [schedule, setSchedule] = useState<ScheduleValue>(() =>
-    bookTomorrow || lines.some((line) => soldOutTonight(line.dish))
+    lines.some((line) => soldOutTonight(line.dish))
       ? { mode: 'later', day: 1, minutes: clampToHours(DEFAULT_MINUTES, 1, close) }
       : { mode: 'asap' }
   );

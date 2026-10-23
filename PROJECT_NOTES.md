@@ -215,11 +215,13 @@ Schedules use Cairo time.
 - **Weekly dinner plan** (`app/week-plan.tsx`, More > Weekly dinner plan): pick a dinner for any of the
   next 7 days (favourites first), one delivery time, then one tap places one scheduled order per
   day. The plan is kept on the phone by weekday for "Same as last week". No discount.
-- **Sold out tonight, book for tomorrow** (`lib/tonight.ts`): when every dish near the customer is
-  sold out today (daily limit reached) or its kitchen has no delivery times left today, Home shows
-  a card instead of Tonight's dinner. "Book for tomorrow" sets `bookTomorrow` in the cart, so
-  checkout starts on tomorrow at 7 PM. Tapping a sold-out dish asks to book it for tomorrow, dish
-  cards say "Sold out today", and checkout refuses a sold-out dish for today.
+- **Sold out tonight** (`lib/tonight.ts`): when every dish near the customer is sold out today
+  (daily limit reached), Home shows a plain notice instead of Tonight's dinner (no button). Dish
+  cards say "Sold out today"; checkout starts on tomorrow and refuses a sold-out dish for today.
+  When kitchens are closed the greeting says so instead.
+- Home's Open/Closed line and greeting use `useKitchensOpen`: open while any nearby kitchen is
+  open by its own last delivery time, so they match checkout. "As soon as possible" is only
+  offered while the chef's kitchen is open, also with a deal in the cart.
 
 ## New icon set and saved addresses (Oct 2026)
 

@@ -22,11 +22,10 @@ import { Button, Card, Icon, PressableScale, Txt } from './ui';
  * new cart. `onAdded` runs once the dish is actually in the cart.
  */
 export function useAddToCart() {
-  const { add, clear, lines, bookTomorrow, setBookTomorrow } = useCart();
+  const { add, clear, lines } = useCart();
   const { getChef, isNear, isPaused } = useCatalog();
   const { t, l } = useSettings();
   const { clashes } = useMyAllergies();
-  const { soldOutTonight } = useTonight();
   // A dish with one of the customer's allergies asks once before going in the cart.
   return (dish: Dish, quantity = 1, onAdded?: () => void) => {
     const mine = clashes(dish);
@@ -62,18 +61,6 @@ export function useAddToCart() {
       add(dish, quantity);
       onAdded?.();
     };
-    // Sold out tonight: offer tomorrow's dinner instead (the daily limit is per delivery day).
-    if (soldOutTonight(dish) && !bookTomorrow) {
-      showConfirm(t('soldOutTonightTitle'), t('soldOutAskBody', { dish: l(dish.name) }), {
-        label: t('bookTomorrowButton'),
-        cancelLabel: t('cancel'),
-        onConfirm: () => {
-          setBookTomorrow(true);
-          addChecked(dish, quantity, onAdded);
-        },
-      });
-      return;
-    }
     const otherChef = lines.find((line) => line.dish.chefId !== dish.chefId)?.dish.chefId;
     if (!otherChef) return addNow();
     showConfirm(t('newCartTitle'), t('newCartBody', { chef: chefName(otherChef) }), {

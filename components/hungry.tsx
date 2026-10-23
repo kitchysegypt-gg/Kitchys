@@ -9,9 +9,9 @@ import { useAuth } from '@/lib/auth';
 import { useCatalog } from '@/lib/catalog';
 import type { TranslationKey } from '@/lib/i18n';
 import { useMembership } from '@/lib/membership';
-import { isKitchenOpen } from '@/lib/schedule';
 import { useSettings } from '@/lib/settings';
 import { softShadow } from '@/lib/theme';
+import { useKitchensOpen } from '@/lib/tonight';
 import { useAddToCart } from './menu';
 import { Icon, PressableScale, Txt } from './ui';
 
@@ -36,7 +36,8 @@ export function Greeting() {
   const first = ((session?.user.user_metadata?.full_name as string | undefined) ?? '').trim().split(/\s+/)[0];
   const name = first ? t('nameSuffix', { name: first }) : '';
   const hour = now.getHours();
-  const [title, sub]: [TranslationKey, TranslationKey] = !isKitchenOpen(now)
+  const open = useKitchensOpen(now);
+  const [title, sub]: [TranslationKey, TranslationKey] = !open
     ? hour >= 5 && hour < 12
       ? ['greetMorning', 'greetMorningSub']
       : ['greetLate', 'greetLateSub']
@@ -47,10 +48,10 @@ export function Greeting() {
         : ['greetEvening', 'greetEveningSub'];
   return (
     <View style={styles.greeting}>
-      <Txt variant="heading" style={{ fontSize: 24 }} numberOfLines={1}>
+      <Txt variant="heading" style={{ fontSize: 24 }} numberOfLines={2}>
         {t(title, { name })}
       </Txt>
-      <Txt muted style={{ color: colors.textMuted }} numberOfLines={1}>
+      <Txt muted style={{ color: colors.textMuted }} numberOfLines={2}>
         {t(sub)}
       </Txt>
     </View>
