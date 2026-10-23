@@ -220,3 +220,15 @@ Schedules use Cairo time.
   a card instead of Tonight's dinner. "Book for tomorrow" sets `bookTomorrow` in the cart, so
   checkout starts on tomorrow at 7 PM. Tapping a sold-out dish asks to book it for tomorrow, dish
   cards say "Sold out today", and checkout refuses a sold-out dish for today.
+
+## New icon set and saved addresses (Oct 2026)
+
+- Icons: 25 full-colour icons cut from the owner's sheet into `assets/icons/` (transparent
+  background). `Icon` in `components/ui.tsx` draws them in their own colours; they are tinted only
+  with `tint` or when the colour is white (on a coloured badge or button). Tabs fade the ones that
+  aren't selected. Names without a Kitchy's icon (stars, arrows, shield...) stay Ionicons.
+- Saved addresses: `saved_addresses` table (owner-only RLS, up to 20 each,
+  `20261023090000_saved_addresses.sql`), `lib/addresses.tsx`, `app/addresses.tsx`
+  (Settings > Saved addresses). The map screen has "Save as: Home / Work / Family / Other".
+  Tapping the address on Home or in More opens the list once something is saved.
+  Delete my account removes them too.

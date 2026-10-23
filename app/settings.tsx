@@ -4,6 +4,7 @@ import { Platform, ScrollView, Switch, View } from 'react-native';
 
 import { Icon, ListGroup, ListRow, Screen, ScreenHeader, Txt } from '@/components/ui';
 import { useDeleteAccount } from '@/lib/account';
+import { useAddresses } from '@/lib/addresses';
 import { useMyAllergies } from '@/lib/allergies';
 import { useCart } from '@/lib/cart';
 import { LANGUAGES } from '@/lib/i18n';
@@ -25,6 +26,7 @@ export default function SettingsScreen() {
   const { clear } = useCart();
   const { start: deleteAccount, busy: deleting } = useDeleteAccount(clear);
   const { allergies } = useMyAllergies();
+  const { addresses } = useAddresses();
 
   const signOut = async () => {
     clear();
@@ -44,6 +46,12 @@ export default function SettingsScreen() {
             label={t('referFriend')}
             detail={t('referTagline')}
             onPress={() => router.push('/refer')}
+          />
+          <ListRow
+            icon="location-outline"
+            label={t('savedAddresses')}
+            detail={addresses.length ? t('addrCount', { n: addresses.length }) : t('addrNone')}
+            onPress={() => router.push('/addresses')}
           />
           <ListRow
             icon="warning-outline"

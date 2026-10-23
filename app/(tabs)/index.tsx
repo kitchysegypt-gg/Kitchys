@@ -7,6 +7,7 @@ import { Greeting, TonightHero } from '@/components/hungry';
 import { DishCard } from '@/components/menu';
 import { Button, Card, EmptyState, Icon, IconBadge, Screen, Txt } from '@/components/ui';
 import { Category } from '@/data/menu';
+import { useAddresses } from '@/lib/addresses';
 import { useCart } from '@/lib/cart';
 import { DELIVERY_RADIUS_KM, useCatalog } from '@/lib/catalog';
 import { FONT } from '@/lib/fonts';
@@ -35,6 +36,7 @@ export default function HomeScreen() {
 
   const browsing = query.trim() !== '' || category !== 'all';
   const tonight = useTonight();
+  const { addresses } = useAddresses();
   const noneNear = !!location && chefs.length === 0;
 
   return (
@@ -42,7 +44,7 @@ export default function HomeScreen() {
       {/* One calm row: where we deliver, whether kitchens are open, and the chat. Settings live in More. */}
       <View style={styles.header}>
         <Pressable
-          onPress={() => router.push('/location')}
+          onPress={() => router.push(addresses.length ? '/addresses' : '/location')}
           style={{ flex: 1 }}
           hitSlop={6}
           accessibilityRole="button"

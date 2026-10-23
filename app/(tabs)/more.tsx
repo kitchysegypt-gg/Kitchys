@@ -7,6 +7,7 @@ import { useIsAdmin } from '@/lib/admin';
 import { useAuth } from '@/lib/auth';
 import { useCatalog } from '@/lib/catalog';
 import { useChefStatus } from '@/lib/chef';
+import { useAddresses } from '@/lib/addresses';
 import { useFavorites } from '@/lib/favorites';
 import { useMembership } from '@/lib/membership';
 import { useOrders } from '@/lib/orders';
@@ -21,6 +22,7 @@ export default function MoreScreen() {
   const chefStatus = useChefStatus();
   const { refresh: refreshCatalog } = useCatalog();
   const favorites = useFavorites();
+  const { addresses } = useAddresses();
   const isAdmin = useIsAdmin();
 
   const name = (session?.user.user_metadata?.full_name as string | undefined) || session?.user.email || '';
@@ -85,7 +87,7 @@ export default function MoreScreen() {
 
         {isAdmin && (
           <ListGroup title={t('adminTitle')}>
-            <ListRow icon="k-secure" label={t('adminTitle')} detail={t('adminRowDetail')} onPress={() => router.push('/admin')} />
+            <ListRow icon="shield-checkmark-outline" label={t('adminTitle')} detail={t('adminRowDetail')} onPress={() => router.push('/admin')} />
           </ListGroup>
         )}
 
@@ -119,7 +121,7 @@ export default function MoreScreen() {
             icon="location-outline"
             label={t('deliveryAddress')}
             detail={location?.address || t('setLocation')}
-            onPress={() => router.push('/location')}
+            onPress={() => router.push(addresses.length ? '/addresses' : '/location')}
           />
           {chefStatus.kitchen ? (
             <ListRow icon="k-become-chef" label={t('myKitchen')} onPress={() => router.push('/kitchen')} />

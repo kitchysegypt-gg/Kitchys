@@ -110,7 +110,7 @@ export function TileMap({ coordinate, onChange, pinColor }: Props) {
 
       {/* The pin's tip sits exactly on the map's centre. */}
       <View pointerEvents="none" style={styles.pinWrap}>
-        <Icon name="location" size={44} color={pinColor} />
+        <Icon name="location" size={44} color={pinColor} tint />
       </View>
 
       <View style={styles.zoom}>

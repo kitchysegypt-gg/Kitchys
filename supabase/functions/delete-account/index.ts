@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
     await admin.from('chef_reviews').update({ reviewer_name: 'Kitchy\'s customer' }).eq('user_id', uid);
 
     // Everything else about the person.
-    for (const table of ['push_devices', 'saved_carts', 'favorite_dishes', 'referral_codes', 'customer_premium', 'notification_log']) {
+    for (const table of ['push_devices', 'saved_carts', 'saved_addresses', 'favorite_dishes', 'referral_codes', 'customer_premium', 'notification_log']) {
       await admin.from(table).delete().eq('user_id', uid);
     }
     if (kitchen) {

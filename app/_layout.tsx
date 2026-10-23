@@ -9,6 +9,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AlertHost } from '@/components/AlertHost';
 import { IntroAnimation } from '@/components/IntroAnimation';
+import { AddressesProvider } from '@/lib/addresses';
 import { AuthProvider, useAuth } from '@/lib/auth';
 import { CartProvider } from '@/lib/cart';
 import { CatalogProvider } from '@/lib/catalog';
@@ -40,10 +41,12 @@ export default function RootLayout() {
               <MembershipProvider>
                 <CartProvider>
                   <FavoritesProvider>
-                    <SoundProvider>
-                      <RootNavigator />
-                      <AlertHost />
-                    </SoundProvider>
+                    <AddressesProvider>
+                      <SoundProvider>
+                        <RootNavigator />
+                        <AlertHost />
+                      </SoundProvider>
+                    </AddressesProvider>
                   </FavoritesProvider>
                 </CartProvider>
               </MembershipProvider>
@@ -125,6 +128,7 @@ function RootNavigator() {
             <Stack.Screen name="allergies" />
             <Stack.Screen name="big-order/[chefId]" />
             <Stack.Screen name="week-plan" />
+            <Stack.Screen name="addresses" />
           </Stack.Protected>
 
           {/* The full guide is open to everyone, also before signing in. Listed last so it is

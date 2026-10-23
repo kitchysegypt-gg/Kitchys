@@ -29,40 +29,37 @@ import { Emoji3D } from './Emoji3D';
 const KITCHY_ICONS = {
   'k-home': require('@/assets/icons/home.png'),
   'k-search': require('@/assets/icons/search.png'),
-  'k-more': require('@/assets/icons/browse.png'),
+  'k-more': require('@/assets/icons/more.png'),
   'k-cart': require('@/assets/icons/cart.png'),
   'k-profile': require('@/assets/icons/profile.png'),
   'k-settings': require('@/assets/icons/settings.png'),
-  'k-food': require('@/assets/icons/food.png'),
-  'k-chefs': require('@/assets/icons/chefs.png'),
+  'k-food': require('@/assets/icons/meals.png'),
+  'k-chefs': require('@/assets/icons/become-chef.png'),
   'k-favorites': require('@/assets/icons/favorites.png'),
   'k-notifications': require('@/assets/icons/notifications.png'),
-  'k-address': require('@/assets/icons/address.png'),
-  'k-payments': require('@/assets/icons/payments.png'),
-  'k-dinner': require('@/assets/icons/dinner.png'),
+  'k-address': require('@/assets/icons/track-order.png'),
+  'k-payments': require('@/assets/icons/cashback.png'),
+  'k-dinner': require('@/assets/icons/todays-dinner.png'),
   'k-vegan': require('@/assets/icons/vegan.png'),
   'k-premium': require('@/assets/icons/premium.png'),
-  'k-top-rated': require('@/assets/icons/top-rated.png'),
-  'k-offers': require('@/assets/icons/offers.png'),
-  'k-rewards': require('@/assets/icons/rewards.png'),
+  'k-rewards': require('@/assets/icons/points.png'),
   'k-delivery': require('@/assets/icons/delivery.png'),
-  'k-secure': require('@/assets/icons/secure.png'),
   'k-support': require('@/assets/icons/support.png'),
   'k-orders': require('@/assets/icons/orders.png'),
-  'k-history': require('@/assets/icons/history.png'),
   'k-logout': require('@/assets/icons/logout.png'),
   'k-healthy': require('@/assets/icons/healthy.png'),
   'k-become-chef': require('@/assets/icons/become-chef.png'),
-  'k-refer': require('@/assets/icons/refer.png'),
-  'k-discounts': require('@/assets/icons/discounts.png'),
+  'k-refer': require('@/assets/icons/share.png'),
   'k-chat': require('@/assets/icons/help.png'),
-  'k-light-mode': require('@/assets/icons/light-mode.png'),
+  'k-help': require('@/assets/icons/help.png'),
+  'k-recipes': require('@/assets/icons/recipes.png'),
+  'k-language': require('@/assets/icons/language.png'),
 };
 export type KitchyIconName = keyof typeof KITCHY_ICONS;
 
 /**
- * Ionicons names drawn with Kitchy's own icon instead, so the whole app uses one set.
- * Stars stay Ionicons: ratings need the outline and half star.
+ * Common Ionicons names drawn with Kitchy's own icons instead, so screens keep using the
+ * familiar names. Names not listed here (stars, arrows, checkmarks...) stay Ionicons.
  */
 const ICON_ALIASES: Partial<Record<string, KitchyIconName>> = {
   home: 'k-home',
@@ -71,6 +68,7 @@ const ICON_ALIASES: Partial<Record<string, KitchyIconName>> = {
   'search-outline': 'k-search',
   menu: 'k-more',
   'menu-outline': 'k-more',
+  'ellipsis-horizontal': 'k-more',
   cart: 'k-cart',
   'cart-outline': 'k-cart',
   person: 'k-profile',
@@ -86,23 +84,17 @@ const ICON_ALIASES: Partial<Record<string, KitchyIconName>> = {
   'notifications-outline': 'k-notifications',
   location: 'k-address',
   'location-outline': 'k-address',
-  card: 'k-payments',
-  'card-outline': 'k-payments',
+  wallet: 'k-payments',
+  'wallet-outline': 'k-payments',
   flame: 'k-dinner',
   'flame-outline': 'k-dinner',
   leaf: 'k-vegan',
   'leaf-outline': 'k-vegan',
   diamond: 'k-premium',
   'diamond-outline': 'k-premium',
-  pricetag: 'k-offers',
-  'pricetag-outline': 'k-offers',
-  pricetags: 'k-offers',
-  'pricetags-outline': 'k-offers',
   gift: 'k-rewards',
   'gift-outline': 'k-rewards',
   delivery: 'k-delivery',
-  'shield-checkmark': 'k-secure',
-  'shield-checkmark-outline': 'k-secure',
   headset: 'k-support',
   'headset-outline': 'k-support',
   receipt: 'k-orders',
@@ -111,41 +103,51 @@ const ICON_ALIASES: Partial<Record<string, KitchyIconName>> = {
   'log-out-outline': 'k-logout',
   nutrition: 'k-healthy',
   'nutrition-outline': 'k-healthy',
-  people: 'k-refer',
-  'people-outline': 'k-refer',
-  ticket: 'k-discounts',
-  'ticket-outline': 'k-discounts',
+  'share-social': 'k-refer',
+  'share-social-outline': 'k-refer',
   'chatbubble-ellipses': 'k-chat',
   'chatbubble-ellipses-outline': 'k-chat',
-  sunny: 'k-light-mode',
-  'sunny-outline': 'k-light-mode',
+  'help-circle': 'k-help',
+  'help-circle-outline': 'k-help',
+  'book-outline': 'k-recipes',
+  language: 'k-language',
+  'language-outline': 'k-language',
+  'globe-outline': 'k-language',
 };
 
 /** Any Ionicons name, "delivery" (the Kitchy's delivery truck), or one of Kitchy's own icons. */
 export type IconName = React.ComponentProps<typeof Ionicons>['name'] | 'delivery' | KitchyIconName;
 
-/** Outline icon from Ionicons, tinted with the theme's text colour by default. */
+/**
+ * Kitchy's own icons are drawn in their own colours. They are tinted only when `tint` is set or
+ * the colour is white (an icon on a coloured badge or button). Other names are Ionicons, tinted
+ * with the theme's text colour by default.
+ */
 export function Icon({
   name,
   size = 22,
   color,
+  tint,
   style,
 }: {
   name: IconName;
   size?: number;
   color?: React.ComponentProps<typeof Ionicons>['color'];
+  /** Draw a Kitchy's icon in one colour (`color`), e.g. a grey heart that isn't saved yet. */
+  tint?: boolean;
   style?: StyleProp<TextStyle>;
 }) {
   const { colors } = useSettings();
   const kitchy = name in KITCHY_ICONS ? (name as KitchyIconName) : ICON_ALIASES[name];
   if (kitchy) {
-    // The truck is wider than tall, so give it a little extra room.
+    // The scooter is wider than tall, so give it a little extra room.
     const box = kitchy === 'k-delivery' ? Math.round(size * 1.25) : size;
+    const white = typeof color === 'string' && ['#fff', '#ffffff', 'white', String(colors.onPrimary).toLowerCase()].includes(color.toLowerCase());
     return (
       <Image
         source={KITCHY_ICONS[kitchy]}
         style={[{ width: box, height: box }, box !== size && { marginHorizontal: -(box - size) / 2 }]}
-        tintColor={(color as string | undefined) ?? colors.text}
+        tintColor={tint || white ? ((color as string | undefined) ?? colors.text) : undefined}
         contentFit="contain"
         accessibilityIgnoresInvertColors
       />

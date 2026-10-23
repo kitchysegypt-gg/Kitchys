@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import {
   ActivityIndicator,
@@ -14,7 +14,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Coordinate, DeliveryMap } from '@/components/DeliveryMap';
-import { Button, Icon, Txt } from '@/components/ui';
+import { Button, Chip, Icon, Txt } from '@/components/ui';
+import { ADDRESS_KINDS, AddressKind, samePlace, useAddresses } from '@/lib/addresses';
 import { showAlert } from '@/lib/alert';
 import { addressFor, currentPosition } from '@/lib/geocode';
 import { useSettings } from '@/lib/settings';
@@ -25,11 +26,18 @@ const DEFAULT_COORDINATE: Coordinate = { latitude: 30.0444, longitude: 31.2357 }
 
 export default function LocationScreen() {
   const { t, colors, isRTL, location, setLocation, language } = useSettings();
+  // Opened from Saved addresses: start on a blank spot and save it to the list.
+  const { save: saving } = useLocalSearchParams<{ save?: string }>();
+  const adding = saving === '1';
+  const { addresses, add } = useAddresses();
+  const [saveAs, setSaveAs] = useState<AddressKind | null>(adding ? 'home' : null);
+  const [customName, setCustomName] = useState('');
+  const [busy, setBusy] = useState(false);
   const [coordinate, setCoordinate] = useState<Coordinate>(
     location ? { latitude: location.latitude, longitude: location.longitude } : DEFAULT_COORDINATE
   );
-  const [address, setAddress] = useState(location?.address ?? '');
-  const [details, setDetails] = useState(location?.details ?? '');
+  const [address, setAddress] = useState(adding ? '' : (location?.address ?? ''));
+  const [details, setDetails] = useState(adding ? '' : (location?.details ?? ''));
   const [locating, setLocating] = useState(false);
   const [denied, setDenied] = useState(false);
 
@@ -56,9 +64,22 @@ export default function LocationScreen() {
     else moveTo(found);
   };
 
-  const save = () => {
+  const save = async () => {
     if (!address.trim()) return showAlert(t('address'), t('addressRequired'));
-    setLocation({ ...coordinate, address: address.trim(), details: details.trim() });
+    if (saveAs === 'other' && !customName.trim()) return showAlert(t('addrSaveAs'), t('addrNameRequired'));
+    const place = { ...coordinate, address: address.trim(), details: details.trim() };
+    setLocation(place);
+    // Saved once: picking the same spot again doesn't add it twice.
+    if (saveAs && !addresses.some((a) => samePlace(place, a))) {
+      setBusy(true);
+      try {
+        await add(place, saveAs, saveAs === 'other' ? customName.trim() : t(`addrKind_${saveAs}`));
+      } catch (e: any) {
+        setBusy(false);
+        return showAlert(t('error'), e?.message ?? String(e));
+      }
+      setBusy(false);
+    }
     router.back();
   };
 
@@ -136,6 +157,26 @@ export default function LocationScreen() {
             style={inputStyle}
           />
 
+          <View style={{ gap: 8 }}>
+            <Txt style={{ fontWeight: '700' }}>{t('addrSaveAs')}</Txt>
+            <View style={styles.chips}>
+              {!adding && <Chip label={t('addrDontSave')} active={saveAs === null} onPress={() => setSaveAs(null)} />}
+              {ADDRESS_KINDS.map((kind) => (
+                <Chip key={kind} label={t(`addrKind_${kind}`)} active={saveAs === kind} onPress={() => setSaveAs(kind)} />
+              ))}
+            </View>
+            {saveAs === 'other' && (
+              <TextInput
+                value={customName}
+                onChangeText={setCustomName}
+                placeholder={t('addrNamePlaceholder')}
+                placeholderTextColor={colors.textMuted}
+                maxLength={40}
+                style={inputStyle}
+              />
+            )}
+          </View>
+
           <Pressable
             onPress={() =>
               Linking.openURL(
@@ -146,7 +187,7 @@ export default function LocationScreen() {
           </Pressable>
 
           <SafeAreaView edges={['bottom']}>
-            <Button title={t('saveLocation')} onPress={save} />
+            <Button title={t('saveLocation')} onPress={save} loading={busy} />
           </SafeAreaView>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -178,6 +219,7 @@ const styles = StyleSheet.create({
   },
   sheet: { borderTopLeftRadius: 24, borderTopRightRadius: 24, borderWidth: 1, marginTop: -24, maxHeight: 460 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   notice: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 10, borderRadius: 14 },
   input: { borderRadius: 14, borderWidth: 1, padding: 12, fontSize: 15, fontFamily: FONT.regular },
 });

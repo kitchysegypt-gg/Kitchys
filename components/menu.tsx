@@ -161,7 +161,7 @@ export function FavoriteButton({ dishId, style }: { dishId: string; style?: Styl
       accessibilityState={{ selected: on }}
       accessibilityLabel={on ? t('favoriteRemove') : t('favoriteAdd')}
       style={[styles.heart, style]}>
-      <Icon name="heart" size={18} color={on ? '#E53935' : colors.textMuted} />
+      <Icon name="heart" size={18} color={colors.textMuted} tint={!on} />
     </Pressable>
   );
 }

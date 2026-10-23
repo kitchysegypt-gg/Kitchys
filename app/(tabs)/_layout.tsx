@@ -19,12 +19,12 @@ export default function TabLayout() {
     router.push('/apply');
   }, [wantsChefApply, setWantsChefApply]);
 
-  // Kitchy's own icons: grey normally, brand colour when the tab is selected.
+  // Kitchy's own icons in their colours; the tabs that aren't selected are faded.
   const icon = (name: KitchyIconName) =>
-    function TabIcon({ color }: { focused: boolean; color: ColorValue }) {
+    function TabIcon({ focused }: { focused: boolean; color: ColorValue }) {
       return (
-        <View style={styles.tabIcon}>
-          <Icon name={name} size={25} color={color as string} />
+        <View style={[styles.tabIcon, { opacity: focused ? 1 : 0.45 }]}>
+          <Icon name={name} size={26} />
         </View>
       );
     };
