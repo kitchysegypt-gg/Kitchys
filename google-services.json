@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1076604244599",
+    "project_id": "kitchys-dbcc6",
+    "storage_bucket": "kitchys-dbcc6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1076604244599:android:5d4c44340ed1149983ec72",
+        "android_client_info": {
+          "package_name": "com.kitchys.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDXmJkMItm14Dq8MMyJk_AJcvf2EwpsMRg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
