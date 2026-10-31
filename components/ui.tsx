@@ -205,9 +205,14 @@ type TxtProps = TextProps & {
 
 export function Txt({ variant = 'body', muted, color, center, style, ...rest }: TxtProps) {
   const { colors, isRTL } = useSettings();
-  const weight = (StyleSheet.flatten([styles[variant], style]) as TextStyle | undefined)?.fontWeight;
-  // Titles and headings use the round headline font, like the Kitchy's logo (it has Arabic too).
+  const flat = StyleSheet.flatten([styles[variant], style]) as TextStyle | undefined;
+  const weight = flat?.fontWeight;
+  // Titles and headings use the strong headline font in capitals. It is narrow, so it runs a
+  // little larger than the size asked for. Arabic headlines use the round font (Barlow has no
+  // Arabic letters, and letter spacing would break joined letters).
   const display = variant === 'title' || variant === 'heading';
+  const strong = display && !isRTL;
+  const baseSize = flat?.fontSize ?? (variant === 'title' ? 28 : 20);
   return (
     <Text
       {...rest}
@@ -220,8 +225,12 @@ export function Txt({ variant = 'body', muted, color, center, style, ...rest }: 
           writingDirection: isRTL ? 'rtl' : 'ltr',
         },
         style,
+        strong && { fontSize: Math.round(baseSize * 1.18), textTransform: 'uppercase', letterSpacing: 0.3 },
         // The font file carries the weight; fontWeight itself is reset so it isn't faked on top.
-        { fontFamily: display ? FONT.display : fontFamilyFor(weight), fontWeight: 'normal' },
+        {
+          fontFamily: strong ? FONT.display : display ? FONT.displayArabic : fontFamilyFor(weight),
+          fontWeight: 'normal',
+        },
       ]}
     />
   );

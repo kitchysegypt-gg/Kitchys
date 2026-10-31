@@ -3,15 +3,17 @@ import { PlusJakartaSans_500Medium } from '@expo-google-fonts/plus-jakarta-sans/
 import { PlusJakartaSans_600SemiBold } from '@expo-google-fonts/plus-jakarta-sans/600SemiBold';
 import { PlusJakartaSans_700Bold } from '@expo-google-fonts/plus-jakarta-sans/700Bold';
 import { PlusJakartaSans_800ExtraBold } from '@expo-google-fonts/plus-jakarta-sans/800ExtraBold';
+import { BarlowCondensed_800ExtraBold } from '@expo-google-fonts/barlow-condensed/800ExtraBold';
 import { BalooBhaijaan2_700Bold } from '@expo-google-fonts/baloo-bhaijaan-2/700Bold';
 import { BalooBhaijaan2_800ExtraBold } from '@expo-google-fonts/baloo-bhaijaan-2/800ExtraBold';
 import type { TextStyle } from 'react-native';
 
 /**
- * Plus Jakarta Sans for text, and Baloo Bhaijaan 2 for headlines: round and chunky like the
- * Kitchy's logo, with Arabic letters too. Loaded at startup in app/_layout.tsx.
+ * Plus Jakarta Sans for text; Barlow Condensed for headlines (bold, narrow capitals), and Baloo
+ * Bhaijaan 2 for Arabic headlines, since Barlow has no Arabic letters. Loaded in app/_layout.tsx.
  */
 export const FONT_FILES = {
+  BarlowCondensed_800ExtraBold,
   BalooBhaijaan2_700Bold,
   BalooBhaijaan2_800ExtraBold,
   PlusJakartaSans_400Regular,
@@ -27,9 +29,10 @@ export const FONT = {
   semibold: 'PlusJakartaSans_600SemiBold',
   bold: 'PlusJakartaSans_700Bold',
   extrabold: 'PlusJakartaSans_800ExtraBold',
-  /** The round headline font (titles and section headings). */
-  display: 'BalooBhaijaan2_800ExtraBold',
-  displayBold: 'BalooBhaijaan2_700Bold',
+  /** The strong headline font (titles and section headings). */
+  display: 'BarlowCondensed_800ExtraBold',
+  /** Headlines in Arabic: round and bold, with Arabic letters. */
+  displayArabic: 'BalooBhaijaan2_800ExtraBold',
 } as const;
 
 /**

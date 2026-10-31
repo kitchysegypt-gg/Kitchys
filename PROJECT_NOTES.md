@@ -240,8 +240,9 @@ Schedules use Cairo time.
 - Built from the brand itself: the cream of the logo (#FAF5E7), white rounded cards with soft
   lines (#EADFC9), orange (#F4511E) and amber (#FF9F3A). No shadows (`softShadow` returns nothing).
   Colours in `lib/theme.ts` (`light`).
-- Headlines (`Txt` variants `title`/`heading`) use Baloo Bhaijaan 2 (`FONT.display`): round and
-  chunky like the logo, with Arabic letters too. Body text stays Plus Jakarta Sans.
+- Headlines (`Txt` variants `title`/`heading`) use Barlow Condensed ExtraBold in capitals
+  (`FONT.display`, drawn about 18% larger since it is narrow). Arabic headlines use Baloo Bhaijaan 2
+  (`FONT.displayArabic`), which has Arabic letters. Body text stays Plus Jakarta Sans.
 - Home starts with the loading screen's orange and amber waves (`assets/images/home-waves.png`,
   drawn to match; solid orange above it), the K mark, address, greeting and search on top.
 - Every dish card shows its cook (face and name) on the photo. Points use the K coin
