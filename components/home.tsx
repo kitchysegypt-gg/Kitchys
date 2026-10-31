@@ -61,7 +61,8 @@ export function CategoryBubbles({ value, onChange }: { value: Category | 'all'; 
             <Txt
               center
               numberOfLines={2}
-              style={{ fontSize: 11.5, lineHeight: 14, fontWeight: '700', color: active ? colors.primary : colors.text }}>
+              maxFontSizeMultiplier={1.2}
+              style={[styles.typeLabel, { color: active ? colors.primary : colors.text }]}>
               {t(c.label)}
             </Txt>
           </Pressable>
@@ -295,10 +296,11 @@ export function KitchenCard({ chef }: { chef: Chef }) {
 
 const styles = StyleSheet.create({
   // Five equal columns, so every food type fits without scrolling.
-  types: { flexDirection: 'row', gap: 8, paddingHorizontal: 16, paddingTop: 2, paddingBottom: 4 },
-  type: { flex: 1, alignItems: 'center', gap: 6 },
-  typeTile: { width: '100%', aspectRatio: 1, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  types: { flexDirection: 'row', gap: 14, paddingHorizontal: 18, paddingTop: 22, paddingBottom: 8 },
+  type: { flex: 1, alignItems: 'center', gap: 8 },
+  typeTile: { width: '100%', aspectRatio: 1, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   typeIcon: { width: '78%', height: '78%' },
+  typeLabel: { fontSize: 12, lineHeight: 15, minHeight: 30, fontWeight: '700' },
   promoShadow: { borderRadius: 20 },
   promo: { borderRadius: 20, overflow: 'hidden', borderWidth: 1 },
   dots: { flexDirection: 'row', justifyContent: 'center', gap: 5, marginTop: 10 },

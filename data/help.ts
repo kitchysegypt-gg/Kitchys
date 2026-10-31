@@ -575,9 +575,9 @@ export const CHEF_HELP: HelpTopic[] = [
     title: { en: 'When a new order comes', ar: 'لما ييجي طلب جديد', fr: 'Quand une commande arrive' },
     steps: [
       {
-        en: 'Your phone shows "New order! 🍲" and plays a sound. The {kitchenOrders} tab shows a red number.',
-        ar: 'تليفونك هيظهر "طلب جديد! 🍲" ويعمل صوت، وتاب {kitchenOrders} هيبان عليه رقم أحمر.',
-        fr: 'Votre téléphone affiche « Nouvelle commande ! 🍲 » avec un son. L\'onglet {kitchenOrders} montre un chiffre rouge.',
+        en: 'Your phone shows "New order!" and plays a sound. The {kitchenOrders} tab shows a red number.',
+        ar: 'تليفونك هيظهر "طلب جديد!" ويعمل صوت، وتاب {kitchenOrders} هيبان عليه رقم أحمر.',
+        fr: 'Votre téléphone affiche « Nouvelle commande ! » avec un son. L\'onglet {kitchenOrders} montre un chiffre rouge.',
       },
       {
         en: 'Open the order and read: the dishes and how many, the delivery time and the customer\'s note.',

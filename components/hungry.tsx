@@ -137,9 +137,12 @@ export function TonightHero() {
               {[chef ? t('heroBy', { chef: l(chef.name) }) : null, t('deliveryWindow')].filter(Boolean).join(' · ')}
             </Txt>
             {orders >= 2 && (
-              <Txt numberOfLines={1} style={[styles.heroMeta, { fontWeight: '700' }]}>
-                🔥 {t('orderedThisWeek', { n: orders })}
-              </Txt>
+              <View style={styles.heroLine}>
+                <Icon name="flame" size={14} color="#FFFFFF" />
+                <Txt numberOfLines={1} style={[styles.heroMeta, { fontWeight: '700', flexShrink: 1 }]}>
+                  {t('orderedThisWeek', { n: orders })}
+                </Txt>
+              </View>
             )}
           </View>
           <Pressable
@@ -177,5 +180,6 @@ const styles = StyleSheet.create({
   heroBottom: { flexDirection: 'row', alignItems: 'flex-end', gap: 12, padding: 14 },
   heroTitle: { color: '#FFFFFF', fontSize: 24, fontWeight: '800' },
   heroMeta: { color: 'rgba(255,255,255,0.92)', fontSize: 13 },
+  heroLine: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   heroButton: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 14 },
 });
