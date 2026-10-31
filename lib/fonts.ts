@@ -3,10 +3,14 @@ import { PlusJakartaSans_500Medium } from '@expo-google-fonts/plus-jakarta-sans/
 import { PlusJakartaSans_600SemiBold } from '@expo-google-fonts/plus-jakarta-sans/600SemiBold';
 import { PlusJakartaSans_700Bold } from '@expo-google-fonts/plus-jakarta-sans/700Bold';
 import { PlusJakartaSans_800ExtraBold } from '@expo-google-fonts/plus-jakarta-sans/800ExtraBold';
+import { BarlowCondensed_700Bold } from '@expo-google-fonts/barlow-condensed/700Bold';
+import { BarlowCondensed_800ExtraBold } from '@expo-google-fonts/barlow-condensed/800ExtraBold';
 import type { TextStyle } from 'react-native';
 
-/** Plus Jakarta Sans, loaded at startup in app/_layout.tsx. */
+/** Plus Jakarta Sans for text and Barlow Condensed for headlines, loaded at startup in app/_layout.tsx. */
 export const FONT_FILES = {
+  BarlowCondensed_700Bold,
+  BarlowCondensed_800ExtraBold,
   PlusJakartaSans_400Regular,
   PlusJakartaSans_500Medium,
   PlusJakartaSans_600SemiBold,
@@ -20,6 +24,9 @@ export const FONT = {
   semibold: 'PlusJakartaSans_600SemiBold',
   bold: 'PlusJakartaSans_700Bold',
   extrabold: 'PlusJakartaSans_800ExtraBold',
+  /** The bold, narrow headline font (titles and section headings). */
+  display: 'BarlowCondensed_800ExtraBold',
+  displayBold: 'BarlowCondensed_700Bold',
 } as const;
 
 /**

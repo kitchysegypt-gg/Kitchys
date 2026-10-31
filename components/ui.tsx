@@ -88,8 +88,8 @@ const ICON_ALIASES: Partial<Record<string, KitchyIconName>> = {
   'wallet-outline': 'k-payments',
   flame: 'k-dinner',
   'flame-outline': 'k-dinner',
-  leaf: 'k-vegan',
-  'leaf-outline': 'k-vegan',
+  leaf: 'k-healthy',
+  'leaf-outline': 'k-healthy',
   diamond: 'k-premium',
   'diamond-outline': 'k-premium',
   gift: 'k-rewards',
@@ -179,7 +179,7 @@ export function IconBadge({
   const radius = Math.round(size * 0.32);
   return (
     <LinearGradient
-      colors={solid ? [color, `${color}CC`] : [`${color}2E`, `${color}12`]}
+      colors={solid ? [color, color] : [`${color}1F`, `${color}1F`]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={{
@@ -188,9 +188,8 @@ export function IconBadge({
         borderRadius: radius,
         alignItems: 'center',
         justifyContent: 'center',
-        borderWidth: 1,
-        borderColor: solid ? `${color}` : `${color}33`,
-        boxShadow: solid ? `0px 4px 10px ${color}55` : undefined,
+        borderWidth: solid ? 0 : 1,
+        borderColor: `${color}40`,
       }}>
       <Icon name={filledIcon(name)} size={Math.round(size * 0.52)} color={solid ? '#FFFFFF' : color} />
     </LinearGradient>
@@ -207,19 +206,23 @@ type TxtProps = TextProps & {
 export function Txt({ variant = 'body', muted, color, center, style, ...rest }: TxtProps) {
   const { colors, isRTL } = useSettings();
   const weight = (StyleSheet.flatten([styles[variant], style]) as TextStyle | undefined)?.fontWeight;
+  // Titles and headings use the bold narrow headline font, in orange capitals. Arabic keeps the
+  // text font: the headline font has no Arabic letters, and spacing would break joined letters.
+  const display = (variant === 'title' || variant === 'heading') && !isRTL;
   return (
     <Text
       {...rest}
       style={[
         styles[variant],
+        display && (variant === 'title' ? styles.titleDisplay : styles.headingDisplay),
         {
-          color: color ?? (muted ? colors.textMuted : colors.text),
+          color: color ?? (muted ? colors.textMuted : display ? colors.primary : colors.text),
           textAlign: center ? 'center' : isRTL ? 'right' : 'left',
           writingDirection: isRTL ? 'rtl' : 'ltr',
         },
         style,
         // The font file carries the weight; fontWeight itself is reset so it isn't faked on top.
-        { fontFamily: fontFamilyFor(weight), fontWeight: 'normal' },
+        { fontFamily: display ? FONT.display : fontFamilyFor(weight), fontWeight: 'normal' },
       ]}
     />
   );
@@ -303,7 +306,7 @@ type ButtonProps = {
 
 export function Button({ title, onPress, icon, variant = 'primary', loading, disabled, style, small }: ButtonProps) {
   const { colors } = useSettings();
-  const background = variant === 'primary' ? colors.primary : variant === 'secondary' ? colors.surfaceAlt : 'transparent';
+  const background = variant === 'primary' ? colors.primary : 'transparent';
   const textColor = variant === 'primary' ? colors.onPrimary : variant === 'secondary' ? colors.text : colors.primary;
 
   return (
@@ -314,6 +317,7 @@ export function Button({ title, onPress, icon, variant = 'primary', loading, dis
         styles.button,
         small && styles.buttonSmall,
         { backgroundColor: background, opacity: disabled ? 0.45 : pressed ? 0.85 : 1 },
+        variant === 'secondary' && { borderWidth: 1.5, borderColor: colors.text },
         style,
       ]}>
       {loading ? (
@@ -349,7 +353,7 @@ export function Chip({
       onPress={onPress}
       style={[
         styles.chip,
-        { backgroundColor: active ? colors.primary : colors.surface, borderColor: active ? colors.primary : colors.border },
+        { backgroundColor: active ? colors.primary : 'transparent', borderColor: active ? colors.primary : colors.text },
       ]}>
       {icon && <Icon name={icon} size={16} color={textColor} />}
       {emoji && <Emoji3D name={emoji} size={20} />}
@@ -448,17 +452,20 @@ export const scrollContent: ScrollViewProps['contentContainerStyle'] = { padding
 const styles = StyleSheet.create({
   title: { fontSize: 25, fontWeight: '700', letterSpacing: -0.5 } as TextStyle,
   heading: { fontSize: 18, fontWeight: '700', letterSpacing: -0.3 } as TextStyle,
+  // The headline font is narrow, so it runs a little larger, in capitals.
+  titleDisplay: { fontSize: 34, textTransform: 'uppercase', letterSpacing: 0.3 } as TextStyle,
+  headingDisplay: { fontSize: 23, textTransform: 'uppercase', letterSpacing: 0.3 } as TextStyle,
   body: { fontSize: 15, lineHeight: 22 },
   caption: { fontSize: 13, lineHeight: 18 },
   label: { fontSize: 12, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.8 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 12 },
   card: {
-    borderRadius: 18,
+    borderRadius: 20,
     padding: 14,
-    borderWidth: 1,
+    borderWidth: 1.25,
   },
   button: {
-    borderRadius: 14,
+    borderRadius: 999,
     paddingVertical: 15,
     paddingHorizontal: 20,
     flexDirection: 'row',
@@ -466,7 +473,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
   },
-  buttonSmall: { paddingVertical: 9, paddingHorizontal: 14, borderRadius: 12 },
+  buttonSmall: { paddingVertical: 9, paddingHorizontal: 16, borderRadius: 999 },
   buttonText: { fontSize: 16, fontFamily: FONT.bold },
   chip: {
     flexDirection: 'row',
@@ -474,11 +481,11 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 8,
     paddingHorizontal: 14,
-    borderRadius: 20,
-    borderWidth: 1,
+    borderRadius: 999,
+    borderWidth: 1.25,
   },
   groupShadow: { borderRadius: 18 },
-  group: { borderRadius: 18, overflow: 'hidden', paddingVertical: 4, borderWidth: 1 },
+  group: { borderRadius: 20, overflow: 'hidden', paddingVertical: 4, borderWidth: 1.25 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingVertical: 15, paddingHorizontal: 18 },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
   emptyIcon: { width: 88, height: 88, borderRadius: 44, alignItems: 'center', justifyContent: 'center' },

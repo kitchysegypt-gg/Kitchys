@@ -27,14 +27,15 @@ const BRAND = '#F4511E';
 const BRAND_DEEP = '#B8330D';
 
 export const THEMES: Record<ThemeName, Palette> = {
+  // Cream paper, dark brown ink and thin dark outlines, with Kitchy's orange.
   light: {
     dark: false,
-    background: '#FFFFFF',
-    surface: '#FFFFFF',
-    surfaceAlt: '#F4F6F5',
-    text: '#1B1D1F',
-    textMuted: '#7A7F86',
-    border: '#D3D9D5',
+    background: '#F6EEDF',
+    surface: '#FBF6EC',
+    surfaceAlt: '#EFE4CF',
+    text: '#2B1A12',
+    textMuted: '#6B5648',
+    border: '#3B2A1F',
     primary: BRAND,
     primaryDeep: BRAND_DEEP,
     onPrimary: '#FFFFFF',
@@ -42,7 +43,7 @@ export const THEMES: Record<ThemeName, Palette> = {
     success: '#1E9E4F',
     successBg: '#E6F7EC',
     danger: '#E5484D',
-    shadow: '#0F1A14',
+    shadow: '#2B1A12',
     heroGradient: ['#F4511E', '#9E2A0C'],
   },
   mint: {
@@ -73,13 +74,12 @@ export const ACCENTS: Record<AccentName, { primary: string; deep: string; light:
   green: { primary: '#2FB45F', deep: '#1E8646', light: '#4CC47F' },
 };
 
-/** A soft drop shadow under cards and panels, so their edges stand out from the background. */
-export function softShadow(color: string) {
-  const hex = color.replace('#', '');
-  const [r, g, b] = [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16));
-  return {
-    boxShadow: `0px 1px 3px rgba(${r}, ${g}, ${b}, 0.08), 0px 6px 18px rgba(${r}, ${g}, ${b}, 0.12)`,
-  };
+/**
+ * The look is flat: cards and panels are outlined, not shadowed. Kept as a function so the
+ * screens that ask for a shadow simply get none.
+ */
+export function softShadow(_color: string) {
+  return {};
 }
 
 /** Colours for icon tiles, so each kind of information is easy to spot. */

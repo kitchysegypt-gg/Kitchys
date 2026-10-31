@@ -48,7 +48,7 @@ export function Greeting() {
         : ['greetEvening', 'greetEveningSub'];
   return (
     <View style={styles.greeting}>
-      <Txt variant="heading" style={{ fontSize: 24 }} numberOfLines={2}>
+      <Txt variant="heading" style={{ fontSize: 36 }} numberOfLines={3}>
         {t(title, { name })}
       </Txt>
       <Txt muted style={{ color: colors.textMuted }} numberOfLines={2}>

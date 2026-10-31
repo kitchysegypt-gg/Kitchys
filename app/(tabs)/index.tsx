@@ -64,7 +64,7 @@ export default function HomeScreen() {
 
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
         {!browsing && <Greeting />}
-        <View style={[styles.search, { backgroundColor: colors.surfaceAlt }]}>
+        <View style={[styles.search, { borderColor: colors.text }]}>
           <Icon name="search" size={20} color={colors.textMuted} />
           <TextInput
             value={query}
@@ -177,7 +177,7 @@ export default function HomeScreen() {
   function sectionHeader(title: string, onSeeAll?: () => void) {
     return (
       <View style={styles.sectionHeader}>
-        <Txt variant="heading" style={{ flex: 1, fontSize: 19 }}>
+        <Txt variant="heading" style={{ flex: 1, fontSize: 27 }}>
           {title}
         </Txt>
         {onSeeAll && (
@@ -268,7 +268,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginTop: 12,
     paddingHorizontal: 14,
-    borderRadius: 14,
+    borderRadius: 999,
+    borderWidth: 1.5,
   },
   searchInput: { flex: 1, paddingVertical: 13, fontSize: 15, fontFamily: FONT.regular },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginTop: 26, marginBottom: 12 },

@@ -35,7 +35,7 @@ export default function ReferScreen() {
           <View style={[styles.introIcon, { backgroundColor: colors.surfaceAlt }]}>
             <Icon name="gift-outline" size={34} color={colors.primary} />
           </View>
-          <Txt variant="title" center style={{ fontSize: 22 }}>
+          <Txt variant="title" center style={{ fontSize: 30 }}>
             {t('referTitle')}
           </Txt>
           <Txt muted center>

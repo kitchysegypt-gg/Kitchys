@@ -46,7 +46,7 @@ export function KitchenLocationPicker({ value, onChange, children }: Props) {
     <Card style={{ gap: 10 }}>
       <View style={styles.row}>
         <IconBadge name="home-outline" tone="orange" size={32} />
-        <Txt variant="heading" style={{ flex: 1, fontSize: 17 }}>
+        <Txt variant="heading" style={{ flex: 1, fontSize: 22 }}>
           {t('kitchenLocation')}
         </Txt>
         {value && <Icon name="checkmark-circle" size={22} color={colors.success} />}

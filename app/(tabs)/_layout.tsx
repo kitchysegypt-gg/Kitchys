@@ -37,8 +37,9 @@ export default function TabLayout() {
         tabBarInactiveTintColor: colors.textMuted,
         tabBarLabelStyle: { fontFamily: FONT.semibold, fontSize: 11.5, marginTop: 2 },
         tabBarStyle: {
-          backgroundColor: colors.surface,
+          backgroundColor: colors.background,
           borderTopColor: colors.border,
+          borderTopWidth: 1.25,
           height: 68 + insets.bottom,
           paddingTop: 8,
           paddingBottom: insets.bottom + 6,
