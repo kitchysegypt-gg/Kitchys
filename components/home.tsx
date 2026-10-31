@@ -1,4 +1,5 @@
 import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Href, router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
@@ -23,50 +24,29 @@ const PROMO_BANNERS = {
 };
 const BANNER_RATIO = 1200 / 676;
 
-// Kitchy's 3D category icons; a category without one shows its photo.
-const CATEGORY_ICONS: Partial<Record<Category, number>> = {
-  main: require('@/assets/categories/main.png'),
-  baked: require('@/assets/categories/baked.png'),
-  seafood: require('@/assets/categories/seafood.png'),
-  desserts: require('@/assets/categories/desserts.png'),
-  healthy: require('@/assets/categories/healthy.png'),
-};
-
-/** Round category bubbles (3D icon or photo); tap again to show everything. */
+/**
+ * The food types as photo tiles: a real dish photo, its name in white capitals on a soft dark
+ * fade at the bottom. Tap again to show everything.
+ */
 export function CategoryBubbles({ value, onChange }: { value: Category | 'all'; onChange: (c: Category | 'all') => void }) {
   const { t, colors } = useSettings();
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.bubbles}>
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tiles}>
       {CATEGORIES.filter((c) => c.id !== 'all').map((c) => {
         const active = value === c.id;
         return (
-          <Pressable
+          <PressableScale
             key={c.id}
             onPress={() => onChange(active ? 'all' : (c.id as Category))}
-            accessibilityRole="button"
-            accessibilityState={{ selected: active }}
-            style={styles.bubbleItem}>
-            <View
-              style={[
-                styles.bubbleRing,
-                { borderColor: active ? colors.primary : 'transparent', backgroundColor: `${colors.primary}14` },
-              ]}>
-              {CATEGORY_ICONS[c.id as Category] ? (
-                <Image source={CATEGORY_ICONS[c.id as Category]} style={styles.bubbleIcon} contentFit="contain" />
-              ) : (
-                <View style={styles.bubble}>
-                  <CategoryPhoto category={c.id as Category} />
-                </View>
-              )}
+            style={[styles.tile, { borderColor: active ? colors.primary : 'transparent' }]}>
+            <View style={styles.tileInner}>
+              <CategoryPhoto category={c.id as Category} />
+              <LinearGradient colors={['transparent', 'rgba(20, 10, 5, 0.72)']} style={styles.tileFade} />
+              <Txt variant="heading" numberOfLines={2} style={styles.tileLabel} color="#FFFFFF">
+                {t(c.label)}
+              </Txt>
             </View>
-            <Txt
-              variant="caption"
-              center
-              numberOfLines={1}
-              style={{ fontSize: 12, fontWeight: active ? '700' : '500', color: active ? colors.primary : colors.text }}>
-              {t(c.label)}
-            </Txt>
-          </Pressable>
+          </PressableScale>
         );
       })}
     </ScrollView>
@@ -296,11 +276,12 @@ export function KitchenCard({ chef }: { chef: Chef }) {
 }
 
 const styles = StyleSheet.create({
-  bubbles: { gap: 14, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 4 },
-  bubbleItem: { width: 78, alignItems: 'center', gap: 6 },
-  bubbleRing: { width: 66, height: 66, borderRadius: 33, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
-  bubble: { width: 56, height: 56, borderRadius: 28, overflow: 'hidden' },
-  bubbleIcon: { width: 50, height: 50 },
+  tiles: { gap: 10, paddingHorizontal: 16, paddingTop: 2, paddingBottom: 4 },
+  // The orange ring of the picked tile sits outside the photo, so the photo keeps its size.
+  tile: { width: 112, height: 128, borderRadius: 24, borderWidth: 3, padding: 2 },
+  tileInner: { flex: 1, borderRadius: 19, overflow: 'hidden', justifyContent: 'flex-end' },
+  tileFade: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '60%' },
+  tileLabel: { fontSize: 15, lineHeight: 18, paddingHorizontal: 10, paddingBottom: 9 },
   promoShadow: { borderRadius: 20 },
   promo: { borderRadius: 20, overflow: 'hidden', borderWidth: 1 },
   dots: { flexDirection: 'row', justifyContent: 'center', gap: 5, marginTop: 10 },

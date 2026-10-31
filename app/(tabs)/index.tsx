@@ -106,13 +106,13 @@ export default function HomeScreen() {
           <>
             {/* Closed for the night: the greeting already says so. Sold out: say that instead of Tonight's dinner. */}
             {!browsing && tonight.reason === 'soldOut' ? <SoldOutNotice /> : !browsing && <TonightHero />}
+            <CategoryBubbles value={category} onChange={setCategory} />
+
             {!browsing && (
               <View style={{ marginTop: 16 }}>
                 <PromoCarousel />
               </View>
             )}
-
-            <CategoryBubbles value={category} onChange={setCategory} />
 
             {browsing ? (
               <View style={{ marginTop: 14 }}>

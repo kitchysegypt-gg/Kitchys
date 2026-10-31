@@ -248,3 +248,6 @@ Schedules use Cairo time.
 - Every dish card shows its cook (face and name) on the photo. Points use the K coin
   (`assets/icons/points.png`, also `k-rewards`). Buttons and chips are pills; the tab bar is
   white with rounded top corners.
+- Home order: waves header, food types, banners, then kitchens and dishes. Food types are photo
+  tiles (`CategoryBubbles` in `components/home.tsx`): the category photo with its name in white
+  capitals over a dark fade; the picked one gets an orange ring.
