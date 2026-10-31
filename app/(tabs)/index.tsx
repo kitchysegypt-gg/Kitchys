@@ -1,13 +1,11 @@
-import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Image } from 'expo-image';
-import { setStatusBarStyle } from 'expo-status-bar';
+import { router } from 'expo-router';
+import { useEffect, useMemo, useState } from 'react';
 import { Animated, FlatList, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CategoryBubbles, KitchenCard, PromoCarousel } from '@/components/home';
 import { Greeting, TonightHero } from '@/components/hungry';
 import { DishCard } from '@/components/menu';
+import { LogoTile, WaveHeader } from '@/components/WaveHeader';
 import { Button, Card, EmptyState, Icon, IconBadge, Screen, Txt } from '@/components/ui';
 import { Category } from '@/data/menu';
 import { useAddresses } from '@/lib/addresses';
@@ -17,9 +15,6 @@ import { useSettings } from '@/lib/settings';
 import { formatTime, nextOpening } from '@/lib/schedule';
 import { useKitchensOpen, useTonight } from '@/lib/tonight';
 import { useAnimatedValue } from '@/lib/useAnimatedValue';
-
-const HOME_WAVES = require('@/assets/images/home-waves.png');
-const LOGO_MARK = require('@/assets/images/logo-mark.png');
 
 export default function HomeScreen() {
   const { t, colors, isRTL, location } = useSettings();
@@ -40,14 +35,6 @@ export default function HomeScreen() {
   }, [category, query, dishes, getChef]);
 
   const browsing = query.trim() !== '' || category !== 'all';
-  const insets = useSafeAreaInsets();
-  // White status bar text over the orange waves while Home is showing.
-  useFocusEffect(
-    useCallback(() => {
-      setStatusBarStyle('light');
-      return () => setStatusBarStyle(colors.dark ? 'light' : 'dark');
-    }, [colors.dark])
-  );
   const tonight = useTonight();
   const { addresses } = useAddresses();
   const noneNear = !!location && chefs.length === 0;
@@ -56,12 +43,9 @@ export default function HomeScreen() {
     <Screen edges={[]}>
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
         {/* Kitchy's waves from the loading screen, with the address, greeting and search on them. */}
-        <View style={[styles.waveTop, { paddingTop: insets.top + 10, backgroundColor: '#F4511E' }]}>
-          <Image source={HOME_WAVES} style={styles.waveEdge} contentFit="fill" />
+        <WaveHeader>
           <View style={styles.header}>
-            <View style={styles.markTile}>
-              <Image source={LOGO_MARK} style={{ width: 28, height: 30 }} contentFit="contain" />
-            </View>
+            <LogoTile />
             <Pressable
               onPress={() => router.push(addresses.length ? '/addresses' : '/location')}
               style={{ flex: 1 }}
@@ -96,7 +80,7 @@ export default function HomeScreen() {
             </Pressable>
           ) : null}
         </View>
-        </View>
+        </WaveHeader>
 
         {noneNear ? (
           <EmptyState icon="location-outline" title={t('noChefsNear')} body={t('noChefsNearBody', { km: DELIVERY_RADIUS_KM })}>
@@ -273,11 +257,7 @@ function KitchenStatus() {
 const SHADOW_ROOM = 22;
 
 const styles = StyleSheet.create({
-  // Solid orange, ending in the orange and amber waves of the loading screen.
-  waveTop: { paddingBottom: 56 },
-  waveEdge: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 122 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingBottom: 4 },
-  markTile: { width: 42, height: 42, borderRadius: 14, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
   addressRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   status: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 3, paddingStart: 2 },
   pulseWrap: { width: 10, height: 10, alignItems: 'center', justifyContent: 'center' },

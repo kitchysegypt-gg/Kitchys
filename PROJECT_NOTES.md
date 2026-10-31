@@ -248,6 +248,11 @@ Schedules use Cairo time.
 - Every dish card shows its cook (face and name) on the photo. Points use the K coin
   (`assets/icons/points.png`, also `k-rewards`). Buttons and chips are pills; the tab bar is
   white with rounded top corners.
-- Home order: waves header, food types, banners, then kitchens and dishes. Food types are photo
-  tiles (`CategoryBubbles` in `components/home.tsx`): the category photo with its name in white
-  capitals over a dark fade; the picked one gets an orange ring.
+- Home order: waves header, food types, banners, then kitchens and dishes. Food types are five
+  equal tiles that always fit the width (`CategoryBubbles` in `components/home.tsx`): the 3D icons
+  on white rounded tiles; the picked one gets an orange ring.
+- `components/WaveHeader.tsx` (`WaveHeader`, `LogoTile`) is the shared orange wave top: Home, the
+  rider app's Deliveries screen and the order-placed screen use it.
+- Order placed (checkout): a full screen with the waves, who is cooking it, the delivery time,
+  points earned, and Track order / Back to home.
+- Notification texts have no emojis (`20261101090000_no_emoji_notifications.sql`).

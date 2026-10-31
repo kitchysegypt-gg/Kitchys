@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Linking, RefreshControl, ScrollView, StyleSheet, Switch, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button, Card, EmptyState, Icon, IconBadge, Txt } from '@/components/ui';
+import { LogoTile, WaveHeader } from '@/components/WaveHeader';
 import { showAlert, showConfirm } from '@/lib/alert';
 import type { TranslationKey } from '@/lib/i18n';
 import { mapsLink } from '@/lib/orderRiders';
@@ -36,12 +36,17 @@ export default function RiderDeliveriesScreen() {
   };
 
   return (
-    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView
-        contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 40 }}
+        contentContainerStyle={{ paddingBottom: 40 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={pull} tintColor={colors.primary} />}>
-        <Txt variant="title">{t('riderAppName')}</Txt>
-
+        <WaveHeader>
+          <View style={styles.headerRow}>
+            <LogoTile />
+            <Txt variant="title" style={{ flex: 1, fontSize: 26 }} color="#FFFFFF">
+              {t('riderAppName')}
+            </Txt>
+          </View>
         <Card style={[styles.onlineCard, online && { borderColor: colors.success, borderWidth: 2 }]}>
           <View style={[styles.dot, { backgroundColor: online ? colors.success : colors.textMuted }]} />
           <View style={{ flex: 1 }}>
@@ -59,6 +64,9 @@ export default function RiderDeliveriesScreen() {
             accessibilityLabel={online ? t('riderOnline') : t('riderOffline')}
           />
         </Card>
+        </WaveHeader>
+
+        <View style={{ paddingHorizontal: 16, gap: 14 }}>
 
         {online && locationAllowed && backgroundOn && (
           <View style={[styles.note, { backgroundColor: `${colors.success}14` }]}>
@@ -144,8 +152,9 @@ export default function RiderDeliveriesScreen() {
             ))}
           </>
         )}
+        </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -395,7 +404,8 @@ function Stop({
 }
 
 const styles = StyleSheet.create({
-  onlineCard: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  headerRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingBottom: 14 },
+  onlineCard: { flexDirection: 'row', alignItems: 'center', gap: 12, marginHorizontal: 16 },
   dot: { width: 12, height: 12, borderRadius: 6 },
   note: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 10, borderRadius: 12 },
   head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },

@@ -1,9 +1,11 @@
 import { router } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Switch, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ScheduleValue, SchedulePicker } from '@/components/SchedulePicker';
+import { WaveHeader } from '@/components/WaveHeader';
 import { Button, Card, Chip, Icon, IconName, Screen, ScreenHeader, Txt } from '@/components/ui';
 import { showAlert } from '@/lib/alert';
 import { useCart } from '@/lib/cart';
@@ -17,6 +19,7 @@ import {
   DEFAULT_MINUTES,
   OPEN_MINUTES,
   clampToHours,
+  formatSlot,
   formatTime,
   isBeforeAfterClosedStart,
   isKitchenOpen,
@@ -64,6 +67,12 @@ export default function CheckoutScreen() {
   const [tip, setTip] = useState(0);
   const [busy, setBusy] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [placed, setPlaced] = useState<{ id: string; chef: string | null; when: string } | null>(null);
+
+  const finish = (to: '/' | '/orders' | `/track/${string}`) => {
+    setSuccess(false);
+    router.replace(to);
+  };
 
   // Phones aren't stored on orders (chefs can't see them), so ask for the last one used.
   useEffect(() => {
@@ -133,6 +142,12 @@ export default function CheckoutScreen() {
         delivery_lat: location?.latitude ?? null,
         delivery_lng: location?.longitude ?? null,
         scheduled_for: scheduledFor?.toISOString() ?? null,
+      });
+      const chef = getChef(lines[0].dish.chefId);
+      setPlaced({
+        id: order.id,
+        chef: chef ? l(chef.name) : null,
+        when: scheduledFor ? formatSlot(scheduledFor, language) : t('deliveryWindow'),
       });
       clear();
       setEarned(order.points_earned);
@@ -353,35 +368,44 @@ export default function CheckoutScreen() {
         </SafeAreaView>
       </KeyboardAvoidingView>
 
-      <Modal visible={success} transparent animationType="fade" onRequestClose={() => setSuccess(false)}>
-        <View style={styles.backdrop}>
-          <Card style={{ padding: 24, alignItems: 'center' }}>
-            <View style={[styles.successIcon, { backgroundColor: colors.successBg }]}>
-              <Icon name="checkmark" size={48} color={colors.success} />
+      {/* Order placed: Kitchy's waves, who is cooking it, when it comes, and the points earned. */}
+      <Modal visible={success} animationType="slide" onRequestClose={() => finish('/orders')}>
+        <StatusBar style="light" />
+        <View style={{ flex: 1, backgroundColor: colors.background }}>
+          <WaveHeader lightStatusBar={false}>
+            <View style={styles.placedTop}>
+              <View style={styles.placedCheck}>
+                <Icon name="checkmark" size={52} color={colors.primary} />
+              </View>
+              <Txt variant="title" center style={{ fontSize: 34 }} color="#FFFFFF">
+                {t('orderPlaced')}
+              </Txt>
+              <Txt center color="#FFE9DF">
+                {placed?.chef ? t('orderPlacedChef', { chef: placed.chef }) : t('orderPlacedBody')}
+              </Txt>
             </View>
-            <Txt variant="title" center style={{ marginTop: 16 }}>
-              {t('orderPlaced')}
-            </Txt>
-            <Txt muted center style={{ marginVertical: 12 }}>
-              {t('orderPlacedBody')}
-            </Txt>
-            {earned > 0 && (
-              <View style={[styles.row, styles.earnedPill, { backgroundColor: colors.surfaceAlt }]}>
-                <Icon name="gift" size={20} color={colors.primary} />
-                <Txt variant="heading" style={{ color: colors.primary }}>
-                  {t('pointsEarned', { n: earned })}
+          </WaveHeader>
+          <View style={{ padding: 20, gap: 12 }}>
+            <Card style={styles.placedRow}>
+              <Icon name="delivery" size={30} />
+              <View style={{ flex: 1 }}>
+                <Txt style={{ fontWeight: '700' }}>{t('deliveryTime')}</Txt>
+                <Txt variant="caption" muted>
+                  {placed?.when ?? t('deliveryWindow')}
                 </Txt>
               </View>
+            </Card>
+            {earned > 0 && (
+              <Card style={styles.placedRow}>
+                <Icon name="k-rewards" size={34} />
+                <Txt variant="heading" style={{ flex: 1, fontSize: 18 }}>
+                  {t('pointsEarned', { n: earned })}
+                </Txt>
+              </Card>
             )}
-            <Button
-              title={t('viewOrders')}
-              style={{ alignSelf: 'stretch' }}
-              onPress={() => {
-                setSuccess(false);
-                router.replace('/orders');
-              }}
-            />
-          </Card>
+            <Button title={t('trackOrder')} icon="location-outline" onPress={() => finish(placed ? `/track/${placed.id}` : '/orders')} />
+            <Button title={t('backToHome')} variant="secondary" onPress={() => finish('/')} />
+          </View>
         </View>
       </Modal>
     </Screen>
@@ -450,7 +474,9 @@ const styles = StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
     gap: 2,
   },
-  successIcon: { width: 88, height: 88, borderRadius: 44, alignItems: 'center', justifyContent: 'center' },
+  placedTop: { alignItems: 'center', gap: 8, paddingHorizontal: 24, paddingTop: 24 },
+  placedCheck: { width: 96, height: 96, borderRadius: 48, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
+  placedRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   earnedPill: { borderRadius: 16, paddingVertical: 8, paddingHorizontal: 14, marginBottom: 14 },
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', padding: 24 },
 });

@@ -1,5 +1,4 @@
 import { Image } from 'expo-image';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Href, router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
@@ -11,7 +10,7 @@ import { useOrders } from '@/lib/orders';
 import { useSettings } from '@/lib/settings';
 import { DELIVERY_FEE, supabase } from '@/lib/supabase';
 import { softShadow } from '@/lib/theme';
-import { CategoryPhoto, ChefAvatar, ChefName, DishArt } from './media';
+import { ChefAvatar, ChefName, DishArt } from './media';
 import { Icon, PressableScale, Txt } from './ui';
 
 // Kitchy's promo banners (1200 x 676).
@@ -24,32 +23,51 @@ const PROMO_BANNERS = {
 };
 const BANNER_RATIO = 1200 / 676;
 
+// Kitchy's 3D food type icons.
+const CATEGORY_ICONS: Record<Category, number> = {
+  main: require('@/assets/categories/main.png'),
+  baked: require('@/assets/categories/baked.png'),
+  seafood: require('@/assets/categories/seafood.png'),
+  desserts: require('@/assets/categories/desserts.png'),
+  healthy: require('@/assets/categories/healthy.png'),
+};
+
 /**
- * The food types as photo tiles: a real dish photo, its name in white capitals on a soft dark
- * fade at the bottom. Tap again to show everything.
+ * The food types in one row that always fits the screen: Kitchy's 3D icons on white rounded
+ * tiles, the name under each. Tap again to show everything.
  */
 export function CategoryBubbles({ value, onChange }: { value: Category | 'all'; onChange: (c: Category | 'all') => void }) {
   const { t, colors } = useSettings();
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tiles}>
+    <View style={styles.types}>
       {CATEGORIES.filter((c) => c.id !== 'all').map((c) => {
         const active = value === c.id;
         return (
-          <PressableScale
+          <Pressable
             key={c.id}
             onPress={() => onChange(active ? 'all' : (c.id as Category))}
-            style={[styles.tile, { borderColor: active ? colors.primary : 'transparent' }]}>
-            <View style={styles.tileInner}>
-              <CategoryPhoto category={c.id as Category} />
-              <LinearGradient colors={['transparent', 'rgba(20, 10, 5, 0.72)']} style={styles.tileFade} />
-              <Txt variant="heading" numberOfLines={2} style={styles.tileLabel} color="#FFFFFF">
-                {t(c.label)}
-              </Txt>
+            accessibilityRole="button"
+            accessibilityState={{ selected: active }}
+            style={styles.type}>
+            <View
+              style={[
+                styles.typeTile,
+                active
+                  ? { backgroundColor: `${colors.primary}14`, borderColor: colors.primary, borderWidth: 2 }
+                  : { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 },
+              ]}>
+              <Image source={CATEGORY_ICONS[c.id as Category]} style={styles.typeIcon} contentFit="contain" />
             </View>
-          </PressableScale>
+            <Txt
+              center
+              numberOfLines={2}
+              style={{ fontSize: 11.5, lineHeight: 14, fontWeight: '700', color: active ? colors.primary : colors.text }}>
+              {t(c.label)}
+            </Txt>
+          </Pressable>
         );
       })}
-    </ScrollView>
+    </View>
   );
 }
 
@@ -276,12 +294,11 @@ export function KitchenCard({ chef }: { chef: Chef }) {
 }
 
 const styles = StyleSheet.create({
-  tiles: { gap: 10, paddingHorizontal: 16, paddingTop: 2, paddingBottom: 4 },
-  // The orange ring of the picked tile sits outside the photo, so the photo keeps its size.
-  tile: { width: 112, height: 128, borderRadius: 24, borderWidth: 3, padding: 2 },
-  tileInner: { flex: 1, borderRadius: 19, overflow: 'hidden', justifyContent: 'flex-end' },
-  tileFade: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '60%' },
-  tileLabel: { fontSize: 15, lineHeight: 18, paddingHorizontal: 10, paddingBottom: 9 },
+  // Five equal columns, so every food type fits without scrolling.
+  types: { flexDirection: 'row', gap: 8, paddingHorizontal: 16, paddingTop: 2, paddingBottom: 4 },
+  type: { flex: 1, alignItems: 'center', gap: 6 },
+  typeTile: { width: '100%', aspectRatio: 1, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  typeIcon: { width: '78%', height: '78%' },
   promoShadow: { borderRadius: 20 },
   promo: { borderRadius: 20, overflow: 'hidden', borderWidth: 1 },
   dots: { flexDirection: 'row', justifyContent: 'center', gap: 5, marginTop: 10 },
