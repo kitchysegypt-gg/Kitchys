@@ -206,9 +206,8 @@ type TxtProps = TextProps & {
 export function Txt({ variant = 'body', muted, color, center, style, ...rest }: TxtProps) {
   const { colors, isRTL } = useSettings();
   const weight = (StyleSheet.flatten([styles[variant], style]) as TextStyle | undefined)?.fontWeight;
-  // Titles and headings use the bold narrow headline font, in orange capitals. Arabic keeps the
-  // text font: the headline font has no Arabic letters, and spacing would break joined letters.
-  const display = (variant === 'title' || variant === 'heading') && !isRTL;
+  // Titles and headings use the round headline font, like the Kitchy's logo (it has Arabic too).
+  const display = variant === 'title' || variant === 'heading';
   return (
     <Text
       {...rest}
@@ -216,7 +215,7 @@ export function Txt({ variant = 'body', muted, color, center, style, ...rest }: 
         styles[variant],
         display && (variant === 'title' ? styles.titleDisplay : styles.headingDisplay),
         {
-          color: color ?? (muted ? colors.textMuted : display ? colors.primary : colors.text),
+          color: color ?? (muted ? colors.textMuted : colors.text),
           textAlign: center ? 'center' : isRTL ? 'right' : 'left',
           writingDirection: isRTL ? 'rtl' : 'ltr',
         },
@@ -306,7 +305,7 @@ type ButtonProps = {
 
 export function Button({ title, onPress, icon, variant = 'primary', loading, disabled, style, small }: ButtonProps) {
   const { colors } = useSettings();
-  const background = variant === 'primary' ? colors.primary : 'transparent';
+  const background = variant === 'primary' ? colors.primary : variant === 'secondary' ? colors.surfaceAlt : 'transparent';
   const textColor = variant === 'primary' ? colors.onPrimary : variant === 'secondary' ? colors.text : colors.primary;
 
   return (
@@ -317,7 +316,6 @@ export function Button({ title, onPress, icon, variant = 'primary', loading, dis
         styles.button,
         small && styles.buttonSmall,
         { backgroundColor: background, opacity: disabled ? 0.45 : pressed ? 0.85 : 1 },
-        variant === 'secondary' && { borderWidth: 1.5, borderColor: colors.text },
         style,
       ]}>
       {loading ? (
@@ -353,7 +351,7 @@ export function Chip({
       onPress={onPress}
       style={[
         styles.chip,
-        { backgroundColor: active ? colors.primary : 'transparent', borderColor: active ? colors.primary : colors.text },
+        { backgroundColor: active ? colors.primary : colors.surface, borderColor: active ? colors.primary : colors.border },
       ]}>
       {icon && <Icon name={icon} size={16} color={textColor} />}
       {emoji && <Emoji3D name={emoji} size={20} />}
@@ -453,16 +451,17 @@ const styles = StyleSheet.create({
   title: { fontSize: 25, fontWeight: '700', letterSpacing: -0.5 } as TextStyle,
   heading: { fontSize: 18, fontWeight: '700', letterSpacing: -0.3 } as TextStyle,
   // The headline font is narrow, so it runs a little larger, in capitals.
-  titleDisplay: { fontSize: 34, textTransform: 'uppercase', letterSpacing: 0.3 } as TextStyle,
-  headingDisplay: { fontSize: 23, textTransform: 'uppercase', letterSpacing: 0.3 } as TextStyle,
+  // The round headline font: no extra letter spacing, so Arabic letters stay joined.
+  titleDisplay: { fontSize: 28, letterSpacing: 0 } as TextStyle,
+  headingDisplay: { fontSize: 20, letterSpacing: 0 } as TextStyle,
   body: { fontSize: 15, lineHeight: 22 },
   caption: { fontSize: 13, lineHeight: 18 },
   label: { fontSize: 12, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.8 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 12 },
   card: {
-    borderRadius: 20,
+    borderRadius: 24,
     padding: 14,
-    borderWidth: 1.25,
+    borderWidth: 1,
   },
   button: {
     borderRadius: 999,
@@ -482,10 +481,10 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 14,
     borderRadius: 999,
-    borderWidth: 1.25,
+    borderWidth: 1,
   },
   groupShadow: { borderRadius: 18 },
-  group: { borderRadius: 20, overflow: 'hidden', paddingVertical: 4, borderWidth: 1.25 },
+  group: { borderRadius: 24, overflow: 'hidden', paddingVertical: 4, borderWidth: 1 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingVertical: 15, paddingHorizontal: 18 },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
   emptyIcon: { width: 88, height: 88, borderRadius: 44, alignItems: 'center', justifyContent: 'center' },

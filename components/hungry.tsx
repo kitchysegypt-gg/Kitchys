@@ -29,7 +29,7 @@ function useNow(everyMs = 5 * 60_000) {
  * "Hungry, Sara?" in the afternoon, "Dinner time!" in the evening, "Plan tonight's dinner"
  * in the morning and "Order for tomorrow" once kitchens are closed.
  */
-export function Greeting() {
+export function Greeting({ light }: { light?: boolean }) {
   const { t, colors } = useSettings();
   const { session } = useAuth();
   const now = useNow();
@@ -48,10 +48,10 @@ export function Greeting() {
         : ['greetEvening', 'greetEveningSub'];
   return (
     <View style={styles.greeting}>
-      <Txt variant="heading" style={{ fontSize: 36 }} numberOfLines={3}>
+      <Txt variant="heading" style={{ fontSize: 30, lineHeight: 38 }} numberOfLines={3} color={light ? '#FFFFFF' : undefined}>
         {t(title, { name })}
       </Txt>
-      <Txt muted style={{ color: colors.textMuted }} numberOfLines={2}>
+      <Txt style={{ color: light ? '#FFE9DF' : colors.textMuted }} numberOfLines={2}>
         {t(sub)}
       </Txt>
     </View>

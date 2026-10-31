@@ -235,12 +235,15 @@ Schedules use Cairo time.
   Tapping the address on Home or in More opens the list once something is saved.
   Delete my account removes them too.
 
-## Look: cream and orange (Nov 2026)
+## Look: Kitchy's own (Nov 2026)
 
-- Cream background (#F6EEDF), dark brown text (#2B1A12), thin dark outlines, no shadows
-  (`softShadow` returns nothing), Kitchy's orange for headlines and main buttons. Colours in
-  `lib/theme.ts` (`light`).
-- Titles and headings (`Txt` variants `title`/`heading`) use Barlow Condensed in orange capitals
-  (`FONT.display`); Arabic keeps the text font. Body text stays Plus Jakarta Sans.
-- Buttons and chips are pills; secondary buttons and chips are outlined; cards and list groups
-  are outlined; icon tiles are flat. Reverting the look = reverting this commit.
+- Built from the brand itself: the cream of the logo (#FAF5E7), white rounded cards with soft
+  lines (#EADFC9), orange (#F4511E) and amber (#FF9F3A). No shadows (`softShadow` returns nothing).
+  Colours in `lib/theme.ts` (`light`).
+- Headlines (`Txt` variants `title`/`heading`) use Baloo Bhaijaan 2 (`FONT.display`): round and
+  chunky like the logo, with Arabic letters too. Body text stays Plus Jakarta Sans.
+- Home starts with the loading screen's orange and amber waves (`assets/images/home-waves.png`,
+  drawn to match; solid orange above it), the K mark, address, greeting and search on top.
+- Every dish card shows its cook (face and name) on the photo. Points use the K coin
+  (`assets/icons/points.png`, also `k-rewards`). Buttons and chips are pills; the tab bar is
+  white with rounded top corners.

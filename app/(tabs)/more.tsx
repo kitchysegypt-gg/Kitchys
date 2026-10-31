@@ -17,7 +17,7 @@ import { isDemo, supabase } from '@/lib/supabase';
 export default function MoreScreen() {
   const { t, colors, location } = useSettings();
   const { session } = useAuth();
-  const { points, rank } = useOrders();
+  const { points } = useOrders();
   const { isMember } = useMembership();
   const chefStatus = useChefStatus();
   const { refresh: refreshCatalog } = useCatalog();
@@ -72,9 +72,8 @@ export default function MoreScreen() {
           </PressableScale>
           <PressableScale onPress={() => router.push('/rewards')} style={{ flex: 1 }}>
             <Card style={styles.tile}>
-              <View style={[styles.tileIcon, { backgroundColor: rank.color }]}>
-                <Icon name={rank.icon} size={22} color="#fff" />
-              </View>
+              {/* The Kitchy's points coin. */}
+              <Icon name="k-rewards" size={44} />
               <Txt style={styles.tileTitle} numberOfLines={1}>
                 {t('kitchysPoints')}
               </Txt>

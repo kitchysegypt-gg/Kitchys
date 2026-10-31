@@ -1,6 +1,9 @@
-import { router } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Image } from 'expo-image';
+import { setStatusBarStyle } from 'expo-status-bar';
 import { Animated, FlatList, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CategoryBubbles, KitchenCard, PromoCarousel } from '@/components/home';
 import { Greeting, TonightHero } from '@/components/hungry';
@@ -14,6 +17,9 @@ import { useSettings } from '@/lib/settings';
 import { formatTime, nextOpening } from '@/lib/schedule';
 import { useKitchensOpen, useTonight } from '@/lib/tonight';
 import { useAnimatedValue } from '@/lib/useAnimatedValue';
+
+const HOME_WAVES = require('@/assets/images/home-waves.png');
+const LOGO_MARK = require('@/assets/images/logo-mark.png');
 
 export default function HomeScreen() {
   const { t, colors, isRTL, location } = useSettings();
@@ -34,37 +40,48 @@ export default function HomeScreen() {
   }, [category, query, dishes, getChef]);
 
   const browsing = query.trim() !== '' || category !== 'all';
+  const insets = useSafeAreaInsets();
+  // White status bar text over the orange waves while Home is showing.
+  useFocusEffect(
+    useCallback(() => {
+      setStatusBarStyle('light');
+      return () => setStatusBarStyle(colors.dark ? 'light' : 'dark');
+    }, [colors.dark])
+  );
   const tonight = useTonight();
   const { addresses } = useAddresses();
   const noneNear = !!location && chefs.length === 0;
 
   return (
-    <Screen>
-      {/* One calm row: where we deliver, whether kitchens are open, and the chat. Settings live in More. */}
-      <View style={styles.header}>
-        <Pressable
-          onPress={() => router.push(addresses.length ? '/addresses' : '/location')}
-          style={{ flex: 1 }}
-          hitSlop={6}
-          accessibilityRole="button"
-          accessibilityLabel={`${t('deliveryTo')} ${location?.address || t('setLocation')}`}>
-          <View style={styles.addressRow}>
-            <Icon name="location" size={18} color={colors.primary} />
-            <Txt numberOfLines={1} style={{ fontSize: 16, fontWeight: '700', flexShrink: 1 }}>
-              {location?.address || t('setLocation')}
-            </Txt>
-            <Icon name="chevron-down" size={16} color={colors.text} />
-          </View>
-          <KitchenStatus />
-        </Pressable>
-        <Pressable onPress={() => router.push('/chat')} hitSlop={8} accessibilityLabel={t('chatTitle')}>
-          <Icon name="k-chat" size={40} color={colors.text} />
-        </Pressable>
-      </View>
-
+    <Screen edges={[]}>
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
-        {!browsing && <Greeting />}
-        <View style={[styles.search, { borderColor: colors.text }]}>
+        {/* Kitchy's waves from the loading screen, with the address, greeting and search on them. */}
+        <View style={[styles.waveTop, { paddingTop: insets.top + 10, backgroundColor: '#F4511E' }]}>
+          <Image source={HOME_WAVES} style={styles.waveEdge} contentFit="fill" />
+          <View style={styles.header}>
+            <View style={styles.markTile}>
+              <Image source={LOGO_MARK} style={{ width: 28, height: 30 }} contentFit="contain" />
+            </View>
+            <Pressable
+              onPress={() => router.push(addresses.length ? '/addresses' : '/location')}
+              style={{ flex: 1 }}
+              hitSlop={6}
+              accessibilityRole="button"
+              accessibilityLabel={`${t('deliveryTo')} ${location?.address || t('setLocation')}`}>
+              <View style={styles.addressRow}>
+                <Txt numberOfLines={1} style={{ fontSize: 16, fontWeight: '700', flexShrink: 1 }} color="#FFFFFF">
+                  {location?.address || t('setLocation')}
+                </Txt>
+                <Icon name="chevron-down" size={16} color="#FFFFFF" />
+              </View>
+              <KitchenStatus />
+            </Pressable>
+            <Pressable onPress={() => router.push('/chat')} hitSlop={8} accessibilityLabel={t('chatTitle')}>
+              <Icon name="k-chat" size={40} />
+            </Pressable>
+          </View>
+          {!browsing && <Greeting light />}
+        <View style={styles.search}>
           <Icon name="search" size={20} color={colors.textMuted} />
           <TextInput
             value={query}
@@ -78,6 +95,7 @@ export default function HomeScreen() {
               <Icon name="close-circle" size={18} color={colors.textMuted} />
             </Pressable>
           ) : null}
+        </View>
         </View>
 
         {noneNear ? (
@@ -177,7 +195,7 @@ export default function HomeScreen() {
   function sectionHeader(title: string, onSeeAll?: () => void) {
     return (
       <View style={styles.sectionHeader}>
-        <Txt variant="heading" style={{ flex: 1, fontSize: 27 }}>
+        <Txt variant="heading" style={{ flex: 1, fontSize: 22 }}>
           {title}
         </Txt>
         {onSeeAll && (
@@ -211,7 +229,7 @@ function SoldOutNotice() {
 
 /** "● Kitchens open · 45–60 min" under the address, with a softly pulsing live dot. */
 function KitchenStatus() {
-  const { t, colors, language } = useSettings();
+  const { t, language } = useSettings();
   const pulse = useAnimatedValue(0);
   // Re-check every minute so the line flips at 10 AM and 9 PM.
   const [now, setNow] = useState(() => new Date());
@@ -225,7 +243,7 @@ function KitchenStatus() {
     return () => loop.stop();
   }, [pulse]);
   const open = useKitchensOpen(now);
-  const dot = open ? colors.success : colors.danger;
+  const dot = open ? '#7DF0A5' : '#FFD2C2';
   const opening = nextOpening(now);
   const opensText = t(opening.day === 0 ? 'opensAt' : 'opensTomorrow', { time: formatTime(opening.minutes, language) });
   return (
@@ -245,7 +263,7 @@ function KitchenStatus() {
         )}
         <View style={[styles.pulseDot, { backgroundColor: dot }]} />
       </View>
-      <Txt variant="caption" muted numberOfLines={1} style={{ fontSize: 12, flexShrink: 1 }}>
+      <Txt variant="caption" numberOfLines={1} style={{ fontSize: 12, flexShrink: 1 }} color="#FFE9DF">
         {open ? `${t('kitchensOpen')} · ${t('deliveryWindow')}` : `${t('kitchensClosed')} · ${opensText}`}
       </Txt>
     </View>
@@ -255,7 +273,11 @@ function KitchenStatus() {
 const SHADOW_ROOM = 22;
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingTop: 10, paddingBottom: 4 },
+  // Solid orange, ending in the orange and amber waves of the loading screen.
+  waveTop: { paddingBottom: 56 },
+  waveEdge: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 122 },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingBottom: 4 },
+  markTile: { width: 42, height: 42, borderRadius: 14, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
   addressRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   status: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 3, paddingStart: 2 },
   pulseWrap: { width: 10, height: 10, alignItems: 'center', justifyContent: 'center' },
@@ -267,9 +289,9 @@ const styles = StyleSheet.create({
     gap: 10,
     marginHorizontal: 16,
     marginTop: 12,
-    paddingHorizontal: 14,
-    borderRadius: 999,
-    borderWidth: 1.5,
+    paddingHorizontal: 16,
+    borderRadius: 22,
+    backgroundColor: '#FFFFFF',
   },
   searchInput: { flex: 1, paddingVertical: 13, fontSize: 15, fontFamily: FONT.regular },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, marginTop: 26, marginBottom: 12 },

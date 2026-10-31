@@ -27,23 +27,23 @@ const BRAND = '#F4511E';
 const BRAND_DEEP = '#B8330D';
 
 export const THEMES: Record<ThemeName, Palette> = {
-  // Cream paper, dark brown ink and thin dark outlines, with Kitchy's orange.
+  // Kitchy's own look: the cream of the logo, white rounded cards, soft lines, orange and amber.
   light: {
     dark: false,
-    background: '#F6EEDF',
-    surface: '#FBF6EC',
-    surfaceAlt: '#EFE4CF',
-    text: '#2B1A12',
-    textMuted: '#6B5648',
-    border: '#3B2A1F',
+    background: '#FAF5E7',
+    surface: '#FFFFFF',
+    surfaceAlt: '#F3EBDA',
+    text: '#2A1D17',
+    textMuted: '#6E5F55',
+    border: '#EADFC9',
     primary: BRAND,
     primaryDeep: BRAND_DEEP,
     onPrimary: '#FFFFFF',
-    accent: '#FFB300',
+    accent: '#FF9F3A',
     success: '#1E9E4F',
     successBg: '#E6F7EC',
     danger: '#E5484D',
-    shadow: '#2B1A12',
+    shadow: '#2A1D17',
     heroGradient: ['#F4511E', '#9E2A0C'],
   },
   mint: {

@@ -181,6 +181,15 @@ export function DishCard({ dish, wide }: { dish: Dish; wide?: boolean }) {
                 <Txt style={{ color: '#1B1D1F', fontSize: 11, fontWeight: '800' }}>{t('orderedWeekShort', { n: orders })}</Txt>
               </View>
             )}
+            {/* Every dish is cooked by a real person: show her face and name. */}
+            {chef && (
+              <View style={styles.cookedBy}>
+                <ChefAvatar chef={chef} size={22} />
+                <Txt numberOfLines={1} style={{ fontSize: 11, fontWeight: '700', flexShrink: 1 }} color="#2A1D17">
+                  {l(chef.name)}
+                </Txt>
+              </View>
+            )}
             <FavoriteButton dishId={dish.deal?.dishId ?? dish.id} style={styles.cardHeart} />
             {(dish.spicy || dish.vegetarian) && (
               <View style={styles.badges}>
@@ -190,11 +199,11 @@ export function DishCard({ dish, wide }: { dish: Dish; wide?: boolean }) {
             )}
           </View>
           <View style={{ padding: 12, gap: 2 }}>
-            <Txt numberOfLines={1} style={{ fontSize: 15, fontWeight: '700' }}>
+            <Txt variant="heading" numberOfLines={1} style={{ fontSize: 17, lineHeight: 24 }}>
               {l(dish.name)}
             </Txt>
             <Txt muted variant="caption" numberOfLines={1}>
-              {[chef ? l(chef.name) : l(dish.short), dish.portionGrams ? formatPortion(dish.portionGrams) : null]
+              {[l(dish.short), dish.portionGrams ? formatPortion(dish.portionGrams) : null]
                 .filter(Boolean)
                 .join(' · ')}
             </Txt>
@@ -371,6 +380,20 @@ export { Button };
 
 const styles = StyleSheet.create({
   cardHeart: { position: 'absolute', bottom: 8, end: 8 },
+  cookedBy: {
+    position: 'absolute',
+    bottom: 8,
+    start: 8,
+    maxWidth: '72%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 999,
+    paddingVertical: 2,
+    paddingStart: 2,
+    paddingEnd: 9,
+  },
   allergyLine: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
   heart: {
     width: 32,
