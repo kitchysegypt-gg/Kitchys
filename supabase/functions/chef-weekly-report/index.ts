@@ -36,7 +36,7 @@ type Lang = 'en' | 'ar';
 const TEXT = {
   en: {
     subject: (name: string) => `${name}, your Kitchy's week in numbers`,
-    hello: (name: string) => `Hi Chef ${name}`,
+    hello: (name: string) => `Hi Chef ${name} 👋`,
     intro: "Here's how your kitchen did in the last 7 days.",
     orders: 'Orders',
     sales: 'Sales',
@@ -62,7 +62,7 @@ const TEXT = {
   },
   ar: {
     subject: (name: string) => `${name}، أسبوعك على كيتشيز بالأرقام`,
-    hello: (name: string) => `أهلاً يا شيف ${name}`,
+    hello: (name: string) => `أهلاً يا شيف ${name} 👋`,
     intro: 'ده أداء مطبخك في آخر ٧ أيام.',
     orders: 'الطلبات',
     sales: 'المبيعات',
@@ -149,7 +149,7 @@ function buildEmail(name: string, s: Stats, lang: Lang) {
       <p style="margin:12px 6px 0;font-size:16px"><b>${escape(T.earnings)}:</b> <span style="color:#1E9E4F;font-weight:800">${escape(egp(earnings))}</span></p>
       ${top ? `<p style="margin:16px 0 0"><b>${escape(T.best)}:</b> ${escape(top.name)} · ${escape(T.portions(top.qty))} · ${escape(egp(top.sales))}</p>` : ''}
       ${busiest?.orders ? `<p style="margin:6px 0 0"><b>${escape(T.busiest)}:</b> ${escape(T.days[busiest.weekday])}</p>` : ''}
-      ${s.rating.count ? `<p style="margin:6px 0 0"><b>${escape(T.rating)}:</b> ★ ${Number(s.rating.overall).toFixed(1)} (${escape(T.reviews(s.rating.count))})</p>` : ''}
+      ${s.rating.count ? `<p style="margin:6px 0 0"><b>${escape(T.rating)}:</b> ⭐ ${Number(s.rating.overall).toFixed(1)} (${escape(T.reviews(s.rating.count))})</p>` : ''}
       ${tips.length ? `<h2 style="font-size:16px;margin:20px 0 6px;color:#1B1D1F">${escape(T.tips)}</h2><ul style="margin:0;padding-${dir === 'rtl' ? 'right' : 'left'}:20px;color:#1B1D1F">${tips.map((tip) => `<li style="margin:4px 0">${escape(tip)}</li>`).join('')}</ul>` : ''}
       <div style="margin-top:22px"><a href="https://kitchys.expo.app/kitchen" style="display:inline-block;background:${BRAND};color:#fff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:12px">${escape(T.open)}</a></div>
     </div>

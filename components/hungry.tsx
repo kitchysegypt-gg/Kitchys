@@ -3,9 +3,11 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import Animated, { FadeIn, LinearTransition } from 'react-native-reanimated';
 
 import { Dish } from '@/data/menu';
 import { useAuth } from '@/lib/auth';
+import { useCart } from '@/lib/cart';
 import { useCatalog } from '@/lib/catalog';
 import type { TranslationKey } from '@/lib/i18n';
 import { useMembership } from '@/lib/membership';
@@ -67,7 +69,7 @@ export function TonightHero() {
   const { popular, dishes, getChef, weekOrders } = useCatalog();
   const { isMember, membership } = useMembership();
   const addToCart = useAddToCart();
-  const [added, setAdded] = useState(false);
+  const { lines, setQuantity } = useCart();
   // The dish changes once a day.
   const [day] = useState(() => Math.floor(Date.now() / 86_400_000));
 
@@ -107,11 +109,8 @@ export function TonightHero() {
   const chef = getChef(dish.chefId);
   const orders = weekOrders(dish);
 
-  const onAdd = () =>
-    addToCart(dish, 1, () => {
-      setAdded(true);
-      setTimeout(() => setAdded(false), 1400);
-    });
+  const inCart = lines.find((line) => line.dish.id === dish.id)?.quantity ?? 0;
+  const onAdd = () => addToCart(dish, 1);
 
   return (
     <PressableScale
@@ -145,17 +144,42 @@ export function TonightHero() {
               </View>
             )}
           </View>
-          <Pressable
-            onPress={onAdd}
-            hitSlop={6}
-            accessibilityRole="button"
-            accessibilityLabel={`${t('addToCart')} ${l(dish.name)}`}
-            style={[styles.heroButton, { backgroundColor: colors.primary }]}>
-            <Icon name={added ? 'checkmark' : 'add'} size={18} color={colors.onPrimary} />
-            <Txt style={{ color: colors.onPrimary, fontWeight: '800' }}>
-              {added ? t('addedShort') : formatPrice(dish.price)}
-            </Txt>
-          </Pressable>
+          {/* "Add to cart" first; once the dish is in the cart the button grows into - 1 + so more can be added. */}
+          <Animated.View layout={LinearTransition.duration(220)} style={[styles.heroButton, { backgroundColor: colors.primary }]}>
+            {inCart > 0 ? (
+              <Animated.View key="stepper" entering={FadeIn.duration(180)} style={styles.heroStepper}>
+                <Pressable
+                  onPress={() => setQuantity(dish.id, inCart - 1)}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('less')}
+                  style={styles.heroStep}>
+                  <Icon name={inCart <= 1 ? 'trash-outline' : 'remove'} size={20} color={colors.onPrimary} />
+                </Pressable>
+                <Txt style={styles.heroQty}>{inCart}</Txt>
+                <Pressable
+                  onPress={onAdd}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('more')}
+                  style={styles.heroStep}>
+                  <Icon name="add" size={20} color={colors.onPrimary} />
+                </Pressable>
+              </Animated.View>
+            ) : (
+              <Animated.View key="add" entering={FadeIn.duration(180)}>
+                <Pressable
+                  onPress={onAdd}
+                  hitSlop={6}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${t('addToCart')} ${l(dish.name)}`}
+                  style={styles.heroAdd}>
+                  <Icon name="add" size={18} color={colors.onPrimary} />
+                  <Txt style={{ color: colors.onPrimary, fontWeight: '800' }}>{t('addToCart')}</Txt>
+                </Pressable>
+              </Animated.View>
+            )}
+          </Animated.View>
         </View>
       </View>
     </PressableScale>
@@ -182,4 +206,8 @@ const styles = StyleSheet.create({
   heroMeta: { color: 'rgba(255,255,255,0.92)', fontSize: 13 },
   heroLine: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   heroButton: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 14 },
+  heroAdd: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  heroStepper: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  heroStep: { width: 32, height: 28, alignItems: 'center', justifyContent: 'center' },
+  heroQty: { color: '#FFFFFF', fontSize: 18, fontWeight: '800', minWidth: 26, textAlign: 'center' },
 });
