@@ -121,5 +121,5 @@ const styles = StyleSheet.create({
   kicker: { letterSpacing: 2, textTransform: 'uppercase', fontWeight: '700' },
   title: { fontFamily: FONT.extrabold, fontSize: 32, lineHeight: 38 },
   perk: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  perkIcon: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  perkIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
 });

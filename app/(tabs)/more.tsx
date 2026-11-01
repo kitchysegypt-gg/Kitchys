@@ -156,6 +156,6 @@ const styles = StyleSheet.create({
   initials: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center' },
   tiles: { flexDirection: 'row', gap: 12 },
   tile: { gap: 10, minHeight: 130, padding: 16 },
-  tileIcon: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  tileIcon: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   tileTitle: { fontSize: 16, fontWeight: '600' },
 });

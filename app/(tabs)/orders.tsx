@@ -233,7 +233,7 @@ export default function OrdersScreen() {
 const styles = StyleSheet.create({
   riderRow: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 10, borderRadius: 12, borderWidth: 1 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  statusIcon: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
+  statusIcon: { width: 42, height: 42, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   badges: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 16, rowGap: 6 },
   items: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   item: {

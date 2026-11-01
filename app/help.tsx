@@ -183,7 +183,7 @@ const styles = StyleSheet.create({
   search: { flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderRadius: 14, paddingHorizontal: 12 },
   searchInput: { flex: 1, paddingVertical: 12, fontSize: 16 },
   topicHead: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14 },
-  topicIcon: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  topicIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   topicBody: { paddingHorizontal: 14, paddingBottom: 16, gap: 12 },
   step: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
   stepNumber: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center', marginTop: 1 },

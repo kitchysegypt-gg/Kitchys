@@ -176,7 +176,8 @@ export function IconBadge({
   solid?: boolean;
 }) {
   const color = ICON_TONES[tone];
-  const radius = Math.round(size * 0.32);
+  // Rounded squares: 12 on normal sizes, a little more on big ones.
+  const radius = size <= 48 ? 12 : Math.round(size * 0.27);
   return (
     <LinearGradient
       colors={solid ? [color, color] : [`${color}1F`, `${color}1F`]}
@@ -496,5 +497,5 @@ const styles = StyleSheet.create({
   group: { borderRadius: 24, overflow: 'hidden', paddingVertical: 4, borderWidth: 1 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingVertical: 15, paddingHorizontal: 18 },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
-  emptyIcon: { width: 88, height: 88, borderRadius: 44, alignItems: 'center', justifyContent: 'center' },
+  emptyIcon: { width: 88, height: 88, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
 });

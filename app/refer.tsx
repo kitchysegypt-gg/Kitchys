@@ -120,7 +120,7 @@ export default function ReferScreen() {
 
 const styles = StyleSheet.create({
   intro: { alignItems: 'center', gap: 8, paddingHorizontal: 8, paddingTop: 8 },
-  introIcon: { width: 72, height: 72, borderRadius: 36, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
+  introIcon: { width: 72, height: 72, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
   code: {
     alignSelf: 'stretch',
     alignItems: 'center',
@@ -132,5 +132,5 @@ const styles = StyleSheet.create({
   codeText: { fontSize: 28, fontWeight: '800', letterSpacing: 4 },
   buttons: { flexDirection: 'row', gap: 10, alignSelf: 'stretch' },
   creditCard: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  creditIcon: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
+  creditIcon: { width: 48, height: 48, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
 });
