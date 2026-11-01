@@ -32,9 +32,18 @@ const CATEGORY_ICONS: Record<Category, number> = {
   healthy: require('@/assets/categories/healthy.png'),
 };
 
+// Each food type has its own soft colour behind its icon (light theme, dark theme).
+const CATEGORY_TINTS: Record<Category, [string, string]> = {
+  main: ['#FFE0CC', '#4A2E22'],
+  baked: ['#F7E7C6', '#45391F'],
+  seafood: ['#DBEEF8', '#1F3640'],
+  desserts: ['#FCE1E7', '#45252C'],
+  healthy: ['#E1F1D5', '#26381E'],
+};
+
 /**
- * The food types in one row that always fits the screen: Kitchy's 3D icons on white rounded
- * tiles, the name under each. Tap again to show everything.
+ * The food types in one row that always fits the screen: Kitchy's 3D icons on soft coloured
+ * rounded tiles, the icon peeking over the top, the name under each. Tap again to show everything.
  */
 export function CategoryBubbles({ value, onChange }: { value: Category | 'all'; onChange: (c: Category | 'all') => void }) {
   const { t, colors } = useSettings();
@@ -52,9 +61,8 @@ export function CategoryBubbles({ value, onChange }: { value: Category | 'all'; 
             <View
               style={[
                 styles.typeTile,
-                active
-                  ? { backgroundColor: `${colors.primary}14`, borderColor: colors.primary, borderWidth: 2 }
-                  : { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1 },
+                { backgroundColor: CATEGORY_TINTS[c.id as Category][colors.dark ? 1 : 0] },
+                active && { borderColor: colors.primary, borderWidth: 2 },
               ]}>
               <Image source={CATEGORY_ICONS[c.id as Category]} style={styles.typeIcon} contentFit="contain" />
             </View>
@@ -296,10 +304,11 @@ export function KitchenCard({ chef }: { chef: Chef }) {
 
 const styles = StyleSheet.create({
   // Five equal columns, so every food type fits without scrolling.
-  types: { flexDirection: 'row', gap: 14, paddingHorizontal: 18, paddingTop: 22, paddingBottom: 8 },
+  types: { flexDirection: 'row', gap: 12, paddingHorizontal: 18, paddingTop: 30, paddingBottom: 8 },
   type: { flex: 1, alignItems: 'center', gap: 8 },
-  typeTile: { width: '100%', aspectRatio: 1, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
-  typeIcon: { width: '78%', height: '78%' },
+  typeTile: { width: '100%', aspectRatio: 1, borderRadius: 20, alignItems: 'center', justifyContent: 'flex-end', overflow: 'visible' },
+  // Bigger than the tile's top so it peeks out.
+  typeIcon: { width: '96%', height: '108%', marginBottom: '4%' },
   typeLabel: { fontSize: 12, lineHeight: 15, minHeight: 30, fontWeight: '700' },
   promoShadow: { borderRadius: 20 },
   promo: { borderRadius: 20, overflow: 'hidden', borderWidth: 1 },
