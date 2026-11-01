@@ -4,6 +4,7 @@ import { PlusJakartaSans_600SemiBold } from '@expo-google-fonts/plus-jakarta-san
 import { PlusJakartaSans_700Bold } from '@expo-google-fonts/plus-jakarta-sans/700Bold';
 import { PlusJakartaSans_800ExtraBold } from '@expo-google-fonts/plus-jakarta-sans/800ExtraBold';
 import { BarlowCondensed_800ExtraBold } from '@expo-google-fonts/barlow-condensed/800ExtraBold';
+import { Fredoka_600SemiBold } from '@expo-google-fonts/fredoka/600SemiBold';
 import { BalooBhaijaan2_700Bold } from '@expo-google-fonts/baloo-bhaijaan-2/700Bold';
 import { BalooBhaijaan2_800ExtraBold } from '@expo-google-fonts/baloo-bhaijaan-2/800ExtraBold';
 import type { TextStyle } from 'react-native';
@@ -13,6 +14,8 @@ import type { TextStyle } from 'react-native';
  * Bhaijaan 2 for Arabic headlines, since Barlow has no Arabic letters. Loaded in app/_layout.tsx.
  */
 export const FONT_FILES = {
+  // The loading screen's line, in the round style of the Kitchy's logo.
+  Fredoka_600SemiBold,
   BarlowCondensed_800ExtraBold,
   BalooBhaijaan2_700Bold,
   BalooBhaijaan2_800ExtraBold,

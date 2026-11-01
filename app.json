@@ -32,8 +32,8 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-kitchys.png",
-          "imageWidth": 240,
+          "image": "./assets/images/loading-logo.png",
+          "imageWidth": 220,
           "resizeMode": "contain",
           "backgroundColor": "#FAF5E7"
         }

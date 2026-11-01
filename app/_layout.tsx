@@ -2,13 +2,13 @@ import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { View } from 'react-native';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AlertHost } from '@/components/AlertHost';
-import { IntroAnimation } from '@/components/IntroAnimation';
+import { LoadingScreen } from '@/components/LoadingScreen';
 import { AddressesProvider } from '@/lib/addresses';
 import { AuthProvider, useAuth } from '@/lib/auth';
 import { CartProvider } from '@/lib/cart';
@@ -28,8 +28,8 @@ export { ErrorBoundary } from 'expo-router';
 
 SplashScreen.preventAutoHideAsync();
 
-// The opening animation plays once each time the app starts.
-let introPlayed = false;
+// The loading screen shows once each time the app starts.
+let loadingShown = false;
 
 export default function RootLayout() {
   return (
@@ -61,16 +61,23 @@ export default function RootLayout() {
 function RootNavigator() {
   const { loaded, onboarded, colors } = useSettings();
   const { session, loading } = useAuth();
-  const [showIntro, setShowIntro] = useState(!introPlayed);
+  const [showLoading, setShowLoading] = useState(!loadingShown);
   // A font that fails to load falls back to the system font rather than blocking the app.
   const [fontsLoaded, fontError] = useFonts(FONT_FILES);
-  const ready = loaded && !loading && (fontsLoaded || !!fontError);
+  const fontsReady = fontsLoaded || !!fontError;
+  const ready = loaded && !loading && fontsReady;
+  const loadingDone = useCallback(() => {
+    loadingShown = true;
+    setShowLoading(false);
+  }, []);
 
+  // The phone's own splash (just the logo) gives way to Kitchy's loading screen as soon as its
+  // font is there; the loading screen stays until the app is ready.
   useEffect(() => {
-    if (ready) SplashScreen.hideAsync();
-  }, [ready]);
+    if (fontsReady) SplashScreen.hideAsync();
+  }, [fontsReady]);
 
-  if (!ready) return null;
+  if (!fontsReady || (!ready && !showLoading)) return null;
 
   const base = colors.dark ? DarkTheme : DefaultTheme;
   const navTheme = {
@@ -87,64 +94,59 @@ function RootNavigator() {
 
   return (
     <View style={{ flex: 1 }}>
-      <ThemeProvider value={navTheme}>
-        <StatusBar style={colors.dark ? 'light' : 'dark'} />
-        <Stack screenOptions={{ headerShown: false }}>
-          {/* 1. First launch: explain how the app works. */}
-          <Stack.Protected guard={!onboarded && !IS_RIDER}>
-            <Stack.Screen name="onboarding" />
-          </Stack.Protected>
+      {ready && (
+        <ThemeProvider value={navTheme}>
+          <StatusBar style={colors.dark ? 'light' : 'dark'} />
+          <Stack screenOptions={{ headerShown: false }}>
+            {/* 1. First launch: explain how the app works. */}
+            <Stack.Protected guard={!onboarded && !IS_RIDER}>
+              <Stack.Screen name="onboarding" />
+            </Stack.Protected>
 
-          {/* 2. Email + password sign in with Supabase. */}
-          <Stack.Protected guard={(onboarded || IS_RIDER) && !session}>
-            <Stack.Screen name="auth" />
-          </Stack.Protected>
+            {/* 2. Email + password sign in with Supabase. */}
+            <Stack.Protected guard={(onboarded || IS_RIDER) && !session}>
+              <Stack.Screen name="auth" />
+            </Stack.Protected>
 
-          {/* Kitchy's Rider (a separate app built from this code, see app.config.ts). */}
-          <Stack.Protected guard={IS_RIDER && !!session}>
-            <Stack.Screen name="rider" />
-          </Stack.Protected>
+            {/* Kitchy's Rider (a separate app built from this code, see app.config.ts). */}
+            <Stack.Protected guard={IS_RIDER && !!session}>
+              <Stack.Screen name="rider" />
+            </Stack.Protected>
 
-          {/* 3. The app itself. */}
-          <Stack.Protected guard={onboarded && !!session && !IS_RIDER}>
-            <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="chef/[id]" />
-            <Stack.Screen name="dish/[id]" options={{ presentation: 'modal' }} />
-            <Stack.Screen name="guide" options={{ presentation: 'modal' }} />
-            <Stack.Screen name="checkout" />
-            <Stack.Screen name="track/[id]" />
-            <Stack.Screen name="premium" />
-            <Stack.Screen name="location" />
-            <Stack.Screen name="apply" />
-            <Stack.Screen name="kitchen" />
-            <Stack.Screen name="rewards" />
-            <Stack.Screen name="chat" />
-            <Stack.Screen name="settings" />
-            <Stack.Screen name="refer" />
-            <Stack.Screen name="review/[orderId]" options={{ presentation: 'modal' }} />
-            <Stack.Screen name="favorites" />
-            <Stack.Screen name="problem/[orderId]" options={{ presentation: 'modal' }} />
-            <Stack.Screen name="admin" />
-            <Stack.Screen name="allergies" />
-            <Stack.Screen name="big-order/[chefId]" />
-            <Stack.Screen name="week-plan" />
-            <Stack.Screen name="addresses" />
-          </Stack.Protected>
+            {/* 3. The app itself. */}
+            <Stack.Protected guard={onboarded && !!session && !IS_RIDER}>
+              <Stack.Screen name="(tabs)" />
+              <Stack.Screen name="chef/[id]" />
+              <Stack.Screen name="dish/[id]" options={{ presentation: 'modal' }} />
+              <Stack.Screen name="guide" options={{ presentation: 'modal' }} />
+              <Stack.Screen name="checkout" />
+              <Stack.Screen name="track/[id]" />
+              <Stack.Screen name="premium" />
+              <Stack.Screen name="location" />
+              <Stack.Screen name="apply" />
+              <Stack.Screen name="kitchen" />
+              <Stack.Screen name="rewards" />
+              <Stack.Screen name="chat" />
+              <Stack.Screen name="settings" />
+              <Stack.Screen name="refer" />
+              <Stack.Screen name="review/[orderId]" options={{ presentation: 'modal' }} />
+              <Stack.Screen name="favorites" />
+              <Stack.Screen name="problem/[orderId]" options={{ presentation: 'modal' }} />
+              <Stack.Screen name="admin" />
+              <Stack.Screen name="allergies" />
+              <Stack.Screen name="big-order/[chefId]" />
+              <Stack.Screen name="week-plan" />
+              <Stack.Screen name="addresses" />
+            </Stack.Protected>
 
-          {/* The full guide is open to everyone, also before signing in. Listed last so it is
+            {/* The full guide is open to everyone, also before signing in. Listed last so it is
               never the screen the app opens on. */}
-          <Stack.Screen name="help" />
-        </Stack>
-        {(onboarded || IS_RIDER) && session && <NotificationsBridge />}
-      </ThemeProvider>
-      {showIntro && (
-        <IntroAnimation
-          onDone={() => {
-            introPlayed = true;
-            setShowIntro(false);
-          }}
-        />
+            <Stack.Screen name="help" />
+          </Stack>
+          {(onboarded || IS_RIDER) && session && <NotificationsBridge />}
+        </ThemeProvider>
       )}
+      {showLoading && <LoadingScreen ready={ready} onDone={loadingDone} />}
     </View>
   );
 }

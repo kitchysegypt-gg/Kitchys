@@ -256,3 +256,13 @@ Schedules use Cairo time.
 - Order placed (checkout): a full screen with the waves, who is cooking it, the delivery time,
   points earned, and Track order / Back to home.
 - Notification texts have no emojis (`20261101090000_no_emoji_notifications.sql`).
+
+## Loading screen (Nov 2026)
+- `components/LoadingScreen.tsx` replaced the old wave intro: the K logo and "Kitchys" on cream with a
+  soft warm glow (`assets/images/loading-glow.png`), four bouncing dots and a line that changes every
+  1.5 s (`loading1`..`loading5`) until the app is ready (at least 2.2 s), then fades out.
+- The line uses Fredoka SemiBold (closest Google font to the logo's wordmark); Arabic uses Baloo Bhaijaan 2.
+- `assets/images/loading-logo.png` is the logo cut from the owner's design with a transparent background.
+  The phone's own splash uses it too (app.json), which takes effect with the next APK.
+- Notifications keep their emojis (owner's choice); the app screens stay without emojis.
+- Today's dish on Home: "Add to cart" (no price) that grows into - qty + once in the cart.
