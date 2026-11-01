@@ -204,15 +204,16 @@ type TxtProps = TextProps & {
   center?: boolean;
 };
 
+/** Titles and headings are near-black on the light theme. */
+const HEADLINE_BLACK = '#141110';
+
 export function Txt({ variant = 'body', muted, color, center, style, ...rest }: TxtProps) {
   const { colors, isRTL } = useSettings();
   const flat = StyleSheet.flatten([styles[variant], style]) as TextStyle | undefined;
   const weight = flat?.fontWeight;
-  // Titles and headings use the strong headline font in capitals. It is narrow, so it runs a
-  // little larger than the size asked for. Arabic headlines use the round font (Barlow has no
-  // Arabic letters, and letter spacing would break joined letters).
+  // Titles and headings use the elegant headline font (not bold) in near-black. Arabic headlines
+  // use the Arabic serif (Fraunces has no Arabic letters).
   const display = variant === 'title' || variant === 'heading';
-  const strong = display && !isRTL;
   const baseSize = flat?.fontSize ?? (variant === 'title' ? 28 : 20);
   return (
     <Text
@@ -221,15 +222,15 @@ export function Txt({ variant = 'body', muted, color, center, style, ...rest }: 
         styles[variant],
         display && (variant === 'title' ? styles.titleDisplay : styles.headingDisplay),
         {
-          color: color ?? (muted ? colors.textMuted : colors.text),
+          color: color ?? (muted ? colors.textMuted : display && !colors.dark ? HEADLINE_BLACK : colors.text),
           textAlign: center ? 'center' : isRTL ? 'right' : 'left',
           writingDirection: isRTL ? 'rtl' : 'ltr',
         },
         style,
-        strong && { fontSize: Math.round(baseSize * 1.18), textTransform: 'uppercase', letterSpacing: 0.3 },
+        display && { letterSpacing: isRTL ? 0 : -0.2, lineHeight: flat?.lineHeight ?? Math.round(baseSize * (isRTL ? 1.5 : 1.25)) },
         // The font file carries the weight; fontWeight itself is reset so it isn't faked on top.
         {
-          fontFamily: strong ? FONT.display : display ? FONT.displayArabic : fontFamilyFor(weight),
+          fontFamily: display ? (isRTL ? FONT.displayArabic : FONT.display) : fontFamilyFor(weight),
           fontWeight: 'normal',
         },
       ]}

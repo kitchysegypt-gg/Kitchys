@@ -2,16 +2,18 @@ import { Image } from 'expo-image';
 import { useEffect, useState } from 'react';
 import { Linking, Pressable, RefreshControl, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
+import { AdminRiderTopups } from '@/components/AdminRiderTopups';
 import { Button, Card, EmptyState, Icon, Screen, ScreenHeader, Txt } from '@/components/ui';
 import { AdminProblem, PendingDish, problemPhotoUrl, resolveProblem, reviewDish, useAdminDashboard } from '@/lib/admin';
 import { showAlert, showConfirm } from '@/lib/alert';
 import { FONT } from '@/lib/fonts';
 import { useSettings } from '@/lib/settings';
 
-/** More > Admin (kitchysegypt@gmail.com only): dishes to approve and order problems to sort out. */
+/** More > Admin (kitchysegypt@gmail.com only): rider top-ups, dishes to approve and order problems to sort out. */
 export default function AdminScreen() {
   const { t, colors } = useSettings();
   const { data, loading, error, reload } = useAdminDashboard();
+  const [refreshKey, setRefreshKey] = useState(0);
 
   if (error && !data)
     return (
@@ -29,7 +31,16 @@ export default function AdminScreen() {
       <ScreenHeader title={t('adminTitle')} />
       <ScrollView
         contentContainerStyle={{ padding: 16, paddingTop: 4, gap: 12, paddingBottom: 40 }}
-        refreshControl={<RefreshControl refreshing={loading} onRefresh={reload} tintColor={colors.primary} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={loading}
+            onRefresh={() => {
+              reload();
+              setRefreshKey((k) => k + 1);
+            }}
+            tintColor={colors.primary}
+          />
+        }
         keyboardShouldPersistTaps="handled">
         {data && (
           <View style={styles.stats}>
@@ -50,6 +61,8 @@ export default function AdminScreen() {
             ))}
           </View>
         )}
+
+        <AdminRiderTopups refreshKey={refreshKey} />
 
         <Txt variant="label" muted style={styles.section}>
           {t('adminDishesTitle', { n: data?.pending_dishes.length ?? 0 })}

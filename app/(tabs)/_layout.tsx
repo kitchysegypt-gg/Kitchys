@@ -26,7 +26,7 @@ export default function TabLayout() {
     function TabIcon({ focused }: { focused: boolean; color: ColorValue }) {
       return (
         <View style={[styles.tabIcon, focused && { backgroundColor: colors.primary }]}>
-          <Ionicons name={focused ? filled : outline} size={focused ? 21 : 24} color={focused ? colors.onPrimary : colors.text} />
+          <Ionicons name={focused ? filled : outline} size={focused ? 18 : 22} color={focused ? colors.onPrimary : colors.text} />
         </View>
       );
     };
@@ -37,16 +37,16 @@ export default function TabLayout() {
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.text,
-        tabBarLabelStyle: { fontFamily: FONT.semibold, fontSize: 11.5, marginTop: 4 },
-        tabBarIconStyle: { height: 40 },
+        tabBarLabelStyle: { fontFamily: FONT.semibold, fontSize: 11, marginTop: 2 },
+        tabBarIconStyle: { height: 32 },
         tabBarStyle: {
           backgroundColor: colors.surface,
           borderTopWidth: 0,
           borderTopLeftRadius: 24,
           borderTopRightRadius: 24,
-          height: 88 + insets.bottom,
+          height: 76 + insets.bottom,
           paddingTop: 8,
-          paddingBottom: insets.bottom + 10,
+          paddingBottom: insets.bottom + 12,
         },
       }}>
       <Tabs.Screen name="index" options={{ title: t('tabHome'), tabBarIcon: icon('home-outline', 'home') }} />
@@ -67,5 +67,5 @@ export default function TabLayout() {
 }
 
 const styles = StyleSheet.create({
-  tabIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  tabIcon: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
 });

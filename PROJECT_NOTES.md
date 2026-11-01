@@ -266,3 +266,22 @@ Schedules use Cairo time.
   The phone's own splash uses it too (app.json), which takes effect with the next APK.
 - Notifications keep their emojis (owner's choice); the app screens stay without emojis.
 - Today's dish on Home: "Add to cart" (no price) that grows into - qty + once in the cart.
+
+## Riders prepay Kitchy's share (Nov 2026)
+- Migration `20261102090000_rider_prepaid_balance.sql`: `riders.balance`, `rider_topups` (InstaPay /
+  Vodafone Cash + reference, pending/approved/rejected), `rider_ledger` (every balance change),
+  `orders.rider_prepaid`, `app_config` (where riders send money; set from Admin).
+- Kitchy's share = `rider_share(total, tip)` = cash minus the rider's pay (EGP 30 + tip).
+- Taking an order needs balance for it plus the rider's other orders not picked up yet.
+- "Picked up" takes the share from the balance; after that all the cash collected is the rider's.
+- A cancelled order that was prepaid refunds the rider (trigger `orders_refund_rider`).
+- Orders picked up before this (rider_prepaid null) still hand cash in the old way (earnings "hand over").
+- Rider app: balance card on Deliveries, `app/rider/topup.tsx` (hidden tab). Admin: `components/AdminRiderTopups.tsx`
+  ("Money arrived" / "Not found", and the InstaPay / Vodafone Cash details riders see).
+- Tested in a rolled-back transaction: refused at 0, top-up 1000 -> pickup -160 -> cancel +160.
+
+## Fonts and tab bar (Nov 2026)
+- Headlines: Fraunces 400 (elegant, not bold), near-black #141110 on light theme, no capitals.
+  Arabic headlines: Noto Naskh Arabic 500. Barlow Condensed is no longer loaded.
+- Tab bars (customer and rider): selected tab = 32px orange square (radius 10) with a white icon,
+  others dark-brown outline Ionicons; bar 76 + safe area tall.

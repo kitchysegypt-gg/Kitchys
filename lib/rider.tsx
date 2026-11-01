@@ -19,7 +19,29 @@ import { isDemo, supabase } from './supabase';
 
 export type Vehicle = 'motorbike' | 'scooter' | 'bicycle' | 'car';
 
-export type RiderProfile = { id: string; name: string; phone: string; vehicle: Vehicle; area: string | null; online: boolean };
+export type RiderProfile = {
+  id: string;
+  name: string;
+  phone: string;
+  vehicle: Vehicle;
+  area: string | null;
+  online: boolean;
+  /** Prepaid money for paying Kitchy's share of each order at pickup. */
+  balance: number;
+};
+
+/** A top-up the rider sent by InstaPay or Vodafone Cash; the team confirms it. */
+export type RiderTopup = {
+  id: string;
+  amount: number;
+  method: 'instapay' | 'vodafone_cash';
+  reference: string;
+  status: 'pending' | 'approved' | 'rejected';
+  created_at: string;
+};
+
+/** Where riders send their top-ups (set by the team). */
+export type TopupDetails = { instapay: string | null; vodafoneCash: string | null };
 
 /** 'none' until they apply; 'approved' once the team approves them from the email. */
 export type RiderStatus = 'loading' | 'none' | 'pending' | 'rejected' | 'approved';
@@ -37,8 +59,12 @@ export type RiderOrder = {
   delivery_fee: number;
   /** The customer's tip (all of it is the rider's). */
   tip: number;
-  /** What the rider earns for this delivery: EGP 30 plus the tip. The rest of the cash is Kitchy's. */
+  /** What the rider earns for this delivery: EGP 30 plus the tip. */
   pay: number;
+  /** Kitchy's share, paid from the rider's balance at pickup: the cash minus the rider's pay. */
+  share: number;
+  /** What the rider paid at pickup; null before pickup (and for orders from before prepaying). */
+  prepaid: number | null;
   chef: { name: string; area: string | null; lat: number | null; lng: number | null; phone: string | null };
   customer: {
     name: string | null;
@@ -93,7 +119,9 @@ export type RiderStats = {
   /** EGP 30 a delivery plus tips. */
   earnings: number;
   tips: number;
-  /** Cash collected minus earnings: what goes to Kitchy's. */
+  /** Paid to Kitchy's at pickup from the balance. */
+  prepaid: number;
+  /** Cash still to hand to Kitchy's (only orders from before prepaying). */
   hand_over: number;
   today_deliveries: number;
   today_cash: number;
@@ -125,6 +153,11 @@ type RiderValue = {
   release: (orderId: string) => Promise<void>;
   setStep: (orderId: string, step: 'picked_up' | 'delivered') => Promise<void>;
   loadStats: (days: number) => Promise<RiderStats | null>;
+  balance: number;
+  /** The rider's latest top-ups, newest first. */
+  topups: RiderTopup[];
+  topupDetails: TopupDetails;
+  requestTopup: (amount: number, method: RiderTopup['method'], reference: string) => Promise<void>;
 };
 
 const RiderContext = createContext<RiderValue | null>(null);
@@ -137,6 +170,8 @@ export function RiderProvider({ children }: { children: React.ReactNode }) {
   const [rider, setRider] = useState<RiderProfile | null>(null);
   const [available, setAvailable] = useState<RiderOrder[]>([]);
   const [mine, setMine] = useState<RiderOrder[]>([]);
+  const [topups, setTopups] = useState<RiderTopup[]>([]);
+  const [topupDetails, setTopupDetails] = useState<TopupDetails>({ instapay: null, vodafoneCash: null });
   const [locationAllowed, setLocationAllowed] = useState(true);
   const [backgroundOn, setBackgroundOn] = useState(false);
   // Bumped after the rider answers the "all the time" question, to restart tracking.
@@ -152,7 +187,17 @@ export function RiderProvider({ children }: { children: React.ReactNode }) {
     if (error || !data) return;
     const result = data as { status: RiderStatus; rider?: RiderProfile };
     setStatus(result.status);
-    setRider(result.rider ?? null);
+    setRider(result.rider ? { ...result.rider, balance: Number(result.rider.balance ?? 0) } : null);
+    if (result.status !== 'approved') return;
+    const [topupsRes, configRes] = await Promise.all([
+      supabase.from('rider_topups').select('id, amount, method, reference, status, created_at').order('created_at', { ascending: false }).limit(5),
+      supabase.from('app_config').select('key, value').in('key', ['rider_topup_instapay', 'rider_topup_vodafone_cash']),
+    ]);
+    if (!topupsRes.error) setTopups((topupsRes.data ?? []).map((row) => ({ ...row, amount: Number(row.amount) }) as RiderTopup));
+    if (!configRes.error) {
+      const value = (key: string) => configRes.data?.find((row) => row.key === key)?.value?.trim() || null;
+      setTopupDetails({ instapay: value('rider_topup_instapay'), vodafoneCash: value('rider_topup_vodafone_cash') });
+    }
   }, [session]);
 
   const loadOrders = useCallback(async () => {
@@ -297,9 +342,19 @@ export function RiderProvider({ children }: { children: React.ReactNode }) {
     async (fn: string, args: Record<string, unknown>) => {
       const { error } = await supabase.rpc(fn, args);
       if (error) throw error;
-      await loadOrders();
+      // Picking up changes the balance too.
+      await Promise.all([loadOrders(), loadStatus()]);
     },
-    [loadOrders]
+    [loadOrders, loadStatus]
+  );
+
+  const requestTopup = useCallback(
+    async (amount: number, method: RiderTopup['method'], reference: string) => {
+      const { error } = await supabase.rpc('request_rider_topup', { p_amount: amount, p_method: method, p_reference: reference });
+      if (error) throw error;
+      await loadStatus();
+    },
+    [loadStatus]
   );
 
   const setOnline = useCallback(
@@ -336,8 +391,12 @@ export function RiderProvider({ children }: { children: React.ReactNode }) {
       release: (id) => call('rider_release_order', { p_order: id }),
       setStep: (id, step) => call('rider_set_order_status', { p_order: id, p_step: step }),
       loadStats,
+      balance: rider?.balance ?? 0,
+      topups,
+      topupDetails,
+      requestTopup,
     }),
-    [status, rider, online, available, mine, locationAllowed, backgroundOn, enableBackground, refresh, apply, setOnline, call, loadStats]
+    [status, rider, online, available, mine, locationAllowed, backgroundOn, enableBackground, refresh, apply, setOnline, call, loadStats, topups, topupDetails, requestTopup]
   );
 
   return <RiderContext.Provider value={value}>{children}</RiderContext.Provider>;

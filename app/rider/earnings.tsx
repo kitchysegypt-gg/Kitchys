@@ -87,14 +87,24 @@ export default function RiderEarningsScreen() {
               {t('riderTipIncluded', { amount: formatPrice(Number(stats?.tips ?? 0)) })}
             </Txt>
           )}
-          <View style={[styles.row, styles.handOver, { borderColor: colors.border }]}>
-            <IconBadge name="business-outline" tone="orange" size={30} />
-            {/* Negative when credit-paid orders left less cash than the rider earned: Kitchy's owes them. */}
-            <Txt style={{ flex: 1, fontWeight: '700' }}>
-              {Number(stats?.hand_over ?? 0) < 0 ? t('riderKitchysOwes') : t('riderHandOver')}
-            </Txt>
-            <Txt style={{ fontWeight: '800', fontSize: 18 }}>{formatPrice(Math.abs(Number(stats?.hand_over ?? 0)))}</Txt>
-          </View>
+          {Number(stats?.prepaid ?? 0) > 0 && (
+            <View style={styles.row}>
+              <IconBadge name="business-outline" tone="orange" size={30} />
+              <Txt style={{ flex: 1, fontWeight: '600' }}>{t('riderPrepaidTotal')}</Txt>
+              <Txt style={{ fontWeight: '700' }}>{formatPrice(Number(stats?.prepaid ?? 0))}</Txt>
+            </View>
+          )}
+          {/* Cash still to hand in (orders from before prepaying), or what Kitchy's owes when credit-paid
+              orders left less cash than the rider earned. */}
+          {Number(stats?.hand_over ?? 0) !== 0 && (
+            <View style={[styles.row, styles.handOver, { borderColor: colors.border }]}>
+              <IconBadge name="business-outline" tone="orange" size={30} />
+              <Txt style={{ flex: 1, fontWeight: '700' }}>
+                {Number(stats?.hand_over ?? 0) < 0 ? t('riderKitchysOwes') : t('riderHandOver')}
+              </Txt>
+              <Txt style={{ fontWeight: '800', fontSize: 18 }}>{formatPrice(Math.abs(Number(stats?.hand_over ?? 0)))}</Txt>
+            </View>
+          )}
           <Txt variant="caption" muted>
             {t('riderCashNote')}
           </Txt>

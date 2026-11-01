@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { Linking, RefreshControl, ScrollView, StyleSheet, Switch, View } from 'react-native';
 
@@ -12,8 +13,21 @@ import { useSettings } from '@/lib/settings';
 /** Rider > Deliveries: go online, your active deliveries step by step, and orders to take. */
 export default function RiderDeliveriesScreen() {
   const { t, colors, formatPrice } = useSettings();
-  const { online, setOnline, available, active, mine, refresh, locationAllowed, backgroundOn, backgroundSupported, enableBackground } =
-    useRider();
+  const {
+    online,
+    setOnline,
+    available,
+    active,
+    mine,
+    refresh,
+    locationAllowed,
+    backgroundOn,
+    backgroundSupported,
+    enableBackground,
+    balance,
+    topups,
+  } = useRider();
+  const pendingTopup = topups.filter((x) => x.status === 'pending').reduce((sum, x) => sum + x.amount, 0);
   const [refreshing, setRefreshing] = useState(false);
   const [switching, setSwitching] = useState(false);
   const doneToday = mine.filter((o) => o.status === 'delivered');
@@ -47,111 +61,133 @@ export default function RiderDeliveriesScreen() {
               {t('riderAppName')}
             </Txt>
           </View>
-        <Card style={[styles.onlineCard, online && { borderColor: colors.success, borderWidth: 2 }]}>
-          <View style={[styles.dot, { backgroundColor: online ? colors.success : colors.textMuted }]} />
-          <View style={{ flex: 1 }}>
-            <Txt style={{ fontWeight: '800', fontSize: 17 }}>{online ? t('riderOnline') : t('riderOffline')}</Txt>
-            <Txt variant="caption" muted>
-              {online ? t('riderOnlineBody') : t('riderOfflineBody')}
-            </Txt>
-          </View>
-          <Switch
-            value={online}
-            onValueChange={toggle}
-            disabled={switching}
-            trackColor={{ true: colors.success, false: colors.border }}
-            thumbColor="#fff"
-            accessibilityLabel={online ? t('riderOnline') : t('riderOffline')}
-          />
-        </Card>
+          <Card style={[styles.onlineCard, online && { borderColor: colors.success, borderWidth: 2 }]}>
+            <View style={[styles.dot, { backgroundColor: online ? colors.success : colors.textMuted }]} />
+            <View style={{ flex: 1 }}>
+              <Txt style={{ fontWeight: '800', fontSize: 17 }}>{online ? t('riderOnline') : t('riderOffline')}</Txt>
+              <Txt variant="caption" muted>
+                {online ? t('riderOnlineBody') : t('riderOfflineBody')}
+              </Txt>
+            </View>
+            <Switch
+              value={online}
+              onValueChange={toggle}
+              disabled={switching}
+              trackColor={{ true: colors.success, false: colors.border }}
+              thumbColor="#fff"
+              accessibilityLabel={online ? t('riderOnline') : t('riderOffline')}
+            />
+          </Card>
         </WaveHeader>
 
         <View style={{ paddingHorizontal: 16, gap: 14 }}>
-
-        {online && locationAllowed && backgroundOn && (
-          <View style={[styles.note, { backgroundColor: `${colors.success}14` }]}>
-            <Icon name="checkmark-circle-outline" size={20} color={colors.success} />
-            <Txt variant="caption" style={{ flex: 1, fontWeight: '600' }}>
-              {t('riderBgOn')}
-            </Txt>
-          </View>
-        )}
-
-        {online && locationAllowed && !backgroundOn && backgroundSupported && (
-          <Card style={{ gap: 10, borderColor: colors.primary, borderWidth: 1 }}>
+          {/* Kitchy's share of each order is paid from this balance at pickup. */}
+          <Card style={{ gap: 8 }}>
             <View style={styles.line}>
-              <IconBadge name="location-outline" tone="orange" size={32} />
-              <Txt style={{ flex: 1, fontWeight: '800' }}>{t('riderBgTitle')}</Txt>
-            </View>
-            <Txt variant="caption" muted>
-              {t('riderBgBody')}
-            </Txt>
-            <Button
-              title={t('riderBgButton')}
-              icon="navigate-outline"
-              onPress={() =>
-                showConfirm(t('riderBgExplainTitle'), t('riderBgExplainBody'), {
-                  label: t('riderBgButton'),
-                  cancelLabel: t('cancel'),
-                  onConfirm: () => {
-                    enableBackground().catch((e) => showAlert(t('error'), e?.message ?? String(e)));
-                  },
-                })
-              }
-            />
-          </Card>
-        )}
-
-        {online && locationAllowed && !backgroundSupported && (
-          <View style={[styles.note, { backgroundColor: colors.surfaceAlt }]}>
-            <Icon name="information-circle-outline" size={20} color={colors.primary} />
-            <Txt variant="caption" style={{ flex: 1, fontWeight: '600' }}>
-              {t('riderBgOldApp')}
-            </Txt>
-          </View>
-        )}
-
-        {online && !locationAllowed && (
-          <View style={[styles.note, { backgroundColor: `${colors.danger}12` }]}>
-            <Icon name="location-outline" size={20} color={colors.danger} />
-            <Txt variant="caption" style={{ flex: 1, fontWeight: '600' }}>
-              {t('riderLocationOff')}
-            </Txt>
-          </View>
-        )}
-
-        {active.length > 0 && (
-          <>
-            <Txt variant="heading">{t('riderMyDeliveries')}</Txt>
-            {active.map((o) => (
-              <ActiveCard key={o.id} order={o} />
-            ))}
-          </>
-        )}
-
-        <Txt variant="heading">{t('riderAvailable')}</Txt>
-        {!online ? (
-          <EmptyState icon="moon-outline" title={t('riderOffline')} body={t('riderOfflineBody')} />
-        ) : available.length === 0 ? (
-          <EmptyState icon="bicycle-outline" title={t('riderNoAvailable')} body={t('riderNoAvailableBody')} />
-        ) : (
-          available.map((o) => <AvailableCard key={o.id} order={o} />)
-        )}
-
-        {doneToday.length > 0 && (
-          <>
-            <Txt variant="heading">{t('riderDoneToday')}</Txt>
-            {doneToday.map((o) => (
-              <View key={o.id} style={[styles.doneRow, { borderColor: colors.border }]}>
-                <Icon name="checkmark-circle" size={20} color={colors.success} />
-                <Txt style={{ flex: 1 }} numberOfLines={1}>
-                  {o.chef.area ?? o.chef.name} → {o.customer.address ?? ''}
+              <IconBadge name="wallet-outline" tone="green" size={36} />
+              <View style={{ flex: 1 }}>
+                <Txt variant="caption" muted>
+                  {t('riderBalance')}
                 </Txt>
-                <Txt style={{ fontWeight: '700' }}>{formatPrice(o.cash)}</Txt>
+                <Txt style={{ fontWeight: '800', fontSize: 22 }}>{formatPrice(balance)}</Txt>
               </View>
-            ))}
-          </>
-        )}
+              <Button small title={t('riderTopUp')} icon="add" onPress={() => router.push('/rider/topup')} />
+            </View>
+            {pendingTopup > 0 ? (
+              <Txt variant="caption" style={{ fontWeight: '600', color: colors.primary }}>
+                {t('riderTopupPending', { amount: formatPrice(pendingTopup) })}
+              </Txt>
+            ) : (
+              <Txt variant="caption" muted>
+                {t('riderBalanceBody')}
+              </Txt>
+            )}
+          </Card>
+
+          {online && locationAllowed && backgroundOn && (
+            <View style={[styles.note, { backgroundColor: `${colors.success}14` }]}>
+              <Icon name="checkmark-circle-outline" size={20} color={colors.success} />
+              <Txt variant="caption" style={{ flex: 1, fontWeight: '600' }}>
+                {t('riderBgOn')}
+              </Txt>
+            </View>
+          )}
+
+          {online && locationAllowed && !backgroundOn && backgroundSupported && (
+            <Card style={{ gap: 10, borderColor: colors.primary, borderWidth: 1 }}>
+              <View style={styles.line}>
+                <IconBadge name="location-outline" tone="orange" size={32} />
+                <Txt style={{ flex: 1, fontWeight: '800' }}>{t('riderBgTitle')}</Txt>
+              </View>
+              <Txt variant="caption" muted>
+                {t('riderBgBody')}
+              </Txt>
+              <Button
+                title={t('riderBgButton')}
+                icon="navigate-outline"
+                onPress={() =>
+                  showConfirm(t('riderBgExplainTitle'), t('riderBgExplainBody'), {
+                    label: t('riderBgButton'),
+                    cancelLabel: t('cancel'),
+                    onConfirm: () => {
+                      enableBackground().catch((e) => showAlert(t('error'), e?.message ?? String(e)));
+                    },
+                  })
+                }
+              />
+            </Card>
+          )}
+
+          {online && locationAllowed && !backgroundSupported && (
+            <View style={[styles.note, { backgroundColor: colors.surfaceAlt }]}>
+              <Icon name="information-circle-outline" size={20} color={colors.primary} />
+              <Txt variant="caption" style={{ flex: 1, fontWeight: '600' }}>
+                {t('riderBgOldApp')}
+              </Txt>
+            </View>
+          )}
+
+          {online && !locationAllowed && (
+            <View style={[styles.note, { backgroundColor: `${colors.danger}12` }]}>
+              <Icon name="location-outline" size={20} color={colors.danger} />
+              <Txt variant="caption" style={{ flex: 1, fontWeight: '600' }}>
+                {t('riderLocationOff')}
+              </Txt>
+            </View>
+          )}
+
+          {active.length > 0 && (
+            <>
+              <Txt variant="heading">{t('riderMyDeliveries')}</Txt>
+              {active.map((o) => (
+                <ActiveCard key={o.id} order={o} />
+              ))}
+            </>
+          )}
+
+          <Txt variant="heading">{t('riderAvailable')}</Txt>
+          {!online ? (
+            <EmptyState icon="moon-outline" title={t('riderOffline')} body={t('riderOfflineBody')} />
+          ) : available.length === 0 ? (
+            <EmptyState icon="bicycle-outline" title={t('riderNoAvailable')} body={t('riderNoAvailableBody')} />
+          ) : (
+            available.map((o) => <AvailableCard key={o.id} order={o} />)
+          )}
+
+          {doneToday.length > 0 && (
+            <>
+              <Txt variant="heading">{t('riderDoneToday')}</Txt>
+              {doneToday.map((o) => (
+                <View key={o.id} style={[styles.doneRow, { borderColor: colors.border }]}>
+                  <Icon name="checkmark-circle" size={20} color={colors.success} />
+                  <Txt style={{ flex: 1 }} numberOfLines={1}>
+                    {o.chef.area ?? o.chef.name} → {o.customer.address ?? ''}
+                  </Txt>
+                  <Txt style={{ fontWeight: '700' }}>{formatPrice(o.cash)}</Txt>
+                </View>
+              ))}
+            </>
+          )}
         </View>
       </ScrollView>
     </View>
@@ -173,8 +209,11 @@ function StatusPill({ status }: { status: RiderOrder['status'] }) {
 /** An order waiting for a rider. */
 function AvailableCard({ order }: { order: RiderOrder }) {
   const { t, colors, formatPrice } = useSettings();
-  const { claim } = useRider();
+  const { claim, balance, active } = useRider();
   const [busy, setBusy] = useState(false);
+  // Enough balance for this order and the ones already taken but not picked up yet.
+  const reserved = active.filter((o) => o.status !== 'on_the_way').reduce((sum, o) => sum + o.share, 0);
+  const short = Math.max(0, order.share + reserved - balance);
 
   const take = async () => {
     setBusy(true);
@@ -217,7 +256,24 @@ function AvailableCard({ order }: { order: RiderOrder }) {
           </Txt>
         </View>
       </View>
-      <Button title={t('riderTake')} icon="hand-right-outline" onPress={take} loading={busy} />
+      {order.share > 0 && (
+        <View style={[styles.note, { backgroundColor: colors.surfaceAlt }]}>
+          <Icon name="wallet-outline" size={18} color={colors.primary} />
+          <Txt variant="caption" style={{ flex: 1, fontWeight: '600' }}>
+            {t('riderPayAtPickup', { amount: formatPrice(order.share) })}
+          </Txt>
+        </View>
+      )}
+      {short > 0 ? (
+        <Button
+          variant="secondary"
+          title={t('riderNeedTopup', { amount: formatPrice(short) })}
+          icon="add"
+          onPress={() => router.push('/rider/topup')}
+        />
+      ) : (
+        <Button title={t('riderTake')} icon="hand-right-outline" onPress={take} loading={busy} />
+      )}
     </Card>
   );
 }
@@ -240,14 +296,32 @@ function ActiveCard({ order }: { order: RiderOrder }) {
     }
   };
 
+  // Orders picked up before prepaying started still hand the cash in at the end of the shift.
+  const oldWay = pickedUp && order.prepaid == null;
+
+  const pickUp = () =>
+    showConfirm(
+      t('riderPickupTitle'),
+      order.share > 0
+        ? t('riderPickupBody', { share: formatPrice(order.share), cash: formatPrice(order.cash) })
+        : t('riderPickupNoShare'),
+      {
+        label: t('riderPickedUp'),
+        cancelLabel: t('cancel'),
+        onConfirm: () => run(() => setStep(order.id, 'picked_up')),
+      }
+    );
+
   const delivered = () =>
     showConfirm(
       t('riderDeliveredTitle'),
-      t('riderDeliveredBody', {
-        amount: formatPrice(order.cash),
-        pay: formatPrice(order.pay),
-        rest: formatPrice(Math.max(0, order.cash - order.pay)),
-      }),
+      oldWay
+        ? t('riderDeliveredBody', {
+            amount: formatPrice(order.cash),
+            pay: formatPrice(order.pay),
+            rest: formatPrice(Math.max(0, order.cash - order.pay)),
+          })
+        : t('riderDeliveredBodyPrepaid', { amount: formatPrice(order.cash) }),
       {
         label: t('riderDelivered'),
         cancelLabel: t('cancel'),
@@ -277,14 +351,18 @@ function ActiveCard({ order }: { order: RiderOrder }) {
         <Txt style={{ fontWeight: '800', fontSize: 20 }}>{formatPrice(order.cash)}</Txt>
       </View>
       <Txt variant="caption" muted style={{ marginTop: -6 }}>
-        {order.cash >= order.pay
-          ? t('riderKeepLine', {
-              pay: formatPrice(order.pay),
-              tip: formatPrice(order.tip),
-              rest: formatPrice(order.cash - order.pay),
-            })
-          : // Small order (mostly paid with credit): Kitchy's pays the rider the difference.
-            t('riderKitchysPaysLine', { pay: formatPrice(order.pay), owed: formatPrice(order.pay - order.cash) })}
+        {order.cash < order.pay
+          ? // Small order (mostly paid with credit): Kitchy's pays the rider the difference.
+            t('riderKitchysPaysLine', { pay: formatPrice(order.pay), owed: formatPrice(order.pay - order.cash) })
+          : !pickedUp
+            ? t('riderShareLine', { share: formatPrice(order.share) })
+            : !oldWay
+              ? t('riderPaidLine', { share: formatPrice(order.prepaid ?? 0) })
+              : t('riderKeepLine', {
+                  pay: formatPrice(order.pay),
+                  tip: formatPrice(order.tip),
+                  rest: formatPrice(order.cash - order.pay),
+                })}
       </Txt>
 
       <Stop
@@ -326,7 +404,7 @@ function ActiveCard({ order }: { order: RiderOrder }) {
           <Button
             title={t('riderPickedUp')}
             icon="bag-check-outline"
-            onPress={() => run(() => setStep(order.id, 'picked_up'))}
+            onPress={pickUp}
             loading={busy}
             style={{ flex: 1 }}
           />
@@ -414,5 +492,11 @@ const styles = StyleSheet.create({
   cash: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 14 },
   stop: { gap: 10, padding: 12, borderRadius: 14, borderWidth: 1 },
   actions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  doneRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth },
+  doneRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
 });
