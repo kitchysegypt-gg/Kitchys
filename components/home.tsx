@@ -21,6 +21,16 @@ const PROMO_BANNERS = {
   becomeChef: require('@/assets/promos/become-chef.jpg'),
   premium: require('@/assets/promos/premium.jpg'),
 };
+
+// Other brands' ads, only for testing how banners look with the app's colours (owner's request).
+// Remove these and their promo_banners rows (image 'builtin:test-...') before launch.
+const TEST_BANNERS: Record<string, number> = {
+  'test-mcdonalds': require('@/assets/promos/test-mcdonalds.jpg'),
+  'test-dunkin': require('@/assets/promos/test-dunkin.jpg'),
+  'test-sunscreen': require('@/assets/promos/test-sunscreen.jpg'),
+  'test-nike': require('@/assets/promos/test-nike.jpg'),
+  'test-jumpstart': require('@/assets/promos/test-jumpstart.jpg'),
+};
 const BANNER_RATIO = 1200 / 676;
 
 // Kitchy's 3D food type icons.
@@ -80,6 +90,7 @@ const BUILTIN_BANNERS: Record<string, number> = {
   refer: PROMO_BANNERS.refer,
   'become-chef': PROMO_BANNERS.becomeChef,
   premium: PROMO_BANNERS.premium,
+  ...TEST_BANNERS,
 };
 
 /** Where a built-in banner goes when its row's link is 'none'. */

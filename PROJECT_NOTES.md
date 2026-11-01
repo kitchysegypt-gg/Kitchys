@@ -285,3 +285,10 @@ Schedules use Cairo time.
   Arabic headlines: Noto Naskh Arabic 500. Barlow Condensed is no longer loaded.
 - Tab bars (customer and rider): selected tab = 32px orange square (radius 10) with a white icon,
   others dark-brown outline Ionicons; bar 76 + safe area tall.
+
+## Test banners (Nov 2026) - REMOVE BEFORE LAUNCH
+- Five other brands' ads (McDonald's, Dunkin', a sunscreen, Nike, Jump Start) were added at the owner's
+  request only to test banner colours: `assets/promos/test-*.jpg`, `TEST_BANNERS` in components/home.tsx,
+  and promo_banners rows with image 'builtin:test-...' (sort 1-5, link none).
+- To remove: `update promo_banners set active = false where image like 'builtin:test-%'`, then delete
+  the files and TEST_BANNERS.
