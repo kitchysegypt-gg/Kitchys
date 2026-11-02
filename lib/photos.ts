@@ -3,3 +3,23 @@
 export const DISH_PHOTOS: Record<string, number> = {};
 
 export const CHEF_PHOTOS: Record<string, number> = {};
+
+/**
+ * Stand-in dish photos the owner picked to make the app look better while testing. Customers see
+ * one of them on every dish (the same one each time for a dish) instead of the chef's own photos,
+ * which stay saved and still show in the chef's kitchen. Empty this list to go back to the chefs' photos.
+ */
+const TEST_DISH_PHOTOS: number[] = [
+  require('@/assets/photos/test-dishes/dish-1.jpg'),
+  require('@/assets/photos/test-dishes/dish-2.jpg'),
+  require('@/assets/photos/test-dishes/dish-3.jpg'),
+  require('@/assets/photos/test-dishes/dish-4.jpg'),
+];
+
+/** The stand-in photo for a dish, picked by its id so it never changes between screens. */
+export function testDishPhoto(dishId: string): number | undefined {
+  if (!TEST_DISH_PHOTOS.length) return undefined;
+  let h = 0;
+  for (let i = 0; i < dishId.length; i++) h = (h * 31 + dishId.charCodeAt(i)) >>> 0;
+  return TEST_DISH_PHOTOS[h % TEST_DISH_PHOTOS.length];
+}

@@ -68,6 +68,8 @@ export type Dish = {
   photo?: string;
   /** All of the chef's photos of this dish (up to 4), cover first. */
   photos?: string[];
+  /** A stand-in photo customers see instead of the chef's (the owner's test look, see lib/photos.ts). */
+  testPhoto?: number;
   /** Portion size in grams. */
   portionGrams?: number;
   /** Home-chef dishes: most portions the chef cooks per day. */

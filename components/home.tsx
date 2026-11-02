@@ -237,7 +237,7 @@ export function KitchenCard({ chef }: { chef: Chef }) {
   const { ratings, dishesByChef, highlights, chefTags, getDish } = useCatalog();
   const { freeDeliveriesLeft } = useOrders();
   const dishes = dishesByChef(chef.id);
-  const cover = dishes.find((d) => d.photo) ?? dishes[0];
+  const cover = dishes.find((d) => d.photo || d.testPhoto) ?? dishes[0];
   const rating = ratings[chef.id];
   const highlight = highlights[chef.id];
   const topDish = highlight?.topDish ? getDish(highlight.topDish) : undefined;

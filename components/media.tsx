@@ -18,7 +18,7 @@ export function DishArt({ dish, height, radius = 0 }: { dish: Dish; height: numb
   return (
     <View style={[styles.art, { height, borderRadius: radius, backgroundColor: colors.surfaceAlt }]}>
       <Image
-        source={DISH_PHOTOS[dish.id] ?? (dish.photo ? { uri: dish.photo } : DEFAULT_DISH_PHOTO)}
+        source={dish.testPhoto ?? DISH_PHOTOS[dish.id] ?? (dish.photo ? { uri: dish.photo } : DEFAULT_DISH_PHOTO)}
         style={StyleSheet.absoluteFill}
         contentFit="cover"
         transition={200}
@@ -33,7 +33,7 @@ export function DishGallery({ dish, height }: { dish: Dish; height: number }) {
   const [width, setWidth] = useState(0);
   const [index, setIndex] = useState(0);
   const photos = dish.photos ?? [];
-  if (photos.length < 2) return <DishArt dish={dish} height={height} />;
+  if (photos.length < 2 || dish.testPhoto) return <DishArt dish={dish} height={height} />;
   return (
     <View style={{ height, backgroundColor: colors.surfaceAlt }} onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
       {width > 0 && (

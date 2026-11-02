@@ -292,3 +292,7 @@ Schedules use Cairo time.
   and promo_banners rows with image 'builtin:test-...' (sort 1-5, link none).
 - To remove: `update promo_banners set active = false where image like 'builtin:test-%'`, then delete
   the files and TEST_BANNERS.
+- Stand-in dish photos (owner's request, for the look while testing): `assets/photos/test-dishes/dish-1..4.jpg`,
+  `TEST_DISH_PHOTOS` / `testDishPhoto()` in lib/photos.ts. Customers see one of the four on every dish
+  (picked by dish id); the chefs' real photos stay in the database and still show in the chef's kitchen.
+  Empty TEST_DISH_PHOTOS to go back to the chefs' own photos.

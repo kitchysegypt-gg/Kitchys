@@ -74,18 +74,19 @@ export function TonightHero() {
   const [day] = useState(() => Math.floor(Date.now() / 86_400_000));
 
   const dish = useMemo<Dish | undefined>(() => {
-    const top = popular.filter((d) => d.photo).slice(0, 5);
-    const pool = top.length ? top : dishes.filter((d) => d.photo);
+    const top = popular.filter((d) => d.photo || d.testPhoto).slice(0, 5);
+    const pool = top.length ? top : dishes.filter((d) => d.photo || d.testPhoto);
     return pool.length ? pool[day % pool.length] : undefined;
   }, [popular, dishes, day]);
 
-  if (!dish?.photo) return null;
+  if (!dish?.photo && !dish?.testPhoto) return null;
+  const photo = dish.testPhoto ?? { uri: dish.photo };
   // Tonight's dinner is for Kitchy's Premium members; everyone else sees it locked.
   if (!isMember) {
     return (
       <PressableScale onPress={() => router.push('/premium')} style={[styles.heroShadow, softShadow(colors.shadow)]}>
         <View style={styles.hero}>
-          <Image source={{ uri: dish.photo }} style={StyleSheet.absoluteFill} contentFit="cover" blurRadius={18} />
+          <Image source={photo} style={StyleSheet.absoluteFill} contentFit="cover" blurRadius={18} />
           <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.45)' }]} />
           <View style={[styles.heroPill, { backgroundColor: colors.primary }]}>
             <Icon name="lock-closed" size={12} color={colors.onPrimary} />
@@ -117,7 +118,7 @@ export function TonightHero() {
       onPress={() => router.push(`/dish/${dish.id}`)}
       style={[styles.heroShadow, softShadow(colors.shadow)]}>
       <View style={styles.hero}>
-        <Image source={{ uri: dish.photo }} style={StyleSheet.absoluteFill} contentFit="cover" transition={250} />
+        <Image source={photo} style={StyleSheet.absoluteFill} contentFit="cover" transition={250} />
         <LinearGradient
           colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.15)', 'rgba(0,0,0,0.78)']}
           locations={[0, 0.45, 1]}

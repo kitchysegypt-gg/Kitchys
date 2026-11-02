@@ -6,6 +6,7 @@ import type { EmojiName } from './emoji';
 import type { Localized } from './i18n';
 import { CLOSE_MINUTES } from './schedule';
 import { useSettings } from './settings';
+import { testDishPhoto } from './photos';
 import { isDemo, supabase } from './supabase';
 
 /** A chef is "Popular" with at least this many orders in the last 30 days. */
@@ -307,7 +308,9 @@ export function CatalogProvider({ children }: { children: React.ReactNode }) {
 
   const value = useMemo<CatalogValue>(() => {
     const allChefs = [...SAMPLE_CHEFS, ...kitchenChefs];
-    const allDishes = [...SAMPLE_DISHES, ...kitchenDishes.filter((d) => kitchenChefs.some((c) => c.id === d.chefId))];
+    const allDishes = [...SAMPLE_DISHES, ...kitchenDishes.filter((d) => kitchenChefs.some((c) => c.id === d.chefId))].map(
+      (d): Dish => ({ ...d, testPhoto: testDishPhoto(d.id) })
+    );
     const now = Date.now();
     const dealDishes = dealRows.flatMap((row): Dish[] => {
       const base = allDishes.find((d) => d.id === row.dish_id);
