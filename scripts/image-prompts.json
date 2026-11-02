@@ -1,0 +1,110 @@
+{
+  "dishes": {
+    "koshari": {
+      "prompt": "Egyptian koshari in a rustic ceramic bowl: rice, brown lentils, small macaroni and chickpeas topped with glossy spicy tomato sauce and a pile of crispy golden fried onions. Appetizing professional food photograph, served as an evening dinner on a dark wooden table, warm soft lighting, shallow depth of field, 45 degree angle, no text, no people, no hands.",
+      "size": "1536x1024"
+    },
+    "molokhia": {
+      "prompt": "Egyptian molokhia, a bowl of glossy green jute-leaf stew next to half a golden roast chicken and a plate of white rice with vermicelli. Appetizing professional food photograph, served as an evening dinner on a dark wooden table, warm soft lighting, shallow depth of field, 45 degree angle, no text, no people, no hands.",
+      "size": "1536x1024"
+    },
+    "mahshi": {
+      "prompt": "A round tray of Egyptian mixed mahshi: stuffed bell peppers, zucchini, small eggplants and rolled vine leaves filled with herby rice in light tomato broth. Appetizing professional food photograph, served as an evening dinner on a dark wooden table, warm soft lighting, shallow depth of field, 45 degree angle, no text, no people, no hands.",
+      "size": "1536x1024"
+    },
+    "fatta": {
+      "prompt": "Egyptian beef fatta: layers of crispy toasted bread and white rice topped with tender beef chunks and red garlic-vinegar tomato sauce in a deep dish. Appetizing professional food photograph, served as an evening dinner on a dark wooden table, warm soft lighting, shallow depth of field, 45 degree angle, no text, no people, no hands.",
+      "size": "1536x1024"
+    },
+    "hamam-mahshi": {
+      "prompt": "Two Egyptian stuffed pigeons (hamam mahshi) roasted golden and crispy, stuffed with freekeh, on a platter with a small bowl of broth. Appetizing professional food photograph, served as an evening dinner on a dark wooden table, warm soft lighting, shallow depth of field, 45 degree angle, no text, no people, no hands.",
+      "size": "1536x1024"
+    },
+    "sayadeya": {
+      "prompt": "Alexandrian sayadeya: baked white fish fillets with lemon slices over brown caramelized-onion rice, topped with toasted pine nuts. Appetizing professional food photograph, served as an evening dinner on a dark wooden table, warm soft lighting, shallow depth of field, 45 degree angle, no text, no people, no hands.",
+      "size": "1536x1024"
+    },
+    "shrimp": {
+      "prompt": "Crispy golden breaded fried shrimp on a plate with a small bowl of tahini sauce and lemon wedges. Appetizing professional food photograph, served as an evening dinner on a dark wooden table, warm soft lighting, shallow depth of field, 45 degree angle, no text, no people, no hands.",
+      "size": "1536x1024"
+    },
+    "lentil-soup": {
+      "prompt": "A bowl of smooth yellow Egyptian lentil soup with cumin, lemon wedges and crispy toasted bread croutons on the side. Appetizing professional food photograph, served as an evening dinner on a dark wooden table, warm soft lighting, shallow depth of field, 45 degree angle, no text, no people, no hands.",
+      "size": "1536x1024"
+    },
+    "calamari": {
+      "prompt": "A clay-pot seafood rice tagine with shrimp, calamari rings and fish pieces baked with red rice, tomatoes and peppers, crispy top. Appetizing professional food photograph, served as an evening dinner on a dark wooden table, warm soft lighting, shallow depth of field, 45 degree angle, no text, no people, no hands.",
+      "size": "1536x1024"
+    },
+    "roz-moammar": {
+      "prompt": "Egyptian roz moammar: creamy oven-baked rice in a clay pot with a golden crispy crust, next to a quarter roast chicken. Appetizing professional food photograph, served as an evening dinner on a dark wooden table, warm soft lighting, shallow depth of field, 45 degree angle, no text, no people, no hands.",
+      "size": "1536x1024"
+    },
+    "hawawshi": {
+      "prompt": "Egyptian hawawshi: crispy baked round baladi bread stuffed with spiced minced beef, cut in wedges, with pickles and tahini. Appetizing professional food photograph, served as an evening dinner on a dark wooden table, warm soft lighting, shallow depth of field, 45 degree angle, no text, no people, no hands.",
+      "size": "1536x1024"
+    },
+    "bechamel": {
+      "prompt": "A square slice of Egyptian macaroni bechamel: layers of penne and minced beef under thick golden browned bechamel, in a baking dish. Appetizing professional food photograph, served as an evening dinner on a dark wooden table, warm soft lighting, shallow depth of field, 45 degree angle, no text, no people, no hands.",
+      "size": "1536x1024"
+    },
+    "moussaka": {
+      "prompt": "Egyptian moussaka: fried eggplant slices and green peppers baked in rich red garlic tomato sauce in a clay dish, with baladi bread. Appetizing professional food photograph, served as an evening dinner on a dark wooden table, warm soft lighting, shallow depth of field, 45 degree angle, no text, no people, no hands.",
+      "size": "1536x1024"
+    },
+    "om-ali": {
+      "prompt": "Om Ali Egyptian dessert in a small clay dish: puff pastry soaked in hot milk and cream, bubbling golden top with nuts, coconut and raisins. Appetizing professional food photograph, served as an evening dinner on a dark wooden table, warm soft lighting, shallow depth of field, 45 degree angle, no text, no people, no hands.",
+      "size": "1536x1024"
+    },
+    "basbousa": {
+      "prompt": "Egyptian basbousa semolina cake cut into diamond pieces, each topped with a whole almond, glistening with syrup, on a brass tray. Appetizing professional food photograph, served as an evening dinner on a dark wooden table, warm soft lighting, shallow depth of field, 45 degree angle, no text, no people, no hands.",
+      "size": "1536x1024"
+    },
+    "roz-bel-laban": {
+      "prompt": "Egyptian roz bel laban rice pudding in small clay pots, creamy white with a dusting of cinnamon and a few pistachios. Appetizing professional food photograph, served as an evening dinner on a dark wooden table, warm soft lighting, shallow depth of field, 45 degree angle, no text, no people, no hands.",
+      "size": "1536x1024"
+    },
+    "konafa": {
+      "prompt": "Egyptian cream konafa: golden crispy shredded kataifi pastry with a thick layer of white cream filling, sprinkled with crushed pistachios. Appetizing professional food photograph, served as an evening dinner on a dark wooden table, warm soft lighting, shallow depth of field, 45 degree angle, no text, no people, no hands.",
+      "size": "1536x1024"
+    },
+    "salad": {
+      "prompt": "A fresh green garden salad with lettuce, cucumber, tomato, radish, rocket and mint with lemon and olive oil dressing in a bowl. Appetizing professional food photograph, served as an evening dinner on a dark wooden table, warm soft lighting, shallow depth of field, 45 degree angle, no text, no people, no hands.",
+      "size": "1536x1024"
+    },
+    "grilled-chicken": {
+      "prompt": "Charcoal grilled herb-marinated chicken thighs with roasted zucchini, carrots and bell peppers on a plate. Appetizing professional food photograph, served as an evening dinner on a dark wooden table, warm soft lighting, shallow depth of field, 45 degree angle, no text, no people, no hands.",
+      "size": "1536x1024"
+    },
+    "kofta": {
+      "prompt": "Egyptian charcoal kofta skewers of minced beef and lamb with tahini, pickles, baladi salad and flatbread. Appetizing professional food photograph, served as an evening dinner on a dark wooden table, warm soft lighting, shallow depth of field, 45 degree angle, no text, no people, no hands.",
+      "size": "1536x1024"
+    },
+    "shawarma-plate": {
+      "prompt": "Chicken shawarma plate: thinly sliced spiced grilled chicken with garlic toum sauce, pickles, fresh salad and warm pita bread. Appetizing professional food photograph, served as an evening dinner on a dark wooden table, warm soft lighting, shallow depth of field, 45 degree angle, no text, no people, no hands.",
+      "size": "1536x1024"
+    }
+  },
+  "chefs": {
+    "fatma": {
+      "prompt": "A cheerful Egyptian mother in her fifties wearing a colorful headscarf and apron, holding a wooden spoon. Friendly 3D animated character portrait in a warm Pixar-like style, head and shoulders, soft studio lighting, cozy home kitchen background, plain and clearly illustrated (not a photo), no text.",
+      "size": "1024x1024"
+    },
+    "samira": {
+      "prompt": "A warm Egyptian grandmother in her seventies with a light blue headscarf and apron, standing by a window with the Alexandria sea. Friendly 3D animated character portrait in a warm Pixar-like style, head and shoulders, soft studio lighting, cozy home kitchen background, plain and clearly illustrated (not a photo), no text.",
+      "size": "1024x1024"
+    },
+    "mona": {
+      "prompt": "A smiling Egyptian mother in her forties with a patterned headscarf and oven mitts, next to a traditional oven. Friendly 3D animated character portrait in a warm Pixar-like style, head and shoulders, soft studio lighting, cozy home kitchen background, plain and clearly illustrated (not a photo), no text.",
+      "size": "1024x1024"
+    },
+    "hoda": {
+      "prompt": "A sweet Egyptian grandmother with glasses and a pink headscarf, holding a tray of oriental desserts. Friendly 3D animated character portrait in a warm Pixar-like style, head and shoulders, soft studio lighting, cozy home kitchen background, plain and clearly illustrated (not a photo), no text.",
+      "size": "1024x1024"
+    },
+    "nour": {
+      "prompt": "A fit, smiling Egyptian mother in her thirties with a green headscarf and apron, surrounded by fresh vegetables. Friendly 3D animated character portrait in a warm Pixar-like style, head and shoulders, soft studio lighting, cozy home kitchen background, plain and clearly illustrated (not a photo), no text.",
+      "size": "1024x1024"
+    }
+  }
+}
