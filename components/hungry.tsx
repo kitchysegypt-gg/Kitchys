@@ -100,7 +100,7 @@ export function TonightHero() {
               </Txt>
             </View>
             <View style={[styles.heroButton, { backgroundColor: colors.primary }]}>
-              <Txt style={{ color: colors.onPrimary, fontWeight: '800' }}>{t('getPremium')}</Txt>
+              <Txt style={{ color: colors.onPrimary, fontWeight: '700', fontSize: 13 }}>{t('getPremium')}</Txt>
             </View>
           </View>
         </View>
@@ -155,7 +155,7 @@ export function TonightHero() {
                   accessibilityRole="button"
                   accessibilityLabel={t('less')}
                   style={styles.heroStep}>
-                  <Icon name={inCart <= 1 ? 'trash-outline' : 'remove'} size={20} color={colors.onPrimary} />
+                  <Icon name={inCart <= 1 ? 'trash-outline' : 'remove'} size={16} color={colors.onPrimary} />
                 </Pressable>
                 <Txt style={styles.heroQty}>{inCart}</Txt>
                 <Pressable
@@ -164,7 +164,7 @@ export function TonightHero() {
                   accessibilityRole="button"
                   accessibilityLabel={t('more')}
                   style={styles.heroStep}>
-                  <Icon name="add" size={20} color={colors.onPrimary} />
+                  <Icon name="add" size={16} color={colors.onPrimary} />
                 </Pressable>
               </Animated.View>
             ) : (
@@ -175,8 +175,8 @@ export function TonightHero() {
                   accessibilityRole="button"
                   accessibilityLabel={`${t('addToCart')} ${l(dish.name)}`}
                   style={styles.heroAdd}>
-                  <Icon name="add" size={18} color={colors.onPrimary} />
-                  <Txt style={{ color: colors.onPrimary, fontWeight: '800' }}>{t('addToCart')}</Txt>
+                  <Icon name="add" size={15} color={colors.onPrimary} />
+                  <Txt style={{ color: colors.onPrimary, fontWeight: '700', fontSize: 13 }}>{t('addToCart')}</Txt>
                 </Pressable>
               </Animated.View>
             )}
@@ -206,9 +206,10 @@ const styles = StyleSheet.create({
   heroTitle: { color: '#FFFFFF', fontSize: 24, fontWeight: '800' },
   heroMeta: { color: 'rgba(255,255,255,0.92)', fontSize: 13 },
   heroLine: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  heroButton: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 14 },
+  // Small enough to leave the photo and the dish name room.
+  heroButton: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingVertical: 7, paddingHorizontal: 11, borderRadius: 12 },
   heroAdd: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  heroStepper: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  heroStep: { width: 32, height: 28, alignItems: 'center', justifyContent: 'center' },
-  heroQty: { color: '#FFFFFF', fontSize: 18, fontWeight: '800', minWidth: 26, textAlign: 'center' },
+  heroStepper: { flexDirection: 'row', alignItems: 'center', gap: 2 },
+  heroStep: { width: 26, height: 22, alignItems: 'center', justifyContent: 'center' },
+  heroQty: { color: '#FFFFFF', fontSize: 15, fontWeight: '700', minWidth: 20, textAlign: 'center' },
 });
