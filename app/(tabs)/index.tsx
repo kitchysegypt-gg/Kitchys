@@ -2,12 +2,12 @@ import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Animated, FlatList, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
-import { CategoryBubbles, KitchenCard, PromoCarousel } from '@/components/home';
+import { KitchenCard, PromoCarousel } from '@/components/home';
 import { Greeting, TonightHero } from '@/components/hungry';
 import { DishCard } from '@/components/menu';
 import { LogoTile, WaveHeader } from '@/components/WaveHeader';
 import { Button, Card, EmptyState, Icon, IconBadge, Screen, Txt } from '@/components/ui';
-import { Category } from '@/data/menu';
+import { CATEGORIES } from '@/data/menu';
 import { useAddresses } from '@/lib/addresses';
 import { DELIVERY_RADIUS_KM, useCatalog } from '@/lib/catalog';
 import { FONT } from '@/lib/fonts';
@@ -19,22 +19,23 @@ import { useAnimatedValue } from '@/lib/useAnimatedValue';
 export default function HomeScreen() {
   const { t, colors, isRTL, location } = useSettings();
   const { chefs, dishes, deals, popular, getChef } = useCatalog();
-  const [category, setCategory] = useState<Category | 'all'>('all');
   const [query, setQuery] = useState('');
 
+  // Search finds a dish by its name, its chef, or its food type ("dessert", "seafood"...). The
+  // food types row was taken off Home while the menu is small; each dish still has its type.
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
+    if (!q) return dishes;
     return dishes.filter((d) => {
-      if (category !== 'all' && d.category !== category) return false;
-      if (!q) return true;
       const chef = getChef(d.chefId);
-      return [...Object.values(d.name), ...(chef ? Object.values(chef.name) : [])].some((s) =>
-        s.toLowerCase().includes(q)
+      const type = CATEGORIES.find((c) => c.id === d.category);
+      return [...Object.values(d.name), ...(chef ? Object.values(chef.name) : []), type ? t(type.label) : ''].some(
+        (s) => s.toLowerCase().includes(q)
       );
     });
-  }, [category, query, dishes, getChef]);
+  }, [query, dishes, getChef, t]);
 
-  const browsing = query.trim() !== '' || category !== 'all';
+  const browsing = query.trim() !== '';
   const tonight = useTonight();
   const { addresses } = useAddresses();
   const noneNear = !!location && chefs.length === 0;
@@ -65,32 +66,34 @@ export default function HomeScreen() {
             </Pressable>
           </View>
           {!browsing && <Greeting light />}
-        <View style={styles.search}>
-          <Icon name="search" size={20} color={colors.textMuted} />
-          <TextInput
-            value={query}
-            onChangeText={setQuery}
-            placeholder={t('searchPlaceholder')}
-            placeholderTextColor={colors.textMuted}
-            style={[styles.searchInput, { color: colors.text, textAlign: isRTL ? 'right' : 'left' }]}
-          />
-          {query ? (
-            <Pressable onPress={() => setQuery('')} hitSlop={8}>
-              <Icon name="close-circle" size={18} color={colors.textMuted} />
-            </Pressable>
-          ) : null}
-        </View>
+          <View style={styles.search}>
+            <Icon name="search" size={20} color={colors.textMuted} />
+            <TextInput
+              value={query}
+              onChangeText={setQuery}
+              placeholder={t('searchPlaceholder')}
+              placeholderTextColor={colors.textMuted}
+              style={[styles.searchInput, { color: colors.text, textAlign: isRTL ? 'right' : 'left' }]}
+            />
+            {query ? (
+              <Pressable onPress={() => setQuery('')} hitSlop={8}>
+                <Icon name="close-circle" size={18} color={colors.textMuted} />
+              </Pressable>
+            ) : null}
+          </View>
         </WaveHeader>
 
         {noneNear ? (
-          <EmptyState icon="location-outline" title={t('noChefsNear')} body={t('noChefsNearBody', { km: DELIVERY_RADIUS_KM })}>
+          <EmptyState
+            icon="location-outline"
+            title={t('noChefsNear')}
+            body={t('noChefsNearBody', { km: DELIVERY_RADIUS_KM })}>
             <Button title={t('changeAddress')} icon="map-outline" onPress={() => router.push('/location')} />
           </EmptyState>
         ) : (
           <>
             {/* Closed for the night: the greeting already says so. Sold out: say that instead of Tonight's dinner. */}
             {!browsing && tonight.reason === 'soldOut' ? <SoldOutNotice /> : !browsing && <TonightHero />}
-            <CategoryBubbles value={category} onChange={setCategory} />
 
             {!browsing && (
               <View style={{ marginTop: 16 }}>
@@ -114,7 +117,6 @@ export default function HomeScreen() {
               </View>
             ) : (
               <>
-
                 {deals.length > 0 && (
                   <>
                     {sectionHeader(t('todaysDeals'))}
