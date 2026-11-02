@@ -296,3 +296,9 @@ Schedules use Cairo time.
   `TEST_DISH_PHOTOS` / `testDishPhoto()` in lib/photos.ts. Customers see one of the four on every dish
   (picked by dish id); the chefs' real photos stay in the database and still show in the chef's kitchen.
   Empty TEST_DISH_PHOTOS to go back to the chefs' own photos.
+
+## Font: Rubik everywhere (Nov 2026)
+- The owner wanted "Jumper" (Mans Greback) in the whole app; its free version is personal use only, so
+  the owner picked Rubik (free, closest look). Rubik has Arabic letters, so it is used for every text in
+  every language: body, buttons, prices, titles (700) and the loading line. All other font packages
+  (Plus Jakarta, Fraunces, Noto Naskh, Baloo, Barlow, Fredoka) were removed.

@@ -211,8 +211,7 @@ export function Txt({ variant = 'body', muted, color, center, style, ...rest }: 
   const { colors, isRTL } = useSettings();
   const flat = StyleSheet.flatten([styles[variant], style]) as TextStyle | undefined;
   const weight = flat?.fontWeight;
-  // Titles and headings use the elegant headline font (not bold) in near-black. Arabic headlines
-  // use the Arabic serif (Fraunces has no Arabic letters).
+  // Titles and headings use the headline weight in near-black (Rubik, which has Arabic too).
   const display = variant === 'title' || variant === 'heading';
   const baseSize = flat?.fontSize ?? (variant === 'title' ? 28 : 20);
   return (

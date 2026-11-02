@@ -2,6 +2,7 @@ import { Image } from 'expo-image';
 import { useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, Animated, Easing, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
+import { FONT } from '@/lib/fonts';
 import type { TranslationKey } from '@/lib/i18n';
 import { useSettings } from '@/lib/settings';
 import { useAnimatedValue } from '@/lib/useAnimatedValue';
@@ -21,7 +22,7 @@ const MESSAGE_MS = 1500;
  * ready. Then it fades into the app.
  */
 export function LoadingScreen({ ready, onDone }: { ready: boolean; onDone: () => void }) {
-  const { t, loaded, isRTL } = useSettings();
+  const { t, loaded } = useSettings();
   const { width, height } = useWindowDimensions();
   const [index, setIndex] = useState(0);
   const [minDone, setMinDone] = useState(false);
@@ -105,7 +106,7 @@ export function LoadingScreen({ ready, onDone }: { ready: boolean; onDone: () =>
         {loaded && (
           <Animated.View style={{ opacity: text }}>
             <Text
-              style={[styles.message, { fontFamily: isRTL ? 'BalooBhaijaan2_700Bold' : 'Fredoka_600SemiBold' }]}
+              style={[styles.message, { fontFamily: FONT.medium }]}
               maxFontSizeMultiplier={1.2}
               accessibilityLiveRegion="polite">
               {t(MESSAGES[index])}
